@@ -4,7 +4,7 @@ url = "https://stockanalysis.com/stocks/aapl/financials/ratios/__data.json?p=qua
 response = httpx.get(url)
 raw_data = response.json()
 
-# expected_keys = ['datekey', 'fiscalYear', 'fiscalQuarter', 'netIncomeCF', 'totalDepAmorCF', 'sbcomp', 'changeAR', 'changeInventory', 'changeAP', 'changeUnearnedRev', 'changeOtherNetOperAssets', 'otheroperating', 'ncfo', 'ocfGrowth', 'capex', 'cashAcquisition', 'salePurchaseIntangibles', 'investInSecurities', 'otherinvesting', 'ncfi', 'debtIssuedShortTerm', 'debtIssuedLongTerm', 'debtIssuedTotal', 'debtRepaidShortTerm', 'debtRepaidLongTerm', 'debtRepaidTotal', 'netDebtIssued', 'commonIssued', 'commonRepurchased', 'commonDividendCF', 'otherfinancing', 'ncff', 'ncf', 'fcf', 'fcfGrowth', 'fcfMargin', 'fcfps', 'leveredFCF', 'unleveredFCF', 'cashInterestPaid', 'cashTaxesPaid', 'changeNetWorkingCapital']
+expected_keys = ['datekey', 'fiscalYear', 'fiscalQuarter', 'marketcap', 'marketCapGrowth', 'ev', 'lastCloseRatios', 'pe', 'ps', 'pb', 'pfcf', 'pocf', 'evrevenue', 'evebitda', 'evebit', 'evfcf', 'debtequity', 'debtebitda', 'debtfcf', 'assetturnover', 'inventoryTurnover', 'quickRatio', 'currentratio', 'roe', 'roa', 'roic', 'earningsyield', 'fcfyield', 'dividendyield', 'payoutratio', 'buybackyield', 'totalreturn']
 nodes = raw_data['nodes']
 data = nodes[2]['data']
 data_map = data[0]
