@@ -1,27 +1,27 @@
-import json
+import httpx
 
-# Open and read the JSON file
-with open('example_responses/balance_sheet.json', 'r') as file:
-    raw_data = json.load(file)
 
-# Print the data
+url = "https://stockanalysis.com/stocks/nvda/financials/balance-sheet/__data.json?p=quarterly"
+response = httpx.get(url)
+raw_data = response.json()
+
+expected_keys = ['datekey', 'fiscalYear', 'fiscalQuarter', 'cashneq', 'investmentsc', 'totalcash', 'cashGrowth', 'accountsReceivable', 'otherReceivables', 'receivables', 'inventory', 'restrictedCash', 'othercurrent', 'assetsc', 'netPPE', 'investmentsnc', 'goodwill', 'otherIntangibles', 'othernoncurrent', 'assets', 'accountsPayable', 'accruedExpenses', 'debtc', 'currentPortDebt', 'currentCapLeases', 'currentIncomeTaxesPayable', 'currentUnearnedRevenue', 'otherCurrentLiabilities', 'currentLiabilities', 'debtnc', 'capitalLeases', 'longTermUnearnedRevenue', 'longTermDeferredTaxLiabilities', 'otherliabilitiesnoncurrent', 'liabilities', 'commonStock', 'retearn', 'otherEquity', 'equity', 'liabilitiesequity', 'sharesOutFilingDate', 'sharesOutTotalCommon', 'bvps', 'tangibleBookValue', 'tangibleBookValuePerShare', 'debt', 'netcash', 'netCashGrowth', 'netcashpershare', 'workingcapital', 'land', 'machinery', 'leaseholdImprovements', 'tradingAssetSecurities']
+
 nodes = raw_data['nodes']
 data = nodes[2]['data']
 data_map = data[0]
 financial_data_index = data_map['financialData']
-# print(financial_data_index)
 print(data[financial_data_index])
-# print(data[231])
-# print(data[919])
 
 balance_sheet_data = {}
 balance_sheet_data_map = data[financial_data_index]
-for key, value in balance_sheet_data_map.items():
-    key_data = []
-    for data_index in data[value]:
-        key_data.append(data[data_index])
+for balance_sheet_field, balance_sheet_field_idx in balance_sheet_data_map.items():
+    balance_sheet_field_values = []
+    for field_value_index in data[balance_sheet_field_idx]:
+        balance_sheet_field_values.append(data[field_value_index])
     
-    balance_sheet_data[key] = key_data
+    balance_sheet_data[balance_sheet_field] = balance_sheet_field_values
 
+result = [dict(zip(balance_sheet_data.keys(), values)) for values in zip(*balance_sheet_data.values())]
 print('-' * 100)
-print(balance_sheet_data)
+print(result[0].keys())
