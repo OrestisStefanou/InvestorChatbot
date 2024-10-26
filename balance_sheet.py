@@ -23,5 +23,6 @@ for balance_sheet_field, balance_sheet_field_idx in balance_sheet_data_map.items
     balance_sheet_data[balance_sheet_field] = balance_sheet_field_values
 
 result = [dict(zip(balance_sheet_data.keys(), values)) for values in zip(*balance_sheet_data.values())]
+print(len(result))
 print('-' * 100)
 print(result[0].keys())
