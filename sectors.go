@@ -74,7 +74,7 @@ func get_sectors() {
 
 	sectorDataIndicesArray := data[int(sectorsDataIndex)].([]interface{})
 
-	sectors := []Sector{}
+	sectors := make([]Sector, 0, len(sectorDataIndicesArray))
 	for i := 0; i < len(sectorDataIndicesArray); i++ {
 		sectorDataIndex := int(sectorDataIndicesArray[i].(float64))
 		sectorData := data[sectorDataIndex].(map[string]interface{})
@@ -99,4 +99,8 @@ func get_sectors() {
 	}
 
 	fmt.Println(sectors)
+}
+
+func main() {
+	get_sectors()
 }

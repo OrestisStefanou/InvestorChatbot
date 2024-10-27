@@ -74,7 +74,7 @@ func get_industries() {
 
 	industryDataIndicesArray := data[int(industriesDataIndex)].([]interface{})
 
-	industries := []Industry{}
+	industries := make([]Industry, 0, len(industryDataIndicesArray))
 	for i := 0; i < len(industryDataIndicesArray); i++ {
 		industryDataIndex := int(industryDataIndicesArray[i].(float64))
 		industryData := data[industryDataIndex].(map[string]interface{})
@@ -116,8 +116,4 @@ func get_industries() {
 	}
 
 	fmt.Println(industries)
-}
-
-func main() {
-	get_industries()
 }
