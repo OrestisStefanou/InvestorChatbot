@@ -7,7 +7,7 @@ import (
 	"net/http"
 )
 
-func main() {
+func get_balance_sheets() {
 	url := "https://stockanalysis.com/stocks/nvda/financials/balance-sheet/__data.json?p=quarterly"
 	resp, err := http.Get(url)
 	if err != nil {
@@ -38,7 +38,7 @@ func main() {
 		return
 	}
 
-	// Access the second element in "nodes"
+	// Access the second element in "nodes" which contains the data we are interested in
 	nodeData, ok := nodes[2].(map[string]interface{})
 	if !ok {
 		fmt.Println("Unexpected structure in 'nodes[2]'")
@@ -89,7 +89,7 @@ func main() {
 		balanceSheetData[field] = fieldValues
 	}
 
-	// Converting the map into a slice of maps to resemble final structure
+	// Converting the map of slices into a slice of maps to resemble final structure
 	result := []map[string]interface{}{}
 	for i := 0; i < len(balanceSheetData[expectedKeys[0]]); i++ {
 		record := make(map[string]interface{})
