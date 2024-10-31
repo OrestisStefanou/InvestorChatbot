@@ -7,14 +7,14 @@ import (
 	"net/http"
 )
 
-type IndustryStock struct {
+type SectorStock struct {
 	symbol      string
 	companyName string
 	marketCap   float32
 }
 
-func get_industry_stocks() {
-	url := "https://stockanalysis.com/stocks/industry/biotechnology/__data.json"
+func get_sector_stocks() {
+	url := "https://stockanalysis.com/stocks/sector/financials/__data.json"
 	resp, err := http.Get(url)
 	if err != nil {
 		fmt.Println("Error fetching data:", err)
@@ -36,13 +36,13 @@ func get_industry_stocks() {
 
 	// Extract "nodes" from rawData
 	nodes, ok := rawData["nodes"].([]interface{})
-	if !ok || len(nodes) < 3 {
+	if !ok || len(nodes) < 2 {
 		fmt.Println("Unexpected structure in 'nodes'")
 		return
 	}
 
 	// Access the second element in "nodes" which contains the data we are interested in
-	nodeData, ok := nodes[2].(map[string]interface{})
+	nodeData, ok := nodes[1].(map[string]interface{})
 	if !ok {
 		fmt.Println("Unexpected structure in 'nodes[2]'")
 		return
@@ -72,14 +72,14 @@ func get_industry_stocks() {
 		return
 	}
 
-	stocks := make([]IndustryStock, 0, len(stocksDataIndicesArray))
+	stocks := make([]SectorStock, 0, len(stocksDataIndicesArray))
 	for i := 0; i < len(stocksDataIndicesArray); i++ {
 		stockDataIndex := int(stocksDataIndicesArray[i].(float64))
 		stockData := data[stockDataIndex].(map[string]interface{})
 		stockSymbolIndex := int(stockData["s"].(float64))
 		stockCompanyNameIndex := int(stockData["n"].(float64))
 		stockMarketCapIndex := int(stockData["marketCap"].(float64))
-		stock := IndustryStock{
+		stock := SectorStock{
 			symbol:      data[stockSymbolIndex].(string),
 			companyName: data[stockCompanyNameIndex].(string),
 			marketCap:   float32(data[stockMarketCapIndex].(float64)),
@@ -87,8 +87,4 @@ func get_industry_stocks() {
 		stocks = append(stocks, stock)
 	}
 	fmt.Println(stocks)
-}
-
-func main() {
-	get_industry_stocks()
 }
