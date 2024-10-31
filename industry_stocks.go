@@ -89,6 +89,6 @@ func get_industry_stocks() {
 	fmt.Println(stocks)
 }
 
-func main() {
-	get_industry_stocks()
-}
+// func main() {
+// 	get_industry_stocks()
+// }

@@ -7,8 +7,65 @@ import (
 	"net/http"
 )
 
+type BalanceSheet struct {
+	Datekey                        string
+	FiscalYear                     string
+	FiscalQuarter                  string
+	Cashneq                        float64
+	Investmentsc                   float64
+	Totalcash                      float64
+	CashGrowth                     float64
+	AccountsReceivable             float64
+	OtherReceivables               float64
+	Receivables                    float64
+	Inventory                      float64
+	RestrictedCash                 float64
+	Othercurrent                   float64
+	Assetsc                        float64
+	NetPPE                         float64
+	Investmentsnc                  float64
+	Goodwill                       float64
+	OtherIntangibles               float64
+	Othernoncurrent                float64
+	Assets                         float64
+	AccountsPayable                float64
+	AccruedExpenses                float64
+	Debtc                          float64
+	CurrentPortDebt                float64
+	CurrentCapLeases               float64
+	CurrentIncomeTaxesPayable      float64
+	CurrentUnearnedRevenue         float64
+	OtherCurrentLiabilities        float64
+	CurrentLiabilities             float64
+	Debtnc                         float64
+	CapitalLeases                  float64
+	LongTermUnearnedRevenue        float64
+	LongTermDeferredTaxLiabilities float64
+	Otherliabilitiesnoncurrent     float64
+	Liabilities                    float64
+	CommonStock                    float64
+	Retearn                        float64
+	OtherEquity                    float64
+	Equity                         float64
+	Liabilitiesequity              float64
+	SharesOutFilingDate            float64
+	SharesOutTotalCommon           float64
+	Bvps                           float64
+	TangibleBookValue              float64
+	TangibleBookValuePerShare      float64
+	Debt                           float64
+	Netcash                        float64
+	NetCashGrowth                  float64
+	Netcashpershare                float64
+	Workingcapital                 float64
+	Land                           float64
+	Machinery                      float64
+	LeaseholdImprovements          float64
+	TradingAssetSecurities         float64
+}
+
 func get_balance_sheets() {
-	url := "https://stockanalysis.com/stocks/nvda/financials/balance-sheet/__data.json?p=quarterly"
+	url := "https://stockanalysis.com/stocks/aapl/financials/balance-sheet/__data.json?p=quarterly"
 	resp, err := http.Get(url)
 	if err != nil {
 		fmt.Println("Error fetching data:", err)
@@ -27,9 +84,6 @@ func get_balance_sheets() {
 		fmt.Println("Error unmarshalling JSON:", err)
 		return
 	}
-
-	// Define the expected keys (not used here directly but may be useful in further filtering)
-	expectedKeys := []string{"datekey", "fiscalYear", "fiscalQuarter", "cashneq", "investmentsc", "totalcash", "cashGrowth", "accountsReceivable", "otherReceivables", "receivables", "inventory", "restrictedCash", "othercurrent", "assetsc", "netPPE", "investmentsnc", "goodwill", "otherIntangibles", "othernoncurrent", "assets", "accountsPayable", "accruedExpenses", "debtc", "currentPortDebt", "currentCapLeases", "currentIncomeTaxesPayable", "currentUnearnedRevenue", "otherCurrentLiabilities", "currentLiabilities", "debtnc", "capitalLeases", "longTermUnearnedRevenue", "longTermDeferredTaxLiabilities", "otherliabilitiesnoncurrent", "liabilities", "commonStock", "retearn", "otherEquity", "equity", "liabilitiesequity", "sharesOutFilingDate", "sharesOutTotalCommon", "bvps", "tangibleBookValue", "tangibleBookValuePerShare", "debt", "netcash", "netCashGrowth", "netcashpershare", "workingcapital", "land", "machinery", "leaseholdImprovements", "tradingAssetSecurities"}
 
 	// Extract "nodes" from rawData
 	nodes, ok := rawData["nodes"].([]interface{})
@@ -91,11 +145,25 @@ func get_balance_sheets() {
 
 	// Converting the map of slices into a slice of maps to resemble final structure
 	result := []map[string]interface{}{}
-	for i := 0; i < len(balanceSheetData[expectedKeys[0]]); i++ {
+	for i := 0; i < len(balanceSheetData["datekey"]); i++ {
 		record := make(map[string]interface{})
 		for key, values := range balanceSheetData {
 			record[key] = values[i]
 		}
+		// Marshal the map to JSON
+		jsonData, err := json.Marshal(record)
+		if err != nil {
+			fmt.Println("Error marshaling data:", err)
+			return
+		}
+		// Unmarshal the JSON data into an instance of balanceSheet
+		var balanceSheetRecord BalanceSheet
+		err = json.Unmarshal(jsonData, &balanceSheetRecord)
+		if err != nil {
+			fmt.Println("Error unmarshaling data:", err)
+			return
+		}
+		fmt.Println(balanceSheetRecord)
 		result = append(result, record)
 	}
 
@@ -103,4 +171,8 @@ func get_balance_sheets() {
 	fmt.Println(len(result))
 	fmt.Println("--------------------------")
 	fmt.Println(result[0]["totalcash"])
+}
+
+func main() {
+	get_balance_sheets()
 }
