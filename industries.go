@@ -120,7 +120,3 @@ func get_industries() {
 
 	fmt.Println(industries)
 }
-
-func main() {
-	get_industries()
-}
