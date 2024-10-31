@@ -9,6 +9,7 @@ import (
 
 type Industry struct {
 	name             string
+	urlName          string
 	numberOfStocks   int
 	marketCap        float32
 	dividendYieldPct float32
@@ -79,6 +80,7 @@ func get_industries() {
 		industryDataIndex := int(industryDataIndicesArray[i].(float64))
 		industryData := data[industryDataIndex].(map[string]interface{})
 		industryNameIndex := int(industryData["industry_name"].(float64))
+		industryUrlNameIndex := int(industryData["url"].(float64))
 		numberOfStocksIndex := int(industryData["stocks"].(float64))
 		marketCapIndex := int(industryData["marketCap"].(float64))
 		profitMarginIndex := int(industryData["profitMargin"].(float64))
@@ -105,6 +107,7 @@ func get_industries() {
 
 		industry := Industry{
 			name:             data[industryNameIndex].(string),
+			urlName:          data[industryUrlNameIndex].(string),
 			numberOfStocks:   int(data[numberOfStocksIndex].(float64)),
 			marketCap:        float32(data[marketCapIndex].(float64)),
 			dividendYieldPct: dividendYield,
@@ -116,4 +119,8 @@ func get_industries() {
 	}
 
 	fmt.Println(industries)
+}
+
+func main() {
+	get_industries()
 }

@@ -9,6 +9,7 @@ import (
 
 type Sector struct {
 	name             string
+	urlName          string
 	numberOfStocks   int
 	marketCap        float32
 	dividendYieldPct float32
@@ -79,6 +80,7 @@ func get_sectors() {
 		sectorDataIndex := int(sectorDataIndicesArray[i].(float64))
 		sectorData := data[sectorDataIndex].(map[string]interface{})
 		sectorNameIndex := int(sectorData["sector_name"].(float64))
+		sectorUrlNameIndex := int(sectorData["url"].(float64))
 		numberOfStocksIndex := int(sectorData["stocks"].(float64))
 		marketCapIndex := int(sectorData["marketCap"].(float64))
 		dividendYieldIndex := int(sectorData["dividendYield"].(float64))
@@ -88,6 +90,7 @@ func get_sectors() {
 
 		sector := Sector{
 			name:             data[sectorNameIndex].(string),
+			urlName:          data[sectorUrlNameIndex].(string),
 			numberOfStocks:   int(data[numberOfStocksIndex].(float64)),
 			marketCap:        float32(data[marketCapIndex].(float64)),
 			dividendYieldPct: float32(data[dividendYieldIndex].(float64)),
@@ -99,8 +102,4 @@ func get_sectors() {
 	}
 
 	fmt.Println(sectors)
-}
-
-func main() {
-	get_sectors()
 }
