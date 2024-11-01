@@ -6,7 +6,7 @@ import (
 )
 
 func main() {
-	balance_sheets, err := marketDataScraper.GetIncomeStatements("aapl")
+	balance_sheets, err := marketDataScraper.GetFinancialRatios("nvda")
 	if err != nil {
 		panic(err)
 

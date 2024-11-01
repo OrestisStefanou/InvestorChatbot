@@ -157,6 +157,41 @@ type IncomeStatement struct {
 	PayoutRatio       float64
 }
 
+type FinancialRatios struct {
+	Datekey           string
+	FiscalYear        string
+	FiscalQuarter     string
+	Marketcap         float64
+	MarketCapGrowth   float64
+	Ev                float64
+	LastCloseRatios   float64
+	Pe                float64
+	Ps                float64
+	Pb                float64
+	Pfcf              float64
+	Pocf              float64
+	EvRevenue         float64
+	EvEbitda          float64
+	EvEbit            float64
+	EvFcf             float64
+	DebtEquity        float64
+	DebtEbitda        float64
+	DebtFcf           float64
+	AssetTurnover     float64
+	InventoryTurnover float64
+	QuickRatio        float64
+	CurrentRatio      float64
+	Roe               float64
+	Roa               float64
+	Roic              float64
+	EarningsYield     float64
+	FcfYield          float64
+	DividendYield     float64
+	PayoutRatio       float64
+	BuybackYield      float64
+	TotalReturn       float64
+}
+
 func scrapeFinancialStatementData(url string) ([]map[string]interface{}, error) {
 	resp, err := http.Get(url)
 	if err != nil {
@@ -229,6 +264,10 @@ func scrapeFinancialStatementData(url string) ([]map[string]interface{}, error) 
 	for i := 0; i < len(statement_data["datekey"]); i++ {
 		record := make(map[string]interface{})
 		for key, values := range statement_data {
+			// There are some cases where the data is missing for a particular key
+			if i >= len(values) {
+				continue
+			}
 			record[key] = values[i]
 		}
 		statement_data_slice = append(statement_data_slice, record)
@@ -313,4 +352,31 @@ func GetIncomeStatements(symbol string) ([]IncomeStatement, error) {
 		incomeStatements = append(incomeStatements, incomeStatementRecord)
 	}
 	return incomeStatements, nil
+}
+
+func GetFinancialRatios(symbol string) ([]FinancialRatios, error) {
+	url := fmt.Sprintf("https://stockanalysis.com/stocks/%s/financials/ratios/__data.json?p=quarterly", symbol)
+	financialRatiosData, err := scrapeFinancialStatementData(url)
+	if err != nil {
+		return []FinancialRatios{}, err
+	}
+
+	financialRatios := make([]FinancialRatios, 0, len(financialRatiosData))
+	for i := 0; i < len(financialRatiosData); i++ {
+		record := financialRatiosData[i]
+		// Marshal the map to JSON
+		jsonData, err := json.Marshal(record)
+		if err != nil {
+			return []FinancialRatios{}, err
+		}
+		// Unmarshal the JSON data into an instance of balanceSheet
+		var financialRatiosRecord FinancialRatios
+		err = json.Unmarshal(jsonData, &financialRatiosRecord)
+		if err != nil {
+			return []FinancialRatios{}, err
+		}
+		financialRatios = append(financialRatios, financialRatiosRecord)
+	}
+
+	return financialRatios, nil
 }
