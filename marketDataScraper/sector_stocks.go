@@ -1,4 +1,4 @@
-package main
+package marketDataScraper
 
 import (
 	"encoding/json"
@@ -8,68 +8,59 @@ import (
 )
 
 type SectorStock struct {
-	symbol      string
-	companyName string
-	marketCap   float32
+	Symbol      string
+	CompanyName string
+	MarketCap   float32
 }
 
-func get_sector_stocks() {
+func GetSectorStocks() ([]SectorStock, error) {
 	url := "https://stockanalysis.com/stocks/sector/financials/__data.json"
 	resp, err := http.Get(url)
 	if err != nil {
-		fmt.Println("Error fetching data:", err)
-		return
+		return []SectorStock{}, err
 	}
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		fmt.Println("Error reading response body:", err)
-		return
+		return []SectorStock{}, err
 	}
 
 	var rawData map[string]interface{}
 	if err := json.Unmarshal(body, &rawData); err != nil {
-		fmt.Println("Error unmarshalling JSON:", err)
-		return
+		return []SectorStock{}, err
 	}
 
 	// Extract "nodes" from rawData
 	nodes, ok := rawData["nodes"].([]interface{})
 	if !ok || len(nodes) < 2 {
-		fmt.Println("Unexpected structure in 'nodes'")
-		return
+		return []SectorStock{}, fmt.Errorf("unexpected structure in 'nodes'")
 	}
 
 	// Access the second element in "nodes" which contains the data we are interested in
 	nodeData, ok := nodes[1].(map[string]interface{})
 	if !ok {
-		fmt.Println("Unexpected structure in 'nodes[2]'")
-		return
+		return []SectorStock{}, fmt.Errorf("unexpected structure in 'nodes[1]'")
 	}
 
 	data, ok := nodeData["data"].([]interface{})
 	if !ok {
-		fmt.Println("Unexpected structure in 'data'")
-		return
+		return []SectorStock{}, fmt.Errorf("unexpected structure in 'data'")
 	}
 
 	dataMap, ok := data[0].(map[string]interface{})
 	if !ok {
-		fmt.Println("Unexpected structure in 'data[0]'")
-		return
+		return []SectorStock{}, fmt.Errorf("unexpected structure in 'data[0]'")
 	}
 
 	stocksArrayDataIndex, ok := dataMap["data"].(float64)
 	if !ok {
-		fmt.Println("Unexpected structure in 'data[0]'")
-		return
+		return []SectorStock{}, fmt.Errorf("unexpected structure for 'data'")
 	}
 
 	stocksDataIndicesArray := data[int(stocksArrayDataIndex)].([]interface{})
 	if !ok {
-		fmt.Println("Unexpected structure in 'data[0]'")
-		return
+		return []SectorStock{}, fmt.Errorf("unexpected structure for 'data[stocksArrayDataIndex]'")
 	}
 
 	stocks := make([]SectorStock, 0, len(stocksDataIndicesArray))
@@ -80,11 +71,12 @@ func get_sector_stocks() {
 		stockCompanyNameIndex := int(stockData["n"].(float64))
 		stockMarketCapIndex := int(stockData["marketCap"].(float64))
 		stock := SectorStock{
-			symbol:      data[stockSymbolIndex].(string),
-			companyName: data[stockCompanyNameIndex].(string),
-			marketCap:   float32(data[stockMarketCapIndex].(float64)),
+			Symbol:      data[stockSymbolIndex].(string),
+			CompanyName: data[stockCompanyNameIndex].(string),
+			MarketCap:   float32(data[stockMarketCapIndex].(float64)),
 		}
 		stocks = append(stocks, stock)
 	}
-	fmt.Println(stocks)
+
+	return stocks, nil
 }
