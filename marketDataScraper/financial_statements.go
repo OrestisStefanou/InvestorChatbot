@@ -277,7 +277,7 @@ func scrapeFinancialStatementData(url string) ([]map[string]interface{}, error) 
 }
 
 func GetBalanceSheets(symbol string) ([]BalanceSheet, error) {
-	url := fmt.Sprintf("https://stockanalysis.com/stocks/%s/financials/balance-sheet/__data.json", symbol)
+	url := fmt.Sprintf("https://stockanalysis.com/stocks/%s/financials/balance-sheet/__data.json?p=quarterly", symbol)
 	balanceSheetData, err := scrapeFinancialStatementData(url)
 	if err != nil {
 		return []BalanceSheet{}, err

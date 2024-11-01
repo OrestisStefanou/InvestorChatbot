@@ -6,11 +6,9 @@ import (
 )
 
 func main() {
-	balance_sheets, err := marketDataScraper.GetStockProfile("msft")
+	forecast, err := marketDataScraper.GetStockForecast("amzn")
 	if err != nil {
 		panic(err)
-
 	}
-
-	fmt.Println(balance_sheets)
+	fmt.Println(forecast)
 }

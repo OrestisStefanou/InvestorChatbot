@@ -27,6 +27,8 @@ for estimation_field, estimation_field_idx in quarterly_estimates_data_map.items
     quarterly_estimates_data[estimation_field] = estimation_field_values
 
 estimations_doc = [dict(zip(quarterly_estimates_data.keys(), values)) for values in zip(*quarterly_estimates_data.values())]
+print(estimations_doc)
+print('-------------------------------')
 
 # TARGET PRICE SCRAPING
 target_data_index = data_map['targets']
