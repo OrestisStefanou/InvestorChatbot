@@ -6,9 +6,11 @@ import (
 )
 
 func main() {
-	forecast, err := marketDataScraper.GetStockForecast("amzn")
+	etfs, err := marketDataScraper.GetEtfs()
 	if err != nil {
-		panic(err)
+		fmt.Println(err)
+		return
 	}
-	fmt.Println(forecast)
+
+	fmt.Println(etfs[0])
 }
