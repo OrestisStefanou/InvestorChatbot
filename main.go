@@ -6,11 +6,9 @@ import (
 )
 
 func main() {
-	etfs, err := marketDataScraper.GetEtfs()
+	etf, err := marketDataScraper.GetEtfOverview("spy")
 	if err != nil {
-		fmt.Println(err)
-		return
+		panic(err)
 	}
-
-	fmt.Println(etfs[0])
+	fmt.Printf("%+v\n", etf)
 }
