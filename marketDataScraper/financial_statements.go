@@ -93,7 +93,7 @@ func scrapeFinancialStatementData(url string) ([]map[string]interface{}, error) 
 	return statement_data_slice, nil
 }
 
-func GetBalanceSheets(symbol string) ([]domain.BalanceSheet, error) {
+func scrapeBalanceSheets(symbol string) ([]domain.BalanceSheet, error) {
 	url := fmt.Sprintf("https://stockanalysis.com/stocks/%s/financials/balance-sheet/__data.json?p=quarterly", symbol)
 	balanceSheetData, err := scrapeFinancialStatementData(url)
 	if err != nil {
@@ -119,7 +119,7 @@ func GetBalanceSheets(symbol string) ([]domain.BalanceSheet, error) {
 	return balanceSheets, nil
 }
 
-func GetCashFlows(symbol string) ([]domain.CashFlow, error) {
+func scrapeCashFlows(symbol string) ([]domain.CashFlow, error) {
 	url := fmt.Sprintf("https://stockanalysis.com/stocks/%s/financials/cash-flow-statement/__data.json?p=quarterly", symbol)
 	cashFlowData, err := scrapeFinancialStatementData(url)
 	if err != nil {
@@ -145,7 +145,7 @@ func GetCashFlows(symbol string) ([]domain.CashFlow, error) {
 	return cashFlows, nil
 }
 
-func GetIncomeStatements(symbol string) ([]domain.IncomeStatement, error) {
+func scrapeIncomeStatements(symbol string) ([]domain.IncomeStatement, error) {
 	url := fmt.Sprintf("https://stockanalysis.com/stocks/%s/financials/__data.json?p=quarterly", symbol)
 	incomeStatementData, err := scrapeFinancialStatementData(url)
 	if err != nil {
@@ -171,7 +171,7 @@ func GetIncomeStatements(symbol string) ([]domain.IncomeStatement, error) {
 	return incomeStatements, nil
 }
 
-func GetFinancialRatios(symbol string) ([]domain.FinancialRatios, error) {
+func scrapeFinancialRatios(symbol string) ([]domain.FinancialRatios, error) {
 	url := fmt.Sprintf("https://stockanalysis.com/stocks/%s/financials/ratios/__data.json?p=quarterly", symbol)
 	financialRatiosData, err := scrapeFinancialStatementData(url)
 	if err != nil {

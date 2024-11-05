@@ -8,8 +8,8 @@ import (
 	"net/http"
 )
 
-func GetSectorStocks() ([]domain.SectorStock, error) {
-	url := "https://stockanalysis.com/stocks/sector/financials/__data.json"
+func scrapeSectorStocks(sector string) ([]domain.SectorStock, error) {
+	url := fmt.Sprintf("https://stockanalysis.com/stocks/sector/%s/__data.json", sector)
 	resp, err := http.Get(url)
 	if err != nil {
 		return []domain.SectorStock{}, err

@@ -8,7 +8,7 @@ import (
 	"net/http"
 )
 
-func GetIndustries() ([]domain.Industry, error) {
+func scrapeIndustries() ([]domain.Industry, error) {
 	url := "https://stockanalysis.com/stocks/industry/all/__data.json"
 	resp, err := http.Get(url)
 	if err != nil {

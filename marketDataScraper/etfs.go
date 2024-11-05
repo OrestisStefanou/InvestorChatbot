@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-func GetEtfs() ([]domain.Etf, error) {
+func scrapeEtfs() ([]domain.Etf, error) {
 	url := "https://api.stockanalysis.com/api/screener/e/f?m=s&s=asc&c=s,n,assetClass,aum&i=etf"
 
 	resp, err := http.Get(url)

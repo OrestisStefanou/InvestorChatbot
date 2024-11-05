@@ -7,7 +7,7 @@ import (
 	"net/http"
 )
 
-func GetEtfOverview(symbol string) (domain.EtfOverview, error) {
+func scrapeEtfOverview(symbol string) (domain.EtfOverview, error) {
 	url := fmt.Sprintf("https://api.stockanalysis.com/api/symbol/e/%s/overview", symbol)
 	resp, err := http.Get(url)
 	if err != nil {

@@ -8,7 +8,7 @@ import (
 	"net/http"
 )
 
-func GetStockForecast(symbol string) (domain.StockForecast, error) {
+func scrapeStockForecast(symbol string) (domain.StockForecast, error) {
 	url := fmt.Sprintf("https://stockanalysis.com/stocks/%s/forecast/__data.json", symbol)
 	resp, err := http.Get(url)
 	if err != nil {

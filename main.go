@@ -6,7 +6,7 @@ import (
 )
 
 func main() {
-	etf, err := marketDataScraper.GetBalanceSheets("aapl")
+	etf, err := marketDataScraper.GetIndustryStocks("home-improvement-retail")
 	if err != nil {
 		panic(err)
 	}
