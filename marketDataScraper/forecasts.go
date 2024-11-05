@@ -3,48 +3,27 @@ package marketDataScraper
 import (
 	"encoding/json"
 	"fmt"
+	"investbot/domain"
 	"io"
 	"net/http"
 )
 
-type StockEstimation struct {
-	Date          string
-	Eps           float64
-	EpsGrowth     float64
-	FiscalQuarter string
-	FiscalYear    string
-	Revenue       float64
-	RevenueGrowth float64
-}
-
-type StockTargetPrc struct {
-	Average float32
-	High    float32
-	Low     float32
-	Median  float32
-}
-
-type StockForecast struct {
-	Estimations []StockEstimation
-	TargetPrice StockTargetPrc
-}
-
-func GetStockForecast(symbol string) (StockForecast, error) {
+func GetStockForecast(symbol string) (domain.StockForecast, error) {
 	url := fmt.Sprintf("https://stockanalysis.com/stocks/%s/forecast/__data.json", symbol)
 	resp, err := http.Get(url)
 	if err != nil {
-		return StockForecast{}, err
+		return domain.StockForecast{}, err
 	}
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return StockForecast{}, err
+		return domain.StockForecast{}, err
 	}
 
 	var rawData map[string]interface{}
 	if err := json.Unmarshal(body, &rawData); err != nil {
-		return StockForecast{}, err
+		return domain.StockForecast{}, err
 	}
 
 	// Accessing nodes data
@@ -86,7 +65,7 @@ func GetStockForecast(symbol string) (StockForecast, error) {
 	}
 
 	// Create a slice of StockEstimation structs from estimationsDoc
-	estimations := make([]StockEstimation, 0, len(estimationsDoc))
+	estimations := make([]domain.StockEstimation, 0, len(estimationsDoc))
 	for _, record := range estimationsDoc {
 		// Check if the record keys are present
 		var date string
@@ -124,7 +103,7 @@ func GetStockForecast(symbol string) (StockForecast, error) {
 			revenueGrowth = record["revenueGrowth"].(float64)
 		}
 
-		estimation := StockEstimation{
+		estimation := domain.StockEstimation{
 			Date:          date,
 			Eps:           eps,
 			EpsGrowth:     epsGrowth,
@@ -148,14 +127,14 @@ func GetStockForecast(symbol string) (StockForecast, error) {
 	}
 
 	// Create a StockTargetPrc struct from targetPriceDoc
-	targetPrice := StockTargetPrc{
+	targetPrice := domain.StockTargetPrc{
 		Average: float32(targetPriceDoc["average"].(float64)),
 		High:    float32(targetPriceDoc["high"].(float64)),
 		Low:     float32(targetPriceDoc["low"].(float64)),
 		Median:  float32(targetPriceDoc["median"].(float64)),
 	}
 
-	return StockForecast{
+	return domain.StockForecast{
 		Estimations: estimations,
 		TargetPrice: targetPrice,
 	}, nil

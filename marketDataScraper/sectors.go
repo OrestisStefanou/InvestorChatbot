@@ -3,70 +3,60 @@ package marketDataScraper
 import (
 	"encoding/json"
 	"fmt"
+	"investbot/domain"
 	"io"
 	"net/http"
 )
 
-type Sector struct {
-	Name             string
-	UrlName          string
-	NumberOfStocks   int
-	MarketCap        float32
-	DividendYieldPct float32
-	PeRatio          float32
-	ProfitMarginPct  float32
-	OneYearChangePct float32
-}
-
-func GetSectors() ([]Sector, error) {
+func GetSectors() ([]domain.Sector, error) {
 	url := "https://stockanalysis.com/stocks/industry/sectors/__data.json"
 	resp, err := http.Get(url)
 	if err != nil {
-		return []Sector{}, err
+		return []domain.Sector{}, err
 	}
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return []Sector{}, err
+		return []domain.Sector{}, err
 	}
 
 	var rawData map[string]interface{}
 	if err := json.Unmarshal(body, &rawData); err != nil {
-		return []Sector{}, err
+		return []domain.Sector{}, err
 	}
 
 	// Extract "nodes" from rawData
 	nodes, ok := rawData["nodes"].([]interface{})
 	if !ok || len(nodes) < 3 {
-		return []Sector{}, err
+		return []domain.Sector{}, err
 	}
 
 	// Access the second element in "nodes" which contains the data we are interested in
 	nodeData, ok := nodes[2].(map[string]interface{})
 	if !ok {
-		return []Sector{}, err
+		return []domain.Sector{}, err
 	}
 
 	data, ok := nodeData["data"].([]interface{})
 	if !ok {
-		return []Sector{}, err
+		return []domain.Sector{}, err
 	}
 
 	dataMap, ok := data[0].(map[string]interface{})
 	if !ok {
-		return []Sector{}, err
+		return []domain.Sector{}, err
 	}
 
 	fmt.Println(dataMap)
 	sectorsDataIndex, ok := dataMap["sectors"].(float64)
 	if !ok {
-		return []Sector{}, err
+		return []domain.Sector{}, err
 	}
 
 	sectorDataIndicesArray := data[int(sectorsDataIndex)].([]interface{})
 
-	sectors := make([]Sector, 0, len(sectorDataIndicesArray))
+	sectors := make([]domain.Sector, 0, len(sectorDataIndicesArray))
 	for i := 0; i < len(sectorDataIndicesArray); i++ {
 		sectorDataIndex := int(sectorDataIndicesArray[i].(float64))
 		sectorData := data[sectorDataIndex].(map[string]interface{})
@@ -79,7 +69,7 @@ func GetSectors() ([]Sector, error) {
 		profitMarginIndex := int(sectorData["profitMargin"].(float64))
 		oneYearChangeIndex := int(sectorData["ch1y"].(float64))
 
-		sector := Sector{
+		sector := domain.Sector{
 			Name:             data[sectorNameIndex].(string),
 			UrlName:          data[sectorUrlNameIndex].(string),
 			NumberOfStocks:   int(data[numberOfStocksIndex].(float64)),

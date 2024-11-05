@@ -3,44 +3,20 @@ package marketDataScraper
 import (
 	"encoding/json"
 	"fmt"
+	"investbot/domain"
 	"net/http"
 )
 
-type EtfHolding struct {
-	Symbol string
-	Name   string
-	Weight string
-}
-
-type EtfOverview struct {
-	Symbol           string
-	Description      string
-	AssetClass       string
-	Category         string
-	Aum              string
-	Nav              string
-	ExpenseRatio     string
-	PeRatio          string
-	Dps              string
-	DividendYield    string
-	PayoutRatio      string
-	OneYearReturn    string
-	Beta             string
-	NumberOfHoldings int32
-	Website          string
-	TopHoldings      []EtfHolding
-}
-
-func GetEtfOverview(symbol string) (EtfOverview, error) {
+func GetEtfOverview(symbol string) (domain.EtfOverview, error) {
 	url := fmt.Sprintf("https://api.stockanalysis.com/api/symbol/e/%s/overview", symbol)
 	resp, err := http.Get(url)
 	if err != nil {
-		return EtfOverview{}, err
+		return domain.EtfOverview{}, err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return EtfOverview{}, err
+		return domain.EtfOverview{}, err
 	}
 
 	// Define an anonymous struct to match the JSON structure
@@ -73,10 +49,10 @@ func GetEtfOverview(symbol string) (EtfOverview, error) {
 
 	err = json.NewDecoder(resp.Body).Decode(&apiResponse)
 	if err != nil {
-		return EtfOverview{}, err
+		return domain.EtfOverview{}, err
 	}
 
-	etfOverview := EtfOverview{
+	etfOverview := domain.EtfOverview{
 		Symbol:           symbol,
 		Description:      apiResponse.Data.Description,
 		Aum:              apiResponse.Data.Aum,
@@ -90,11 +66,11 @@ func GetEtfOverview(symbol string) (EtfOverview, error) {
 		Beta:             apiResponse.Data.Beta,
 		NumberOfHoldings: apiResponse.Data.Holdings,
 		Website:          apiResponse.Data.EtfWebsite,
-		TopHoldings:      make([]EtfHolding, 0, len(apiResponse.Data.HoldingsTable.Holdings)),
+		TopHoldings:      make([]domain.EtfHolding, 0, len(apiResponse.Data.HoldingsTable.Holdings)),
 	}
 
 	for _, holding := range apiResponse.Data.HoldingsTable.Holdings {
-		etfHolding := EtfHolding{
+		etfHolding := domain.EtfHolding{
 			Symbol: holding.S,
 			Name:   holding.N,
 			Weight: holding.As,
