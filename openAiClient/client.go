@@ -74,13 +74,19 @@ func (client OpenAiClient) Chat(model string, messages []map[string]string, chun
 	// Marshal the payload into JSON
 	jsonData, err := json.Marshal(payload)
 	if err != nil {
-		return fmt.Errorf("failed to marshal JSON payload: %w", err)
+		return &JSONMarshalError{
+			Message: "failed to marshal JSON payload",
+			Err:     err,
+		}
 	}
 
 	// Create the HTTP request
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonData))
 	if err != nil {
-		return fmt.Errorf("failed to create HTTP request: %w", err)
+		return &HTTPError{
+			StatusCode: 0,
+			Message:    fmt.Sprintf("failed to create HTTP request: %v", err),
+		}
 	}
 
 	// Set headers
@@ -91,13 +97,19 @@ func (client OpenAiClient) Chat(model string, messages []map[string]string, chun
 	httpClient := &http.Client{}
 	resp, err := httpClient.Do(req)
 	if err != nil {
-		return fmt.Errorf("failed to send HTTP request: %w", err)
+		return &HTTPError{
+			StatusCode: 0,
+			Message:    fmt.Sprintf("failed to send HTTP request: %v", err),
+		}
 	}
 	defer resp.Body.Close()
 
 	// Check if the request was successful
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("bad response from server: %s", resp.Status)
+		return &HTTPError{
+			StatusCode: resp.StatusCode,
+			Message:    resp.Status,
+		}
 	}
 
 	// Create a scanner to stream the response
@@ -119,7 +131,10 @@ func (client OpenAiClient) Chat(model string, messages []map[string]string, chun
 
 			// Parse the JSON data into a Chunk struct
 			if err := json.Unmarshal(jsonData, &chunk); err != nil {
-				return fmt.Errorf("failed to parse JSON chunk: %w", err)
+				return &StreamError{
+					Message: "failed to parse JSON chunk",
+					Err:     err,
+				}
 			}
 
 			// Send the chunk content to the channel
@@ -129,7 +144,10 @@ func (client OpenAiClient) Chat(model string, messages []map[string]string, chun
 
 	// Check for scanner errors
 	if err := scanner.Err(); err != nil {
-		return fmt.Errorf("error reading the stream: %w", err)
+		return &StreamError{
+			Message: "error reading the stream",
+			Err:     err,
+		}
 	}
 
 	return nil
