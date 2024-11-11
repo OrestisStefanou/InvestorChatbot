@@ -1,4 +1,4 @@
-package openAiClient
+package openAI
 
 import (
 	"fmt"

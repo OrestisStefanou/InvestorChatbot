@@ -1,4 +1,4 @@
-package openAiClient
+package openAI
 
 import (
 	"bufio"
@@ -25,6 +25,12 @@ type chunk struct {
 	} `json:"choices"`
 }
 
+type ChatParameters struct {
+	ModelName   string
+	Messages    []map[string]string
+	Temperature float64
+}
+
 type OpenAiClient struct {
 	apiKey  string
 	baseUrl string
@@ -41,9 +47,7 @@ func NewOpenAiClient(apiKey, baseUrl string) (*OpenAiClient, error) {
 // It streams the response in chunks, sending each chunk's content to a provided channel for real-time processing.
 //
 // Parameters:
-//   - model: A string specifying the model to use for the chat completion, such as "gpt-3.5-turbo" or "gpt-4".
-//   - messages: A map representing the conversation history, where each entry in the map follows OpenAI's message format
-//     (with "role" and "content" fields, e.g., {"role": "user", "content": "Hello"}).
+//   - parameters: A ChatParameters struct containing the model name, message history, and temperature for the chat request.
 //   - chunkChannel: A channel for streaming the chat response in chunks. Each chunk of response content is sent over the
 //     channel as a string. This allows for real-time processing of the response content as it arrives.
 //
@@ -61,14 +65,15 @@ func NewOpenAiClient(apiKey, baseUrl string) (*OpenAiClient, error) {
 //   - Returns an error if the JSON payload cannot be marshaled, the HTTP request cannot be created,
 //     the HTTP request fails, or the response contains a non-OK status code.
 //   - Returns an error if JSON parsing of individual chunks fails or if an error occurs while reading the stream.
-func (client OpenAiClient) Chat(model string, messages []map[string]string, chunkChannel chan<- string) error {
+func (client OpenAiClient) Chat(parameters ChatParameters, chunkChannel chan<- string) error {
 	url := fmt.Sprintf("%s/chat/completions", client.baseUrl)
 
 	// Define the request payload
 	payload := map[string]interface{}{
-		"model":    model,
-		"messages": messages,
-		"stream":   true,
+		"model":       parameters.ModelName,
+		"messages":    parameters.Messages,
+		"stream":      true,
+		"temperature": parameters.Temperature,
 	}
 
 	// Marshal the payload into JSON

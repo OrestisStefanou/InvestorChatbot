@@ -1,4 +1,4 @@
-package openAiClient
+package openAI
 
 import (
 	"net/http"
@@ -38,7 +38,12 @@ func TestChat_Success(t *testing.T) {
 	//defer close(chunkChannel)
 
 	go func() {
-		err := client.Chat("test-model", []map[string]string{{"role": "user", "content": "Hello"}}, chunkChannel)
+		parameters := ChatParameters{
+			ModelName:   "test-model",
+			Temperature: 0.5,
+			Messages:    []map[string]string{{"role": "user", "content": "Hello"}},
+		}
+		err := client.Chat(parameters, chunkChannel)
 		if err != nil {
 			t.Errorf("expected no error, got %v", err)
 		}
@@ -116,7 +121,12 @@ func TestChat_ErrorCases(t *testing.T) {
 			chunkChannel := make(chan string)
 
 			// Execute the Chat method
-			err := tt.client.Chat("test-model", tt.messages, chunkChannel)
+			parameters := ChatParameters{
+				ModelName:   "test-model",
+				Temperature: 0.5,
+				Messages:    tt.messages,
+			}
+			err := tt.client.Chat(parameters, chunkChannel)
 
 			// Compare errors
 			if err == nil {
