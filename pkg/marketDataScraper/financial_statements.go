@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"investbot/domain"
+	"investbot/pkg/domain"
 	"io"
 	"net/http"
 )

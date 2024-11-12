@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"investbot/openAI"
+	"investbot/pkg/openAI"
 	"log"
 )
 

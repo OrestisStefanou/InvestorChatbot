@@ -3,7 +3,7 @@ package marketDataScraper
 import (
 	"encoding/json"
 	"fmt"
-	"investbot/domain"
+	"investbot/pkg/domain"
 	"net/http"
 )
 

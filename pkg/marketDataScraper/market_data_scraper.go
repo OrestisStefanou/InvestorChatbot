@@ -1,6 +1,6 @@
 package marketDataScraper
 
-import "investbot/domain"
+import "investbot/pkg/domain"
 
 // The interface below should be moved somewhere else
 type MarketDataService interface {
