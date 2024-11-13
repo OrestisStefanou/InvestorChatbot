@@ -14,7 +14,7 @@ type MockOpenAiClient struct {
 }
 
 // Chat is a mock method for the Chat function of the OpenAiClient interface
-func (m *MockOpenAiClient) Chat(parameters ChatParameters, responseChannel chan string) error {
+func (m *MockOpenAiClient) Chat(parameters ChatParameters, responseChannel chan<- string) error {
 	args := m.Called(parameters, responseChannel)
 	return args.Error(0)
 }

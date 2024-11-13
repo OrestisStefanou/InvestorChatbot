@@ -11,19 +11,22 @@ func main() {
 	chunkChannel := make(chan string)
 
 	openAiClient, _ := openAI.NewOpenAiClient("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", "https://api.openai.com/v1")
+
+	openAiLLM := openAI.OpenAiLLM{
+		ModelName:    "gpt-4o-mini",
+		Client:       openAiClient,
+		SystemPrefix: "You are a helpful assistant.",
+		Temperature:  0.5,
+	}
 	// Start the MakeChatRequest function in a goroutine to stream data
 	go func() {
-		parameters := openAI.ChatParameters{
-			ModelName:   "gpt-4o-mini",
-			Temperature: 0.5,
-			Messages: []map[string]string{
-				{"role": "system", "content": "You are a helpful assistant."},
-				{"role": "user", "content": "Hey there!"},
-				{"role": "system", "content": "Hello! How can I help you today?"},
-				{"role": "user", "content": "What is a synonym for big?"},
-			},
+		conversation := []map[string]string{
+			{"role": "user", "content": "Hey there!"},
+			{"role": "system", "content": "Hello! How can I help you today?"},
+			{"role": "user", "content": "What is a synonym for big?"},
 		}
-		if err := openAiClient.Chat(parameters, chunkChannel); err != nil {
+
+		if err := openAiLLM.GenerateResponse(conversation, chunkChannel); err != nil {
 			// Handle the error (e.g., log it)
 			log.Printf("Error during request: %v", err)
 			close(chunkChannel) // Ensure the channel is closed if there’s an error

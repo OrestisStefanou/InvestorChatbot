@@ -1,7 +1,7 @@
 package openAI
 
 type OpenAiClientInterface interface {
-	Chat(parameters ChatParameters, responseChannel chan string) error
+	Chat(parameters ChatParameters, responseChannel chan<- string) error
 }
 
 type OpenAiLLM struct {
@@ -15,7 +15,7 @@ type OpenAiLLM struct {
 // It sends the conversation messages to the OpenAI API and streams the response in chunks.
 // The system message is prepended to the conversation messages before sending them to the API.
 // The response chunks are sent over the responseChannel for real-time processing.
-func (llm OpenAiLLM) GenerateResponse(conversation []map[string]string, responseChannel chan string) error {
+func (llm OpenAiLLM) GenerateResponse(conversation []map[string]string, responseChannel chan<- string) error {
 	// Preallocate the slice with the required capacity
 	messages := make([]map[string]string, 0, len(conversation)+1)
 	// Add the system message
