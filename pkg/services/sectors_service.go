@@ -14,10 +14,6 @@ type SectorDataService interface {
 	GetSectors() ([]domain.Sector, error)
 }
 
-type SessionService interface {
-	GetConversationBySessionId(sessionId string) ([]map[string]string, error)
-}
-
 type sectorContext struct {
 	sector       domain.Sector
 	sectorStocks []domain.SectorStock
