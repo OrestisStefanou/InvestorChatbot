@@ -5,28 +5,28 @@ type OpenAiClientInterface interface {
 }
 
 type OpenAiLLM struct {
-	ModelName    string
-	Client       OpenAiClientInterface
-	SystemPrefix string
-	Temperature  float64
+	ModelName   string
+	Client      OpenAiClientInterface
+	Temperature float64
 }
 
 // GenerateResponse generates a response from the OpenAI language model based on the provided conversatoin.
 // It sends the conversation messages to the OpenAI API and streams the response in chunks.
-// The system message is prepended to the conversation messages before sending them to the API.
 // The response chunks are sent over the responseChannel for real-time processing.
+// Params:
+// - conversation: A slice of maps that must have the following format
+//
+//	{
+//		{"role": "user", "content": "Hey there!"},
+//		{"role": "system", "content": "Hello! How can I help you today?"},
+//		{"role": "user", "content": "What is a synonym for big?"},
+//	}
 func (llm OpenAiLLM) GenerateResponse(conversation []map[string]string, responseChannel chan<- string) error {
-	// Preallocate the slice with the required capacity
-	messages := make([]map[string]string, 0, len(conversation)+1)
-	// Add the system message
-	messages = append(messages, map[string]string{"role": "system", "content": llm.SystemPrefix})
-	// Add the conversation messages
-	messages = append(messages, conversation...)
 	// Send the messages to the OpenAI API
 	parameters := ChatParameters{
 		ModelName:   llm.ModelName,
 		Temperature: llm.Temperature,
-		Messages:    messages,
+		Messages:    conversation,
 	}
 	if err := llm.Client.Chat(parameters, responseChannel); err != nil {
 		return err

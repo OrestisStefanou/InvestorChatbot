@@ -22,10 +22,9 @@ func (m *MockOpenAiClient) Chat(parameters ChatParameters, responseChannel chan<
 func TestGenerateResponse(t *testing.T) {
 	mockClient := new(MockOpenAiClient)
 	llm := OpenAiLLM{
-		ModelName:    "test-model",
-		Client:       mockClient,
-		SystemPrefix: "System message",
-		Temperature:  0.7,
+		ModelName:   "test-model",
+		Client:      mockClient,
+		Temperature: 0.7,
 	}
 
 	conversation := []map[string]string{
@@ -33,19 +32,13 @@ func TestGenerateResponse(t *testing.T) {
 		{"role": "assistant", "content": "Hi there!"},
 	}
 
-	responseChannel := make(chan string, 10)
+	responseChannel := make(chan<- string, 10)
 	defer close(responseChannel)
-
-	expectedMessages := []map[string]string{
-		{"role": "system", "content": "System message"},
-		{"role": "user", "content": "Hello"},
-		{"role": "assistant", "content": "Hi there!"},
-	}
 
 	mockClient.On("Chat", ChatParameters{
 		ModelName:   "test-model",
 		Temperature: 0.7,
-		Messages:    expectedMessages,
+		Messages:    conversation,
 	}, responseChannel).Return(nil)
 
 	err := llm.GenerateResponse(conversation, responseChannel)
@@ -56,10 +49,9 @@ func TestGenerateResponse(t *testing.T) {
 func TestGenerateResponse_Error(t *testing.T) {
 	mockClient := new(MockOpenAiClient)
 	llm := OpenAiLLM{
-		ModelName:    "test-model",
-		Client:       mockClient,
-		SystemPrefix: "System message",
-		Temperature:  0.7,
+		ModelName:   "test-model",
+		Client:      mockClient,
+		Temperature: 0.7,
 	}
 
 	conversation := []map[string]string{
@@ -67,19 +59,13 @@ func TestGenerateResponse_Error(t *testing.T) {
 		{"role": "assistant", "content": "Hi there!"},
 	}
 
-	responseChannel := make(chan string, 10)
+	responseChannel := make(chan<- string, 10)
 	defer close(responseChannel)
-
-	expectedMessages := []map[string]string{
-		{"role": "system", "content": "System message"},
-		{"role": "user", "content": "Hello"},
-		{"role": "assistant", "content": "Hi there!"},
-	}
 
 	mockClient.On("Chat", ChatParameters{
 		ModelName:   "test-model",
 		Temperature: 0.7,
-		Messages:    expectedMessages,
+		Messages:    conversation,
 	}, responseChannel).Return(errors.New("API error"))
 
 	err := llm.GenerateResponse(conversation, responseChannel)
