@@ -6,10 +6,6 @@ import (
 	"investbot/pkg/services/prompts"
 )
 
-type SectorService interface {
-	GenerateRagResponse(sessionId string, question string, responseChannel chan<- string) error
-}
-
 type SectorDataService interface {
 	GetSectorStocks(sector string) ([]domain.SectorStock, error)
 	GetSectors() ([]domain.Sector, error)
