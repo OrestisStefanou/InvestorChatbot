@@ -3,6 +3,7 @@ package services
 import (
 	"fmt"
 	"investbot/pkg/domain"
+	"investbot/pkg/services/prompts"
 )
 
 type SectorService interface {
@@ -23,7 +24,6 @@ type SectorServiceRag struct {
 	DataService    SectorDataService
 	Llm            Llm
 	SessionService SessionService
-	Prompt         string
 }
 
 func (rag SectorServiceRag) createRagContext() (string, error) {
@@ -39,9 +39,11 @@ func (rag SectorServiceRag) createRagContext() (string, error) {
 		if err != nil {
 			return ragContext, err
 		}
+
+		// Keep only the top 5 stocks for each sector
 		context := sectorContext{
 			sector:       sector,
-			sectorStocks: sectorStocks,
+			sectorStocks: sectorStocks[:5],
 		}
 		ragContext += fmt.Sprintf("%+v\n", context)
 	}
@@ -61,7 +63,7 @@ func (rag SectorServiceRag) GenerateRagResponse(sessionId string, question strin
 		if err != nil {
 			return err
 		}
-		prompt := fmt.Sprintf(rag.Prompt, ragContext)
+		prompt := fmt.Sprintf(prompts.SectorsPrompt, ragContext)
 		conversation = append(conversation, map[string]string{"role": "system", "content": prompt})
 	}
 	conversation = append(conversation, map[string]string{"role": "user", "content": question})

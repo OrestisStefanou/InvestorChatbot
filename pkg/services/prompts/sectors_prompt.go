@@ -1,6 +1,6 @@
-package services
+package prompts
 
-const sectorsPrompt = `
+const SectorsPrompt = `
 You are a stock sector expert! Your mission is to answer to any question about stock sectors using the context below.
 ## CONTEXT:
 %s

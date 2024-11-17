@@ -2,7 +2,6 @@ package marketDataScraper
 
 import (
 	"encoding/json"
-	"fmt"
 	"investbot/pkg/domain"
 	"io"
 	"net/http"
@@ -48,7 +47,6 @@ func scrapeSectors() ([]domain.Sector, error) {
 		return []domain.Sector{}, err
 	}
 
-	fmt.Println(dataMap)
 	sectorsDataIndex, ok := dataMap["sectors"].(float64)
 	if !ok {
 		return []domain.Sector{}, err
