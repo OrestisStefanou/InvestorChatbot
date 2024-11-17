@@ -2,13 +2,15 @@ package main
 
 import (
 	"fmt"
+	"investbot/pkg/config"
 	"investbot/pkg/openAI"
 	"investbot/pkg/services/prompts"
 	"log"
 )
 
 func main() {
-	openAiClient, _ := openAI.NewOpenAiClient("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", "https://api.openai.com/v1")
+	config, _ := config.LoadConfig()
+	openAiClient, _ := openAI.NewOpenAiClient(config.OpenAiKey, "https://api.openai.com/v1")
 
 	openAiLLM := openAI.OpenAiLLM{
 		ModelName:   "gpt-4o-mini",
