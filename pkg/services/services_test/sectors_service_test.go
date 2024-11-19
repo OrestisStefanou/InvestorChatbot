@@ -150,16 +150,19 @@ func TestGenerateRagResponse_ErrorFetchingConversation(t *testing.T) {
 
 	sessionId := "test-session"
 	question := "What are the top stocks in the technology sector?"
-	expectedError := "failed to fetch conversation"
+	expectedErrorMessage := "failed to fetch conversation"
+	expectedError := services.SessionServiceError{
+		Message: fmt.Sprintf("GetConversationBySessionId failed: %s", expectedErrorMessage),
+	}
 	responseChannel := make(chan string, 1)
 
-	mockSessionService.On("GetConversationBySessionId", sessionId).Return([]map[string]string(nil), fmt.Errorf(expectedError))
+	mockSessionService.On("GetConversationBySessionId", sessionId).Return([]map[string]string(nil), fmt.Errorf(expectedErrorMessage))
 	// Act
 	err := service.GenerateRagResponse(sessionId, question, responseChannel)
 
 	// Assert
 	assert.Error(t, err)
-	assert.EqualError(t, err, expectedError)
+	assert.EqualError(t, err, expectedError.Error())
 	mockSessionService.AssertExpectations(t)
 }
 
@@ -177,18 +180,21 @@ func TestGenerateRagResponse_ErrorFetchingSectors(t *testing.T) {
 	sessionId := "test-session"
 	question := "What are the top stocks in the technology sector?"
 	newConversation := []map[string]string{}
-	expectedError := "failed to fetch sectors"
+	expectedErrorMessage := "failed to fetch sectors"
+	expectedError := services.DataServiceError{
+		Message: fmt.Sprintf("GetSectors failed: %s", expectedErrorMessage),
+	}
 	responseChannel := make(chan string, 1)
 
 	mockSessionService.On("GetConversationBySessionId", sessionId).Return(newConversation, nil)
-	mockDataService.On("GetSectors").Return([]domain.Sector(nil), fmt.Errorf(expectedError))
+	mockDataService.On("GetSectors").Return([]domain.Sector(nil), fmt.Errorf(expectedErrorMessage))
 
 	// Act
 	err := service.GenerateRagResponse(sessionId, question, responseChannel)
 
 	// Assert
 	assert.Error(t, err)
-	assert.EqualError(t, err, expectedError)
+	assert.EqualError(t, err, expectedError.Error())
 	mockSessionService.AssertExpectations(t)
 	mockDataService.AssertExpectations(t)
 }
@@ -210,19 +216,22 @@ func TestGenerateRagResponse_ErrorFetchingSectorStocks(t *testing.T) {
 	sectors := []domain.Sector{
 		{UrlName: "technology", Name: "Technology"},
 	}
-	expectedError := "failed to fetch sector stocks"
+	expectedErrorMessage := "failed to fetch sector stocks"
+	expectedError := services.DataServiceError{
+		Message: fmt.Sprintf("GetSectorStocks failed: %s", expectedErrorMessage),
+	}
 	responseChannel := make(chan string, 1)
 
 	mockSessionService.On("GetConversationBySessionId", sessionId).Return(newConversation, nil)
 	mockDataService.On("GetSectors").Return(sectors, nil)
-	mockDataService.On("GetSectorStocks", "technology").Return([]domain.SectorStock(nil), fmt.Errorf(expectedError))
+	mockDataService.On("GetSectorStocks", "technology").Return([]domain.SectorStock(nil), fmt.Errorf(expectedErrorMessage))
 
 	// Act
 	err := service.GenerateRagResponse(sessionId, question, responseChannel)
 
 	// Assert
 	assert.Error(t, err)
-	assert.EqualError(t, err, expectedError)
+	assert.EqualError(t, err, expectedError.Error())
 	mockSessionService.AssertExpectations(t)
 	mockDataService.AssertExpectations(t)
 }
@@ -253,7 +262,10 @@ func TestGenerateRagResponse_ErrorGeneratingResponse(t *testing.T) {
 		{CompanyName: "NextGen"},
 		{CompanyName: "QuantumAI"},
 	}
-	expectedError := "LLM response generation failed"
+	expectedErrorMessage := "LLM response generation failed"
+	expectedError := services.RagError{
+		Message: fmt.Sprintf("GenerateResponse failed: %s", expectedErrorMessage),
+	}
 	responseChannel := make(chan<- string, 1)
 
 	mockSessionService.On("GetConversationBySessionId", sessionId).Return(existingConversation, nil)
@@ -263,14 +275,14 @@ func TestGenerateRagResponse_ErrorGeneratingResponse(t *testing.T) {
 		"GenerateResponse",
 		append(existingConversation, map[string]string{"role": "user", "content": question}),
 		responseChannel,
-	).Return(fmt.Errorf(expectedError))
+	).Return(fmt.Errorf(expectedErrorMessage))
 
 	// Act
 	err := service.GenerateRagResponse(sessionId, question, responseChannel)
 
 	// Assert
 	assert.Error(t, err)
-	assert.EqualError(t, err, expectedError)
+	assert.EqualError(t, err, expectedError.Error())
 	mockSessionService.AssertExpectations(t)
 	mockLlm.AssertExpectations(t)
 }

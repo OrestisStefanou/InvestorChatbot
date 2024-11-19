@@ -26,14 +26,14 @@ func (rag SectorServiceRag) createRagContext() (string, error) {
 	var ragContext string
 	sectors, err := rag.DataService.GetSectors()
 	if err != nil {
-		return ragContext, err
+		return ragContext, &DataServiceError{Message: fmt.Sprintf("GetSectors failed: %s", err)}
 	}
 
 	for i := 0; i < len(sectors); i++ {
 		sector := sectors[i]
 		sectorStocks, err := rag.DataService.GetSectorStocks(sector.UrlName)
 		if err != nil {
-			return ragContext, err
+			return ragContext, &DataServiceError{Message: fmt.Sprintf("GetSectorStocks failed: %s", err)}
 		}
 
 		// Keep only the top 5 stocks for each sector
@@ -50,7 +50,7 @@ func (rag SectorServiceRag) createRagContext() (string, error) {
 func (rag SectorServiceRag) GenerateRagResponse(sessionId string, question string, responseChannel chan<- string) error {
 	conversation, err := rag.SessionService.GetConversationBySessionId(sessionId)
 	if err != nil {
-		return err
+		return &SessionServiceError{Message: fmt.Sprintf("GetConversationBySessionId failed: %s", err)}
 	}
 
 	if len(conversation) == 0 {
@@ -65,7 +65,7 @@ func (rag SectorServiceRag) GenerateRagResponse(sessionId string, question strin
 	conversation = append(conversation, map[string]string{"role": "user", "content": question})
 
 	if err := rag.Llm.GenerateResponse(conversation, responseChannel); err != nil {
-		return err
+		return &RagError{Message: fmt.Sprintf("GenerateResponse failed: %s", err)}
 	}
 
 	return nil
