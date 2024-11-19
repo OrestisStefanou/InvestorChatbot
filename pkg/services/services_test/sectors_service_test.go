@@ -1,4 +1,4 @@
-package services
+package services_test
 
 import (
 	"fmt"
@@ -44,7 +44,7 @@ func (m *MockLlm) GenerateResponse(conversation []map[string]string, responseCha
 	return args.Error(0)
 }
 
-func TestGenerateRagResponse_SuccessWithExistingConversation(t *testing.T) {
+func TestSectorServiceGenerateRagResponse_SuccessWithExistingConversation(t *testing.T) {
 	// Arrange
 	mockDataService := new(MockSectorDataService)
 	mockSessionService := new(MockSessionService)
@@ -79,7 +79,7 @@ type sectorContext struct {
 	sectorStocks []domain.SectorStock
 }
 
-func TestGenerateRagResponse_SuccessWithNewConversation(t *testing.T) {
+func TestSectorServiceGenerateRagResponse_SuccessWithNewConversation(t *testing.T) {
 	// Arrange
 	mockDataService := new(MockSectorDataService)
 	mockSessionService := new(MockSessionService)
@@ -137,7 +137,7 @@ func TestGenerateRagResponse_SuccessWithNewConversation(t *testing.T) {
 	mockLlm.AssertExpectations(t)
 }
 
-func TestGenerateRagResponse_ErrorFetchingConversation(t *testing.T) {
+func TestSectorServiceGenerateRagResponse_ErrorFetchingConversation(t *testing.T) {
 	// Arrange
 	mockDataService := new(MockSectorDataService)
 	mockSessionService := new(MockSessionService)
@@ -166,7 +166,7 @@ func TestGenerateRagResponse_ErrorFetchingConversation(t *testing.T) {
 	mockSessionService.AssertExpectations(t)
 }
 
-func TestGenerateRagResponse_ErrorFetchingSectors(t *testing.T) {
+func TestSectorServiceGenerateRagResponse_ErrorFetchingSectors(t *testing.T) {
 	// Arrange
 	mockDataService := new(MockSectorDataService)
 	mockSessionService := new(MockSessionService)
@@ -199,7 +199,7 @@ func TestGenerateRagResponse_ErrorFetchingSectors(t *testing.T) {
 	mockDataService.AssertExpectations(t)
 }
 
-func TestGenerateRagResponse_ErrorFetchingSectorStocks(t *testing.T) {
+func TestSectorServiceGenerateRagResponse_ErrorFetchingSectorStocks(t *testing.T) {
 	// Arrange
 	mockDataService := new(MockSectorDataService)
 	mockSessionService := new(MockSessionService)
@@ -236,7 +236,7 @@ func TestGenerateRagResponse_ErrorFetchingSectorStocks(t *testing.T) {
 	mockDataService.AssertExpectations(t)
 }
 
-func TestGenerateRagResponse_ErrorGeneratingResponse(t *testing.T) {
+func TestSectorServiceGenerateRagResponse_ErrorGeneratingResponse(t *testing.T) {
 	// Arrange
 	mockDataService := new(MockSectorDataService)
 	mockSessionService := new(MockSessionService)

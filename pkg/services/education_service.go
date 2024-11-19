@@ -1,6 +1,9 @@
 package services
 
-import "investbot/pkg/services/prompts"
+import (
+	"fmt"
+	"investbot/pkg/services/prompts"
+)
 
 type EducationServiceRag struct {
 	Llm            Llm
@@ -10,7 +13,7 @@ type EducationServiceRag struct {
 func (rag EducationServiceRag) GenerateRagResponse(sessionId string, question string, responseChannel chan<- string) error {
 	conversation, err := rag.SessionService.GetConversationBySessionId(sessionId)
 	if err != nil {
-		return err
+		return &SessionServiceError{Message: fmt.Sprintf("GetConversationBySessionId failed: %s", err)}
 	}
 
 	if len(conversation) == 0 {
@@ -19,7 +22,7 @@ func (rag EducationServiceRag) GenerateRagResponse(sessionId string, question st
 	conversation = append(conversation, map[string]string{"role": "user", "content": question})
 
 	if err := rag.Llm.GenerateResponse(conversation, responseChannel); err != nil {
-		return err
+		return &RagError{Message: fmt.Sprintf("GenerateResponse failed: %s", err)}
 	}
 
 	return nil
