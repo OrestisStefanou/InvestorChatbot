@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"investbot/pkg/config"
+	"investbot/pkg/marketDataScraper"
 	"investbot/pkg/openAI"
 	"investbot/pkg/services"
 	"log"
@@ -17,18 +18,29 @@ func main() {
 		log.Fatal(err)
 	}
 
-	//dataService := marketDataScraper.MarketDataScraper{}
+	dataService := marketDataScraper.MarketDataScraper{}
 	sessionService := services.MockSessionService{}
-	educationService := services.EducationServiceRag{
-		//DataService:    dataService,
+	sectorsService := services.SectorServiceRag{
+		DataService:    dataService,
 		Llm:            openAiLLM,
 		SessionService: sessionService,
 	}
+	educationService := services.EducationServiceRag{
+		Llm:            openAiLLM,
+		SessionService: sessionService,
+	}
+
+	topicToRagMap := make(map[services.Topic]services.Rag)
+	topicToRagMap[services.EDUCATION] = educationService
+	topicToRagMap[services.SECTORS] = sectorsService
+
+	chatService, _ := services.NewChatService(topicToRagMap, nil)
+
 	chunkChannel := make(chan string)
 
 	go func() {
 		question := "Why Do Bond Prices and Interest Rates Have an Inverse Relationship?"
-		if err := educationService.GenerateRagResponse("session_id", question, chunkChannel); err != nil {
+		if err := chatService.GenerateResponse(services.EDUCATION, "sessionID", question, chunkChannel); err != nil {
 			// Handle the error (e.g., log it)
 			log.Printf("Error during request: %v", err)
 			close(chunkChannel) // Ensure the channel is closed if there’s an error
