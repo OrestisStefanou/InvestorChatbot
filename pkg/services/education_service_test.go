@@ -1,7 +1,6 @@
-package services_test
+package services
 
 import (
-	"investbot/pkg/services"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -9,9 +8,9 @@ import (
 
 func TestEducationServiceGenerateRagResponse_SuccessWithExistingConversation(t *testing.T) {
 	// Arrange
-	mockSessionService := new(MockSessionService)
+	mockSessionService := new(SessionServiceMock)
 	mockLlm := new(MockLlm)
-	service := services.EducationServiceRag{
+	service := EducationServiceRag{
 		Llm:            mockLlm,
 		SessionService: mockSessionService,
 	}

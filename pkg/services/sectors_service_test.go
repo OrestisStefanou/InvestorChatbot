@@ -1,11 +1,10 @@
-package services_test
+package services
 
 import (
 	"fmt"
 	"testing"
 
 	"investbot/pkg/domain"
-	"investbot/pkg/services"
 	"investbot/pkg/services/prompts"
 
 	"github.com/stretchr/testify/assert"
@@ -26,11 +25,11 @@ func (m *MockSectorDataService) GetSectors() ([]domain.Sector, error) {
 	return args.Get(0).([]domain.Sector), args.Error(1)
 }
 
-type MockSessionService struct {
+type SessionServiceMock struct {
 	mock.Mock
 }
 
-func (m *MockSessionService) GetConversationBySessionId(sessionId string) ([]map[string]string, error) {
+func (m *SessionServiceMock) GetConversationBySessionId(sessionId string) ([]map[string]string, error) {
 	args := m.Called(sessionId)
 	return args.Get(0).([]map[string]string), args.Error(1)
 }
@@ -47,9 +46,9 @@ func (m *MockLlm) GenerateResponse(conversation []map[string]string, responseCha
 func TestSectorServiceGenerateRagResponse_SuccessWithExistingConversation(t *testing.T) {
 	// Arrange
 	mockDataService := new(MockSectorDataService)
-	mockSessionService := new(MockSessionService)
+	mockSessionService := new(SessionServiceMock)
 	mockLlm := new(MockLlm)
-	service := services.SectorServiceRag{
+	service := SectorServiceRag{
 		DataService:    mockDataService,
 		Llm:            mockLlm,
 		SessionService: mockSessionService,
@@ -74,17 +73,12 @@ func TestSectorServiceGenerateRagResponse_SuccessWithExistingConversation(t *tes
 	mockLlm.AssertExpectations(t)
 }
 
-type sectorContext struct {
-	sector       domain.Sector
-	sectorStocks []domain.SectorStock
-}
-
 func TestSectorServiceGenerateRagResponse_SuccessWithNewConversation(t *testing.T) {
 	// Arrange
 	mockDataService := new(MockSectorDataService)
-	mockSessionService := new(MockSessionService)
+	mockSessionService := new(SessionServiceMock)
 	mockLlm := new(MockLlm)
-	service := services.SectorServiceRag{
+	service := SectorServiceRag{
 		DataService:    mockDataService,
 		Llm:            mockLlm,
 		SessionService: mockSessionService,
@@ -140,9 +134,9 @@ func TestSectorServiceGenerateRagResponse_SuccessWithNewConversation(t *testing.
 func TestSectorServiceGenerateRagResponse_ErrorFetchingConversation(t *testing.T) {
 	// Arrange
 	mockDataService := new(MockSectorDataService)
-	mockSessionService := new(MockSessionService)
+	mockSessionService := new(SessionServiceMock)
 	mockLlm := new(MockLlm)
-	service := services.SectorServiceRag{
+	service := SectorServiceRag{
 		DataService:    mockDataService,
 		Llm:            mockLlm,
 		SessionService: mockSessionService,
@@ -151,7 +145,7 @@ func TestSectorServiceGenerateRagResponse_ErrorFetchingConversation(t *testing.T
 	sessionId := "test-session"
 	question := "What are the top stocks in the technology sector?"
 	expectedErrorMessage := "failed to fetch conversation"
-	expectedError := services.SessionServiceError{
+	expectedError := SessionServiceError{
 		Message: fmt.Sprintf("GetConversationBySessionId failed: %s", expectedErrorMessage),
 	}
 	responseChannel := make(chan string, 1)
@@ -169,9 +163,9 @@ func TestSectorServiceGenerateRagResponse_ErrorFetchingConversation(t *testing.T
 func TestSectorServiceGenerateRagResponse_ErrorFetchingSectors(t *testing.T) {
 	// Arrange
 	mockDataService := new(MockSectorDataService)
-	mockSessionService := new(MockSessionService)
+	mockSessionService := new(SessionServiceMock)
 	mockLlm := new(MockLlm)
-	service := services.SectorServiceRag{
+	service := SectorServiceRag{
 		DataService:    mockDataService,
 		Llm:            mockLlm,
 		SessionService: mockSessionService,
@@ -181,7 +175,7 @@ func TestSectorServiceGenerateRagResponse_ErrorFetchingSectors(t *testing.T) {
 	question := "What are the top stocks in the technology sector?"
 	newConversation := []map[string]string{}
 	expectedErrorMessage := "failed to fetch sectors"
-	expectedError := services.DataServiceError{
+	expectedError := DataServiceError{
 		Message: fmt.Sprintf("GetSectors failed: %s", expectedErrorMessage),
 	}
 	responseChannel := make(chan string, 1)
@@ -202,9 +196,9 @@ func TestSectorServiceGenerateRagResponse_ErrorFetchingSectors(t *testing.T) {
 func TestSectorServiceGenerateRagResponse_ErrorFetchingSectorStocks(t *testing.T) {
 	// Arrange
 	mockDataService := new(MockSectorDataService)
-	mockSessionService := new(MockSessionService)
+	mockSessionService := new(SessionServiceMock)
 	mockLlm := new(MockLlm)
-	service := services.SectorServiceRag{
+	service := SectorServiceRag{
 		DataService:    mockDataService,
 		Llm:            mockLlm,
 		SessionService: mockSessionService,
@@ -217,7 +211,7 @@ func TestSectorServiceGenerateRagResponse_ErrorFetchingSectorStocks(t *testing.T
 		{UrlName: "technology", Name: "Technology"},
 	}
 	expectedErrorMessage := "failed to fetch sector stocks"
-	expectedError := services.DataServiceError{
+	expectedError := DataServiceError{
 		Message: fmt.Sprintf("GetSectorStocks failed: %s", expectedErrorMessage),
 	}
 	responseChannel := make(chan string, 1)
@@ -239,9 +233,9 @@ func TestSectorServiceGenerateRagResponse_ErrorFetchingSectorStocks(t *testing.T
 func TestSectorServiceGenerateRagResponse_ErrorGeneratingResponse(t *testing.T) {
 	// Arrange
 	mockDataService := new(MockSectorDataService)
-	mockSessionService := new(MockSessionService)
+	mockSessionService := new(SessionServiceMock)
 	mockLlm := new(MockLlm)
-	service := services.SectorServiceRag{
+	service := SectorServiceRag{
 		DataService:    mockDataService,
 		Llm:            mockLlm,
 		SessionService: mockSessionService,
@@ -263,7 +257,7 @@ func TestSectorServiceGenerateRagResponse_ErrorGeneratingResponse(t *testing.T) 
 		{CompanyName: "QuantumAI"},
 	}
 	expectedErrorMessage := "LLM response generation failed"
-	expectedError := services.RagError{
+	expectedError := RagError{
 		Message: fmt.Sprintf("GenerateResponse failed: %s", expectedErrorMessage),
 	}
 	responseChannel := make(chan<- string, 1)
