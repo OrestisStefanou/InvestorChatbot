@@ -1,13 +1,37 @@
 package openAI
 
+import "fmt"
+
 type OpenAiClientInterface interface {
-	Chat(parameters ChatParameters, responseChannel chan<- string) error
+	Chat(parameters chatParameters, responseChannel chan<- string) error
 }
 
+type ModelName string
+
+const (
+	GPT3      ModelName = "gpt-3"
+	GPT4_MINI ModelName = "gpt-4o-mini"
+)
+
 type OpenAiLLM struct {
-	ModelName   string
-	Client      OpenAiClientInterface
-	Temperature float64
+	modelName   ModelName
+	client      OpenAiClientInterface
+	temperature float64
+}
+
+func NewOpenAiLLM(modelName ModelName, client OpenAiClientInterface, temperature float64) (*OpenAiLLM, error) {
+	switch modelName {
+	case GPT3, GPT4_MINI:
+	default:
+		return nil, fmt.Errorf("invalid model name: %s", modelName)
+	}
+
+	// Return a new OpenAiLLM instance
+	return &OpenAiLLM{
+		modelName:   modelName,
+		client:      client,
+		temperature: temperature,
+	}, nil
 }
 
 // GenerateResponse generates a response from the OpenAI language model based on the provided conversatoin.
@@ -23,12 +47,12 @@ type OpenAiLLM struct {
 //	}
 func (llm OpenAiLLM) GenerateResponse(conversation []map[string]string, responseChannel chan<- string) error {
 	// Send the messages to the OpenAI API
-	parameters := ChatParameters{
-		ModelName:   llm.ModelName,
-		Temperature: llm.Temperature,
+	parameters := chatParameters{
+		ModelName:   string(llm.modelName),
+		Temperature: llm.temperature,
 		Messages:    conversation,
 	}
-	if err := llm.Client.Chat(parameters, responseChannel); err != nil {
+	if err := llm.client.Chat(parameters, responseChannel); err != nil {
 		return err
 	}
 	return nil

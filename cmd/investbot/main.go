@@ -12,10 +12,9 @@ func main() {
 	config, _ := config.LoadConfig()
 	openAiClient, _ := openAI.NewOpenAiClient(config.OpenAiKey, "https://api.openai.com/v1")
 
-	openAiLLM := openAI.OpenAiLLM{
-		ModelName:   "gpt-4o-mini",
-		Client:      openAiClient,
-		Temperature: 0.2,
+	openAiLLM, err := openAI.NewOpenAiLLM(openAI.GPT4_MINI, openAiClient, 0.2)
+	if err != nil {
+		log.Fatal(err)
 	}
 
 	//dataService := marketDataScraper.MarketDataScraper{}

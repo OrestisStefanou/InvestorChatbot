@@ -25,7 +25,7 @@ type chunk struct {
 	} `json:"choices"`
 }
 
-type ChatParameters struct {
+type chatParameters struct {
 	ModelName   string
 	Messages    []map[string]string
 	Temperature float64
@@ -65,7 +65,7 @@ func NewOpenAiClient(apiKey, baseUrl string) (*OpenAiClient, error) {
 //   - Returns an error if the JSON payload cannot be marshaled, the HTTP request cannot be created,
 //     the HTTP request fails, or the response contains a non-OK status code.
 //   - Returns an error if JSON parsing of individual chunks fails or if an error occurs while reading the stream.
-func (client OpenAiClient) Chat(parameters ChatParameters, chunkChannel chan<- string) error {
+func (client OpenAiClient) Chat(parameters chatParameters, chunkChannel chan<- string) error {
 	url := fmt.Sprintf("%s/chat/completions", client.baseUrl)
 
 	// Define the request payload

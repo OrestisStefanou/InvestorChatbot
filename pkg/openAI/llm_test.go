@@ -14,7 +14,7 @@ type MockOpenAiClient struct {
 }
 
 // Chat is a mock method for the Chat function of the OpenAiClient interface
-func (m *MockOpenAiClient) Chat(parameters ChatParameters, responseChannel chan<- string) error {
+func (m *MockOpenAiClient) Chat(parameters chatParameters, responseChannel chan<- string) error {
 	args := m.Called(parameters, responseChannel)
 	return args.Error(0)
 }
@@ -22,9 +22,9 @@ func (m *MockOpenAiClient) Chat(parameters ChatParameters, responseChannel chan<
 func TestGenerateResponse(t *testing.T) {
 	mockClient := new(MockOpenAiClient)
 	llm := OpenAiLLM{
-		ModelName:   "test-model",
-		Client:      mockClient,
-		Temperature: 0.7,
+		modelName:   "test-model",
+		client:      mockClient,
+		temperature: 0.7,
 	}
 
 	conversation := []map[string]string{
@@ -35,7 +35,7 @@ func TestGenerateResponse(t *testing.T) {
 	responseChannel := make(chan<- string, 10)
 	defer close(responseChannel)
 
-	mockClient.On("Chat", ChatParameters{
+	mockClient.On("Chat", chatParameters{
 		ModelName:   "test-model",
 		Temperature: 0.7,
 		Messages:    conversation,
@@ -49,9 +49,9 @@ func TestGenerateResponse(t *testing.T) {
 func TestGenerateResponse_Error(t *testing.T) {
 	mockClient := new(MockOpenAiClient)
 	llm := OpenAiLLM{
-		ModelName:   "test-model",
-		Client:      mockClient,
-		Temperature: 0.7,
+		modelName:   "test-model",
+		client:      mockClient,
+		temperature: 0.7,
 	}
 
 	conversation := []map[string]string{
@@ -62,7 +62,7 @@ func TestGenerateResponse_Error(t *testing.T) {
 	responseChannel := make(chan<- string, 10)
 	defer close(responseChannel)
 
-	mockClient.On("Chat", ChatParameters{
+	mockClient.On("Chat", chatParameters{
 		ModelName:   "test-model",
 		Temperature: 0.7,
 		Messages:    conversation,

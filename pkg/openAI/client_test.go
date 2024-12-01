@@ -38,7 +38,7 @@ func TestChat_Success(t *testing.T) {
 	//defer close(chunkChannel)
 
 	go func() {
-		parameters := ChatParameters{
+		parameters := chatParameters{
 			ModelName:   "test-model",
 			Temperature: 0.5,
 			Messages:    []map[string]string{{"role": "user", "content": "Hello"}},
@@ -121,7 +121,7 @@ func TestChat_ErrorCases(t *testing.T) {
 			chunkChannel := make(chan string)
 
 			// Execute the Chat method
-			parameters := ChatParameters{
+			parameters := chatParameters{
 				ModelName:   "test-model",
 				Temperature: 0.5,
 				Messages:    tt.messages,
