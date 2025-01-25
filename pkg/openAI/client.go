@@ -67,6 +67,7 @@ func NewOpenAiClient(apiKey, baseUrl string) (*OpenAiClient, error) {
 //     the HTTP request fails, or the response contains a non-OK status code.
 //   - Returns an error if JSON parsing of individual chunks fails or if an error occurs while reading the stream.
 func (client OpenAiClient) Chat(parameters ChatParameters, chunkChannel chan<- string) error {
+	defer close(chunkChannel)
 	url := fmt.Sprintf("%s/chat/completions", client.baseUrl)
 
 	// Define the request payload
@@ -126,7 +127,6 @@ func (client OpenAiClient) Chat(parameters ChatParameters, chunkChannel chan<- s
 
 		// Check if the chunk indicates the end of the stream
 		if string(chunkBytes) == "data: [DONE]" {
-			close(chunkChannel) // Close the channel when the stream ends
 			break
 		}
 

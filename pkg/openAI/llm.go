@@ -1,6 +1,9 @@
 package openAI
 
-import "fmt"
+import (
+	"fmt"
+	"investbot/pkg/services"
+)
 
 type OpenAiClientInterface interface {
 	Chat(parameters ChatParameters, responseChannel chan<- string) error
@@ -38,19 +41,19 @@ func NewOpenAiLLM(modelName ModelName, client OpenAiClientInterface, temperature
 // It sends the conversation messages to the OpenAI API and streams the response in chunks.
 // The response chunks are sent over the responseChannel for real-time processing.
 // Params:
-// - conversation: A slice of maps that must have the following format
-//
-//	{
-//		{"role": "user", "content": "Hey there!"},
-//		{"role": "system", "content": "Hello! How can I help you today?"},
-//		{"role": "user", "content": "What is a synonym for big?"},
-//	}
-func (llm OpenAiLLM) GenerateResponse(conversation []map[string]string, responseChannel chan<- string) error {
+// - conversation: A slice of Message
+func (llm OpenAiLLM) GenerateResponse(conversation []services.Message, responseChannel chan<- string) error {
 	// Send the messages to the OpenAI API
+	messages := make([]map[string]string, 0, len(conversation))
+	msg := make(map[string]string)
+	for _, m := range conversation {
+		msg[string(m.Role)] = m.Content
+		messages = append(messages, msg)
+	}
 	parameters := ChatParameters{
 		ModelName:   string(llm.modelName),
 		Temperature: llm.temperature,
-		Messages:    conversation,
+		Messages:    messages,
 	}
 	if err := llm.client.Chat(parameters, responseChannel); err != nil {
 		return err
