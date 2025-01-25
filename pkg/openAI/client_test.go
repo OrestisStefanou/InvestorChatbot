@@ -1,6 +1,7 @@
 package openAI
 
 import (
+	"investbot/pkg/errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -38,7 +39,7 @@ func TestChat_Success(t *testing.T) {
 	//defer close(chunkChannel)
 
 	go func() {
-		parameters := chatParameters{
+		parameters := ChatParameters{
 			ModelName:   "test-model",
 			Temperature: 0.5,
 			Messages:    []map[string]string{{"role": "user", "content": "Hello"}},
@@ -79,7 +80,7 @@ func TestChat_ErrorCases(t *testing.T) {
 			mockServerFunc: func() *httptest.Server {
 				return httptest.NewServer(nil)
 			},
-			expectedError: &HTTPError{StatusCode: http.StatusNotFound, Message: "failed to send HTTP request"},
+			expectedError: &errors.HTTPError{StatusCode: http.StatusNotFound, Message: "failed to send HTTP request"},
 		},
 		{
 			name:     "HTTP Response Error (Non-200 Status)",
@@ -90,7 +91,7 @@ func TestChat_ErrorCases(t *testing.T) {
 					w.WriteHeader(http.StatusInternalServerError) // Respond with 500 error
 				}))
 			},
-			expectedError: &HTTPError{StatusCode: http.StatusInternalServerError, Message: "Internal Server Error"},
+			expectedError: &errors.HTTPError{StatusCode: http.StatusInternalServerError, Message: "Internal Server Error"},
 		},
 		{
 			name:     "Stream Parse Error",
@@ -102,7 +103,7 @@ func TestChat_ErrorCases(t *testing.T) {
 					_, _ = w.Write([]byte("data: {invalid json}")) // send invalid JSON to induce parse error
 				}))
 			},
-			expectedError: &StreamError{Message: "stream JSON parse error"},
+			expectedError: &errors.StreamError{Message: "stream JSON parse error"},
 		},
 	}
 
@@ -121,7 +122,7 @@ func TestChat_ErrorCases(t *testing.T) {
 			chunkChannel := make(chan string)
 
 			// Execute the Chat method
-			parameters := chatParameters{
+			parameters := ChatParameters{
 				ModelName:   "test-model",
 				Temperature: 0.5,
 				Messages:    tt.messages,
@@ -136,16 +137,16 @@ func TestChat_ErrorCases(t *testing.T) {
 
 			// Type assert and check error message for each error type
 			switch expectedErr := tt.expectedError.(type) {
-			case *JSONMarshalError:
-				if _, ok := err.(*JSONMarshalError); !ok {
+			case *errors.JSONMarshalError:
+				if _, ok := err.(*errors.JSONMarshalError); !ok {
 					t.Errorf("expected JSONMarshalError but got %v", err)
 				}
-			case *HTTPError:
-				if httpErr, ok := err.(*HTTPError); !ok || httpErr.StatusCode != expectedErr.StatusCode {
+			case *errors.HTTPError:
+				if httpErr, ok := err.(*errors.HTTPError); !ok || httpErr.StatusCode != expectedErr.StatusCode {
 					t.Errorf("expected HTTPError with status %d but got %v", expectedErr.StatusCode, err)
 				}
-			case *StreamError:
-				if _, ok := err.(*StreamError); !ok {
+			case *errors.StreamError:
+				if _, ok := err.(*errors.StreamError); !ok {
 					t.Errorf("expected StreamError but got %v", err)
 				}
 			default:

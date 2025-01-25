@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"investbot/pkg/errors"
 	"net/http"
 	"strings"
 )
@@ -25,7 +26,7 @@ type chunk struct {
 	} `json:"choices"`
 }
 
-type chatParameters struct {
+type ChatParameters struct {
 	ModelName   string
 	Messages    []map[string]string
 	Temperature float64
@@ -65,7 +66,7 @@ func NewOpenAiClient(apiKey, baseUrl string) (*OpenAiClient, error) {
 //   - Returns an error if the JSON payload cannot be marshaled, the HTTP request cannot be created,
 //     the HTTP request fails, or the response contains a non-OK status code.
 //   - Returns an error if JSON parsing of individual chunks fails or if an error occurs while reading the stream.
-func (client OpenAiClient) Chat(parameters chatParameters, chunkChannel chan<- string) error {
+func (client OpenAiClient) Chat(parameters ChatParameters, chunkChannel chan<- string) error {
 	url := fmt.Sprintf("%s/chat/completions", client.baseUrl)
 
 	// Define the request payload
@@ -79,7 +80,7 @@ func (client OpenAiClient) Chat(parameters chatParameters, chunkChannel chan<- s
 	// Marshal the payload into JSON
 	jsonData, err := json.Marshal(payload)
 	if err != nil {
-		return &JSONMarshalError{
+		return &errors.JSONMarshalError{
 			Message: "failed to marshal JSON payload",
 			Err:     err,
 		}
@@ -88,7 +89,7 @@ func (client OpenAiClient) Chat(parameters chatParameters, chunkChannel chan<- s
 	// Create the HTTP request
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonData))
 	if err != nil {
-		return &HTTPError{
+		return &errors.HTTPError{
 			StatusCode: 0,
 			Message:    fmt.Sprintf("failed to create HTTP request: %v", err),
 		}
@@ -102,7 +103,7 @@ func (client OpenAiClient) Chat(parameters chatParameters, chunkChannel chan<- s
 	httpClient := &http.Client{}
 	resp, err := httpClient.Do(req)
 	if err != nil {
-		return &HTTPError{
+		return &errors.HTTPError{
 			StatusCode: 0,
 			Message:    fmt.Sprintf("failed to send HTTP request: %v", err),
 		}
@@ -111,7 +112,7 @@ func (client OpenAiClient) Chat(parameters chatParameters, chunkChannel chan<- s
 
 	// Check if the request was successful
 	if resp.StatusCode != http.StatusOK {
-		return &HTTPError{
+		return &errors.HTTPError{
 			StatusCode: resp.StatusCode,
 			Message:    resp.Status,
 		}
@@ -136,7 +137,7 @@ func (client OpenAiClient) Chat(parameters chatParameters, chunkChannel chan<- s
 
 			// Parse the JSON data into a Chunk struct
 			if err := json.Unmarshal(jsonData, &chunk); err != nil {
-				return &StreamError{
+				return &errors.StreamError{
 					Message: "failed to parse JSON chunk",
 					Err:     err,
 				}
@@ -149,7 +150,7 @@ func (client OpenAiClient) Chat(parameters chatParameters, chunkChannel chan<- s
 
 	// Check for scanner errors
 	if err := scanner.Err(); err != nil {
-		return &StreamError{
+		return &errors.StreamError{
 			Message: "error reading the stream",
 			Err:     err,
 		}

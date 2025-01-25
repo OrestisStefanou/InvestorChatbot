@@ -3,7 +3,7 @@ package openAI
 import "fmt"
 
 type OpenAiClientInterface interface {
-	Chat(parameters chatParameters, responseChannel chan<- string) error
+	Chat(parameters ChatParameters, responseChannel chan<- string) error
 }
 
 type ModelName string
@@ -47,7 +47,7 @@ func NewOpenAiLLM(modelName ModelName, client OpenAiClientInterface, temperature
 //	}
 func (llm OpenAiLLM) GenerateResponse(conversation []map[string]string, responseChannel chan<- string) error {
 	// Send the messages to the OpenAI API
-	parameters := chatParameters{
+	parameters := ChatParameters{
 		ModelName:   string(llm.modelName),
 		Temperature: llm.temperature,
 		Messages:    conversation,

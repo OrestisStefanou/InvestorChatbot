@@ -1,4 +1,4 @@
-package openAI
+package errors
 
 import (
 	"fmt"
