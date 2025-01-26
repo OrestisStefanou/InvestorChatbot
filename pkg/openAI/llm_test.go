@@ -2,6 +2,7 @@ package openAI
 
 import (
 	"errors"
+	"investbot/pkg/services"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -32,6 +33,11 @@ func TestGenerateResponse(t *testing.T) {
 		{"role": "assistant", "content": "Hi there!"},
 	}
 
+	messages := []services.Message{
+		{Role: services.User, Content: "Hello"},
+		{Role: services.Assistant, Content: "Hi there!"},
+	}
+
 	responseChannel := make(chan<- string, 10)
 	defer close(responseChannel)
 
@@ -41,7 +47,7 @@ func TestGenerateResponse(t *testing.T) {
 		Messages:    conversation,
 	}, responseChannel).Return(nil)
 
-	err := llm.GenerateResponse(conversation, responseChannel)
+	err := llm.GenerateResponse(messages, responseChannel)
 	assert.NoError(t, err)
 	mockClient.AssertExpectations(t)
 }
@@ -59,6 +65,11 @@ func TestGenerateResponse_Error(t *testing.T) {
 		{"role": "assistant", "content": "Hi there!"},
 	}
 
+	messages := []services.Message{
+		{Role: services.User, Content: "Hello"},
+		{Role: services.Assistant, Content: "Hi there!"},
+	}
+
 	responseChannel := make(chan<- string, 10)
 	defer close(responseChannel)
 
@@ -68,7 +79,7 @@ func TestGenerateResponse_Error(t *testing.T) {
 		Messages:    conversation,
 	}, responseChannel).Return(errors.New("API error"))
 
-	err := llm.GenerateResponse(conversation, responseChannel)
+	err := llm.GenerateResponse(messages, responseChannel)
 	assert.Error(t, err)
 	assert.Equal(t, "API error", err.Error())
 	mockClient.AssertExpectations(t)

@@ -45,9 +45,10 @@ func NewOpenAiLLM(modelName ModelName, client OpenAiClientInterface, temperature
 func (llm OpenAiLLM) GenerateResponse(conversation []services.Message, responseChannel chan<- string) error {
 	// Send the messages to the OpenAI API
 	messages := make([]map[string]string, 0, len(conversation))
-	msg := make(map[string]string)
 	for _, m := range conversation {
-		msg[string(m.Role)] = m.Content
+		msg := make(map[string]string)
+		msg["role"] = string(m.Role)
+		msg["content"] = m.Content
 		messages = append(messages, msg)
 	}
 	parameters := ChatParameters{

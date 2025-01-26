@@ -1,11 +1,11 @@
 package services
 
 type SessionService interface {
-	GetConversationBySessionId(sessionId string) ([]map[string]string, error)
+	GetConversationBySessionId(sessionId string) ([]Message, error)
 }
 
 type MockSessionService struct{}
 
-func (sv MockSessionService) GetConversationBySessionId(sessionId string) ([]map[string]string, error) {
-	return []map[string]string{}, nil
+func (sv MockSessionService) GetConversationBySessionId(sessionId string) ([]Message, error) {
+	return []Message{}, nil
 }

@@ -16,22 +16,25 @@ type sectorContext struct {
 	sectorStocks []domain.SectorStock
 }
 
-type SectorServiceRag struct {
-	DataService    SectorDataService
-	Llm            Llm
-	SessionService SessionService
+type SectorRag struct {
+	dataService SectorDataService
+	llm         Llm
 }
 
-func (rag SectorServiceRag) createRagContext() (string, error) {
+func NewSectorRag(llm Llm, sectorDataService SectorDataService) (*SectorRag, error) {
+	return &SectorRag{llm: llm, dataService: sectorDataService}, nil
+}
+
+func (rag SectorRag) createRagContext() (string, error) {
 	var ragContext string
-	sectors, err := rag.DataService.GetSectors()
+	sectors, err := rag.dataService.GetSectors()
 	if err != nil {
 		return ragContext, &DataServiceError{Message: fmt.Sprintf("GetSectors failed: %s", err)}
 	}
 
 	for i := 0; i < len(sectors); i++ {
 		sector := sectors[i]
-		sectorStocks, err := rag.DataService.GetSectorStocks(sector.UrlName)
+		sectorStocks, err := rag.dataService.GetSectorStocks(sector.UrlName)
 		if err != nil {
 			return ragContext, &DataServiceError{Message: fmt.Sprintf("GetSectorStocks failed: %s", err)}
 		}
@@ -47,24 +50,22 @@ func (rag SectorServiceRag) createRagContext() (string, error) {
 	return ragContext, nil
 }
 
-func (rag SectorServiceRag) GenerateRagResponse(sessionId string, question string, responseChannel chan<- string) error {
-	conversation, err := rag.SessionService.GetConversationBySessionId(sessionId)
+func (rag SectorRag) GenerateRagResponse(conversation []Message, responseChannel chan<- string) error {
+	// Format the prompt to contain the neccessary context
+	ragContext, err := rag.createRagContext()
 	if err != nil {
-		return &SessionServiceError{Message: fmt.Sprintf("GetConversationBySessionId failed: %s", err)}
+		return err
+	}
+	prompt := fmt.Sprintf(prompts.SectorsPrompt, ragContext)
+	prompt_msg := Message{
+		Role:    System,
+		Content: prompt,
 	}
 
-	if len(conversation) == 0 {
-		// Format the prompt to contain the neccessary context
-		ragContext, err := rag.createRagContext()
-		if err != nil {
-			return err
-		}
-		prompt := fmt.Sprintf(prompts.SectorsPrompt, ragContext)
-		conversation = append(conversation, map[string]string{"role": "system", "content": prompt})
-	}
-	conversation = append(conversation, map[string]string{"role": "user", "content": question})
+	// Add the prompt as the first message in the existing conversation
+	conversation_with_prompt := append([]Message{prompt_msg}, conversation...)
 
-	if err := rag.Llm.GenerateResponse(conversation, responseChannel); err != nil {
+	if err := rag.llm.GenerateResponse(conversation_with_prompt, responseChannel); err != nil {
 		return &RagError{Message: fmt.Sprintf("GenerateResponse failed: %s", err)}
 	}
 

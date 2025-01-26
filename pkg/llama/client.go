@@ -54,6 +54,8 @@ func (client *OllamaClient) Chat(parameters ChatParameters, chunkChannel chan<- 
 		}
 	}
 
+	fmt.Printf("JSON DATA: %s", jsonData)
+
 	// Create the HTTP request
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonData))
 	if err != nil {
