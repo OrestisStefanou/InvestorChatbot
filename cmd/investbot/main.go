@@ -1,52 +1,43 @@
 package main
 
+import (
+	"investbot/pkg/config"
+	"investbot/pkg/handlers"
+	"investbot/pkg/marketDataScraper"
+	"investbot/pkg/openAI"
+	"investbot/pkg/services"
+	"log"
+
+	"github.com/labstack/echo/v4"
+)
+
 func main() {
-	// config, _ := config.LoadConfig()
-	// openAiClient, _ := openAI.NewOpenAiClient(config.OpenAiKey, "https://api.openai.com/v1")
+	e := echo.New()
 
-	// openAiLLM, err := openAI.NewOpenAiLLM(openAI.GPT4_MINI, openAiClient, 0.2)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
+	config, _ := config.LoadConfig()
+	openAiClient, _ := openAI.NewOpenAiClient(config.OpenAiKey, config.OpenAiBaseUrl)
 
-	// dataService := marketDataScraper.MarketDataScraper{}
-	// sessionService := services.MockSessionService{}
-	// sectorsService := services.SectorServiceRag{
-	// 	DataService:    dataService,
-	// 	Llm:            openAiLLM,
-	// 	SessionService: sessionService,
-	// }
-	// educationService := services.EducationServiceRag{
-	// 	Llm: openAiLLM,
-	// }
+	openAiLLM, err := openAI.NewOpenAiLLM(openAI.GPT4_MINI, openAiClient, 0.2)
+	if err != nil {
+		log.Fatal(err)
+	}
+	// llamaClient, _ := llama.NewOllamaClient(config.OllamaBaseUrl)
+	// llamaLLM, _ := llama.NewLlamaLLM("llama3.2", llamaClient, 0.2)
+	dataService := marketDataScraper.MarketDataScraper{}
+	sectorRag, _ := services.NewSectorRag(openAiLLM, dataService)
+	educationRag, _ := services.NewEducationRag(openAiLLM)
 
-	// topicToRagMap := make(map[services.Topic]services.Rag)
-	// topicToRagMap[services.EDUCATION] = educationService
-	// topicToRagMap[services.SECTORS] = sectorsService
+	topicToRagMap := map[services.Topic]services.Rag{
+		services.SECTORS:   sectorRag,
+		services.EDUCATION: educationRag,
+	}
 
-	// chatService, _ := services.NewChatService(topicToRagMap, nil)
+	sessionService := services.MockSessionService{}
 
-	// chunkChannel := make(chan string)
+	chatService, _ := services.NewChatService(topicToRagMap, sessionService)
 
-	// go func() {
-	// 	question := "Why Do Bond Prices and Interest Rates Have an Inverse Relationship?"
-	// 	if err := chatService.GenerateResponse(services.EDUCATION, "sessionID", question, chunkChannel); err != nil {
-	// 		// Handle the error (e.g., log it)
-	// 		log.Printf("Error during request: %v", err)
-	// 		close(chunkChannel) // Ensure the channel is closed if there’s an error
-	// 	}
-	// }()
+	chatHandler, _ := handlers.NewChatHandler(chatService)
 
-	// // Consume the chunks from the channel
-	// var finalResponse string
-	// for content := range chunkChannel {
-	// 	// Process the chunk as it arrives
-	// 	fmt.Printf("Received chunk: %s\n", content)
-	// 	finalResponse += content
-	// }
-
-	// // Optional: After the channel is closed, perform any final tasks
-	// log.Println("Streaming has finished.")
-	// fmt.Println(finalResponse)
-
+	e.POST("/chat", chatHandler.ServeRequest)
+	e.Logger.Fatal(e.Start(":1323"))
 }

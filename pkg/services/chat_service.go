@@ -32,6 +32,7 @@ func (s *ChatService) GenerateResponse(topic Topic, sessionId string, question s
 	rag, found := s.topicToRagMap[topic]
 
 	if !found {
+		// Use default RAG in this case?
 		return fmt.Errorf("Rag for topic %s not found", topic)
 	}
 
@@ -42,6 +43,12 @@ func (s *ChatService) GenerateResponse(topic Topic, sessionId string, question s
 			Message: fmt.Sprintf("Conversation for session id: %s not found", sessionId),
 		}
 	}
+
+	questionMessage := Message{
+		Role: User, Content: question,
+	}
+
+	conversation = append(conversation, questionMessage)
 
 	if err := rag.GenerateRagResponse(conversation, responseChannel); err != nil {
 		return err
