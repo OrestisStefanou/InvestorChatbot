@@ -2,29 +2,30 @@ package main
 
 import (
 	"fmt"
-	"investbot/pkg/llama"
+	"investbot/pkg/config"
 	"investbot/pkg/marketDataScraper"
+	"investbot/pkg/openAI"
 	"investbot/pkg/services"
 	"log"
 )
 
 func main() {
-	// config, _ := config.LoadConfig()
-	// openAiClient, _ := openAI.NewOpenAiClient(config.OpenAiKey, "https://api.openai.com/v1")
+	config, _ := config.LoadConfig()
+	openAiClient, _ := openAI.NewOpenAiClient(config.OpenAiKey, config.OpenAiBaseUrl)
 
-	// openAiLLM, err := openAI.NewOpenAiLLM(openAI.GPT4_MINI, openAiClient, 0.2)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-	llamaClient, _ := llama.NewOllamaClient("http://localhost:11434")
-	llamaLLM, _ := llama.NewLlamaLLM("llama3.2", llamaClient, 0.2)
+	openAiLLM, err := openAI.NewOpenAiLLM(openAI.GPT4_MINI, openAiClient, 0.2)
+	if err != nil {
+		log.Fatal(err)
+	}
+	// llamaClient, _ := llama.NewOllamaClient(config.OllamaBaseUrl)
+	// llamaLLM, _ := llama.NewLlamaLLM("llama3.2", llamaClient, 0.2)
 	dataService := marketDataScraper.MarketDataScraper{}
-	sectorRag, _ := services.NewSectorRag(llamaLLM, dataService)
+	sectorRag, _ := services.NewSectorRag(openAiLLM, dataService)
 	chunkChannel := make(chan string)
 
 	go func() {
 		messages := []services.Message{
-			{Role: services.User, Content: "Who is the best football player in the world?"},
+			{Role: services.User, Content: "Which are the top performing sectors?"},
 		}
 		if err := sectorRag.GenerateRagResponse(messages, chunkChannel); err != nil {
 			// Handle the error (e.g., log it)
