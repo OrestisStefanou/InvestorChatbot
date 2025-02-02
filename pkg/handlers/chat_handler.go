@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"investbot/pkg/services"
-	"log"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -23,45 +22,77 @@ func NewChatHandler(chatService ChatService) (*ChatHandler, error) {
 }
 
 type ChatRequest struct {
-	Question  string `json:"question" validate:"required"`
-	Topic     string `json:"topic" validate:"required"`
-	SessionID string `json:"session_id" validate:"required"`
+	Question  string `json:"question"`
+	Topic     string `json:"topic"`
+	SessionID string `json:"session_id"`
 	// TODO: Add extra optional data(metadata) in the request
 	// For example stock symbol/name etc
 }
 
+func (r *ChatRequest) validate() error {
+	if r.Question == "" {
+		return fmt.Errorf("question field is required")
+	}
+
+	if r.Topic == "" {
+		return fmt.Errorf("topic field is required")
+	}
+
+	if r.SessionID == "" {
+		return fmt.Errorf("session_id field is required")
+	}
+
+	return nil
+}
+
 func (h *ChatHandler) ServeRequest(c echo.Context) error {
 	c.Response().Header().Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
-	c.Response().WriteHeader(http.StatusOK)
 
 	var err error
 	chatRequest := new(ChatRequest)
 	if err = c.Bind(chatRequest); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+	}
+
+	err = chatRequest.validate()
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 
 	enc := json.NewEncoder(c.Response())
 	responseChunkChannel := make(chan string)
+	errorChannel := make(chan error, 1)
 
 	go func() {
-		if err = h.chatService.GenerateResponse(
+		if err := h.chatService.GenerateResponse(
 			services.Topic(chatRequest.Topic), chatRequest.SessionID, chatRequest.Question, responseChunkChannel,
 		); err != nil {
-			// TODO: Think which is the right way to handle the error
-			log.Println("ERROR DURING GENERATE RESPONSE", err)
-			return
+			errorChannel <- err
 		}
+		close(errorChannel)
 	}()
 
 	var finalResponse string
-	for chunk := range responseChunkChannel {
-		if err := enc.Encode(chunk); err != nil {
-			return err
-		}
-		finalResponse += chunk
-		c.Response().Flush()
-	}
-	fmt.Printf("FINAL RESPONSE\n %s", finalResponse)
-	return nil
+	for {
+		select {
+		case chunk, ok := <-responseChunkChannel:
+			if !ok {
+				// Channel closed, exit loop
+				fmt.Printf("FINAL RESPONSE\n %s", finalResponse)
+				// TODO: Final response should be stored
+				return nil
+			}
+			if err = enc.Encode(chunk); err != nil {
+				return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+			}
+			finalResponse += chunk
+			c.Response().WriteHeader(http.StatusOK)
+			c.Response().Flush()
 
+		case err := <-errorChannel:
+			if err != nil {
+				return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+			}
+		}
+	}
 }
