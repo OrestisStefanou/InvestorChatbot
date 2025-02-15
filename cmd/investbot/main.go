@@ -26,10 +26,12 @@ func main() {
 	dataService := marketDataScraper.MarketDataScraper{}
 	sectorRag, _ := services.NewSectorRag(openAiLLM, dataService)
 	educationRag, _ := services.NewEducationRag(openAiLLM)
+	industryRag, _ := services.NewIndustryRag(openAiLLM, dataService)
 
 	topicToRagMap := map[services.Topic]services.Rag{
-		services.SECTORS:   sectorRag,
-		services.EDUCATION: educationRag,
+		services.SECTORS:    sectorRag,
+		services.EDUCATION:  educationRag,
+		services.INDUSTRIES: industryRag,
 	}
 
 	sessionService := services.MockSessionService{}
