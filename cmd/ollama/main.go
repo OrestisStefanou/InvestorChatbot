@@ -27,7 +27,7 @@ func main() {
 		messages := []services.Message{
 			{Role: services.User, Content: "Which are the top performing sectors?"},
 		}
-		if err := sectorRag.GenerateRagResponse(messages, chunkChannel); err != nil {
+		if err := sectorRag.GenerateRagResponse(messages, services.Tags{}, chunkChannel); err != nil {
 			// Handle the error (e.g., log it)
 			log.Printf("Error during request: %v", err)
 		}

@@ -13,7 +13,7 @@ func NewEducationRag(llm Llm) (*EducationRag, error) {
 	return &EducationRag{llm: llm}, nil
 }
 
-func (rag EducationRag) GenerateRagResponse(conversation []Message, responseChannel chan<- string) error {
+func (rag EducationRag) GenerateRagResponse(conversation []Message, tags Tags, responseChannel chan<- string) error {
 	// Add the prompt as the first message in the existing conversation
 	prompt_msg := Message{
 		Role:    System,

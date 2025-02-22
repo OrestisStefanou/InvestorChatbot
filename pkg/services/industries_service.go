@@ -12,8 +12,8 @@ type IndustryDataService interface {
 }
 
 type industryContext struct {
-	industry domain.Industry
-	//industryStocks []domain.IndustryStock
+	industry       domain.Industry
+	industryStocks []domain.IndustryStock
 }
 
 type IndustryRag struct {
@@ -25,7 +25,7 @@ func NewIndustryRag(llm Llm, industryDataService IndustryDataService) (*Industry
 	return &IndustryRag{llm: llm, dataService: industryDataService}, nil
 }
 
-func (rag IndustryRag) createRagContext() (string, error) {
+func (rag IndustryRag) createRagContext(industryName string) (string, error) {
 	var ragContext string
 	industries, err := rag.dataService.GetIndustries()
 	if err != nil {
@@ -34,27 +34,32 @@ func (rag IndustryRag) createRagContext() (string, error) {
 
 	for i := 0; i < len(industries); i++ {
 		industry := industries[i]
-		// FOR NOW WE COMMENT OUT THE ONE BELOW TO AVOID MAKING 150+ http calls
-		// We can have extra filtering if we want to have context about industry stocks
-		// by providing the specific industry
-		// industryStocks, err := rag.dataService.GetIndustryStocks(industry.UrlName)
-		// if err != nil {
-		// 	return ragContext, &DataServiceError{Message: fmt.Sprintf("GetIndustryStocks failed: %s", err)}
-		// }
-
-		context := industryContext{
-			industry: industry,
-			//industryStocks: industryStocks[:2],
+		if industryName == "" {
+			// We don't fetch industry stocks to avoid making 150+ http calls
+			context := industryContext{
+				industry: industry,
+			}
+			ragContext += fmt.Sprintf("%+v\n", context)
+		} else if industryName == industry.Name {
+			industryStocks, err := rag.dataService.GetIndustryStocks(industry.UrlName)
+			if err != nil {
+				return ragContext, &DataServiceError{Message: fmt.Sprintf("GetIndustryStocks failed: %s", err)}
+			}
+			context := industryContext{
+				industry:       industry,
+				industryStocks: industryStocks,
+			}
+			ragContext += fmt.Sprintf("%+v\n", context)
+			return ragContext, nil
 		}
-		ragContext += fmt.Sprintf("%+v\n", context)
 	}
 
 	return ragContext, nil
 }
 
-func (rag IndustryRag) GenerateRagResponse(conversation []Message, responseChannel chan<- string) error {
+func (rag IndustryRag) GenerateRagResponse(conversation []Message, tags Tags, responseChannel chan<- string) error {
 	// Format the prompt to contain the neccessary context
-	ragContext, err := rag.createRagContext()
+	ragContext, err := rag.createRagContext(tags.IndustryName)
 	if err != nil {
 		return err
 	}

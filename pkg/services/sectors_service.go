@@ -25,7 +25,7 @@ func NewSectorRag(llm Llm, sectorDataService SectorDataService) (*SectorRag, err
 	return &SectorRag{llm: llm, dataService: sectorDataService}, nil
 }
 
-func (rag SectorRag) createRagContext() (string, error) {
+func (rag SectorRag) createRagContext(sectorName string) (string, error) {
 	var ragContext string
 	sectors, err := rag.dataService.GetSectors()
 	if err != nil {
@@ -39,20 +39,29 @@ func (rag SectorRag) createRagContext() (string, error) {
 			return ragContext, &DataServiceError{Message: fmt.Sprintf("GetSectorStocks failed: %s", err)}
 		}
 
-		// Keep only the top 5 stocks for each sector
-		context := sectorContext{
-			sector:       sector,
-			sectorStocks: sectorStocks[:5],
+		if sectorName == "" {
+			// Keep only the top 5 stocks in case we have all sectors in the prompt
+			context := sectorContext{
+				sector:       sector,
+				sectorStocks: sectorStocks[:5],
+			}
+			ragContext += fmt.Sprintf("%+v\n", context)
+		} else if sectorName == sector.Name {
+			context := sectorContext{
+				sector:       sector,
+				sectorStocks: sectorStocks,
+			}
+			ragContext += fmt.Sprintf("%+v\n", context)
+			return ragContext, nil
 		}
-		ragContext += fmt.Sprintf("%+v\n", context)
 	}
 
 	return ragContext, nil
 }
 
-func (rag SectorRag) GenerateRagResponse(conversation []Message, responseChannel chan<- string) error {
+func (rag SectorRag) GenerateRagResponse(conversation []Message, tags Tags, responseChannel chan<- string) error {
 	// Format the prompt to contain the neccessary context
-	ragContext, err := rag.createRagContext()
+	ragContext, err := rag.createRagContext(tags.SectorName)
 	if err != nil {
 		return err
 	}

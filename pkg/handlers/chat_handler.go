@@ -10,7 +10,7 @@ import (
 )
 
 type ChatService interface {
-	GenerateResponse(topic services.Topic, sessionId string, question string, responseChannel chan<- string) error
+	GenerateResponse(topic services.Topic, tags services.Tags, sessionId string, question string, responseChannel chan<- string) error
 }
 
 type ChatHandler struct {
@@ -21,12 +21,17 @@ func NewChatHandler(chatService ChatService) (*ChatHandler, error) {
 	return &ChatHandler{chatService: chatService}, nil
 }
 
+type TopicTags struct {
+	SectorName   string `json:"sector_name"`
+	IndustryName string `json:"industry_name"`
+	StockSymbol  string `json:"stock_symbol"`
+}
+
 type ChatRequest struct {
-	Question  string `json:"question"`
-	Topic     string `json:"topic"`
-	SessionID string `json:"session_id"`
-	// TODO: Add extra optional data(metadata) in the request
-	// For example stock symbol/name etc
+	Question  string    `json:"question"`
+	Topic     string    `json:"topic"`
+	SessionID string    `json:"session_id"`
+	Tags      TopicTags `json:"topic_tags"`
 }
 
 func (r *ChatRequest) validate() error {
@@ -59,13 +64,19 @@ func (h *ChatHandler) ServeRequest(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 
+	tags := services.Tags{
+		SectorName:   chatRequest.Tags.SectorName,
+		IndustryName: chatRequest.Tags.IndustryName,
+		StockSymbol:  chatRequest.Tags.StockSymbol,
+	}
+
 	enc := json.NewEncoder(c.Response())
 	responseChunkChannel := make(chan string)
 	errorChannel := make(chan error, 1)
 
 	go func() {
 		if err := h.chatService.GenerateResponse(
-			services.Topic(chatRequest.Topic), chatRequest.SessionID, chatRequest.Question, responseChunkChannel,
+			services.Topic(chatRequest.Topic), tags, chatRequest.SessionID, chatRequest.Question, responseChunkChannel,
 		); err != nil {
 			errorChannel <- err
 		}

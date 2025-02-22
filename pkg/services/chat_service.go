@@ -5,8 +5,14 @@ import (
 	"investbot/pkg/errors"
 )
 
+type Tags struct {
+	SectorName   string
+	IndustryName string
+	StockSymbol  string
+}
+
 type Rag interface {
-	GenerateRagResponse(conversation []Message, responseChannel chan<- string) error
+	GenerateRagResponse(conversation []Message, tags Tags, responseChannel chan<- string) error
 }
 
 type Topic string
@@ -29,7 +35,13 @@ func NewChatService(topicToRagMap map[Topic]Rag, sessionService SessionService) 
 	}, nil
 }
 
-func (s *ChatService) GenerateResponse(topic Topic, sessionId string, question string, responseChannel chan<- string) error {
+func (s *ChatService) GenerateResponse(
+	topic Topic,
+	tags Tags,
+	sessionId string,
+	question string,
+	responseChannel chan<- string,
+) error {
 	rag, found := s.topicToRagMap[topic]
 
 	if !found {
@@ -51,7 +63,7 @@ func (s *ChatService) GenerateResponse(topic Topic, sessionId string, question s
 
 	conversation = append(conversation, questionMessage)
 
-	if err := rag.GenerateRagResponse(conversation, responseChannel); err != nil {
+	if err := rag.GenerateRagResponse(conversation, tags, responseChannel); err != nil {
 		return err
 	}
 
