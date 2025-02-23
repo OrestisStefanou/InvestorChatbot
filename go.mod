@@ -2,11 +2,14 @@ module investbot
 
 go 1.23.2
 
-require github.com/stretchr/testify v1.10.0
+require (
+	github.com/google/uuid v1.6.0
+	github.com/labstack/echo/v4 v4.13.3
+	github.com/stretchr/testify v1.10.0
+)
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/labstack/echo/v4 v4.13.3 // indirect
 	github.com/labstack/gommon v0.4.2 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect

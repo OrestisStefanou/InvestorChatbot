@@ -50,7 +50,7 @@ func (r *ChatRequest) validate() error {
 	return nil
 }
 
-func (h *ChatHandler) ServeRequest(c echo.Context) error {
+func (h *ChatHandler) ChatCompletion(c echo.Context) error {
 	c.Response().Header().Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 
 	var err error
@@ -83,20 +83,17 @@ func (h *ChatHandler) ServeRequest(c echo.Context) error {
 		close(errorChannel)
 	}()
 
-	var finalResponse string
 	for {
 		select {
-		case chunk, ok := <-responseChunkChannel:
-			if !ok {
+		case chunk, isOpen := <-responseChunkChannel:
+			if !isOpen {
 				// Channel closed, exit loop
-				fmt.Printf("FINAL RESPONSE\n %s", finalResponse)
-				// TODO: Final response should be stored
 				return nil
 			}
 			if err = enc.Encode(chunk); err != nil {
 				return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 			}
-			finalResponse += chunk
+
 			c.Response().WriteHeader(http.StatusOK)
 			c.Response().Flush()
 

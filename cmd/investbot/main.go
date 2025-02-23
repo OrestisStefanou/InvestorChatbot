@@ -34,12 +34,13 @@ func main() {
 		services.INDUSTRIES: industryRag,
 	}
 
-	sessionService := services.MockSessionService{}
-
+	sessionService, _ := services.NewInMemorySession()
 	chatService, _ := services.NewChatService(topicToRagMap, sessionService)
 
 	chatHandler, _ := handlers.NewChatHandler(chatService)
+	sessionHandler, _ := handlers.NewSessionHandler(sessionService)
 
-	e.POST("/chat", chatHandler.ServeRequest)
+	e.POST("/chat", chatHandler.ChatCompletion)
+	e.POST("/session", sessionHandler.CreateNewSession)
 	e.Logger.Fatal(e.Start(":1323"))
 }

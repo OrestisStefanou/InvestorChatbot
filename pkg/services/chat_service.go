@@ -50,7 +50,6 @@ func (s *ChatService) GenerateResponse(
 	}
 
 	conversation, err := s.sessionService.GetConversationBySessionId(sessionId)
-
 	if err != nil {
 		return &errors.SessionNotFoundError{
 			Message: fmt.Sprintf("Conversation for session id: %s not found", sessionId),
@@ -60,12 +59,40 @@ func (s *ChatService) GenerateResponse(
 	questionMessage := Message{
 		Role: User, Content: question,
 	}
-
 	conversation = append(conversation, questionMessage)
 
-	if err := rag.GenerateRagResponse(conversation, tags, responseChannel); err != nil {
-		return err
+	var responseMessage string
+	chunkChannel := make(chan string)
+	errorChannel := make(chan error, 1)
+
+	go func() {
+		if err := rag.GenerateRagResponse(conversation, tags, chunkChannel); err != nil {
+			errorChannel <- err
+		}
+		close(errorChannel)
+	}()
+
+	shouldExit := false
+	for !shouldExit {
+		select {
+		case chunk, isOpen := <-chunkChannel:
+			if !isOpen {
+				fmt.Printf("FINAL RESPONSE\n %s", responseMessage)
+				shouldExit = true
+				close(responseChannel)
+				continue
+			}
+			responseMessage += chunk
+			responseChannel <- chunk
+		case err := <-errorChannel:
+			if err != nil {
+				return err
+			}
+		}
 	}
+
+	conversation = append(conversation, Message{Role: Assistant, Content: responseMessage})
+	s.sessionService.SetConversationForSessionId(conversation, sessionId)
 
 	return nil
 }
