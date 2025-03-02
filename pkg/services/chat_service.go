@@ -18,9 +18,10 @@ type Rag interface {
 type Topic string
 
 const (
-	EDUCATION  Topic = "education"
-	SECTORS    Topic = "sectors"
-	INDUSTRIES Topic = "industries"
+	EDUCATION      Topic = "education"
+	SECTORS        Topic = "sectors"
+	INDUSTRIES     Topic = "industries"
+	STOCK_OVERVIEW Topic = "stock_overview"
 )
 
 type ChatService struct {

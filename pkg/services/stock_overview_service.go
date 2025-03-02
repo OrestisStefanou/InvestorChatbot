@@ -1,0 +1,78 @@
+package services
+
+import (
+	"fmt"
+	"investbot/pkg/domain"
+	"investbot/pkg/services/prompts"
+)
+
+type StockOverviewDataService interface {
+	GetStockProfile(symbol string) (domain.StockProfile, error)
+	GetFinancialRatios(symbol string) ([]domain.FinancialRatios, error)
+	GetStockForecast(symbol string) (domain.StockForecast, error)
+}
+
+type stockOverviewContext struct {
+	symbol               string
+	stockProfile         domain.StockProfile
+	stockFinancialRatios []domain.FinancialRatios
+	stockForecast        domain.StockForecast
+}
+
+type StockOverviewRag struct {
+	dataService StockOverviewDataService
+	llm         Llm
+}
+
+func NewStockOverviewRag(llm Llm, stockOverviewDataService StockOverviewDataService) (*StockOverviewRag, error) {
+	return &StockOverviewRag{llm: llm, dataService: stockOverviewDataService}, nil
+}
+
+func (rag StockOverviewRag) createRagContext(symbol string) (string, error) {
+	var ragContext stockOverviewContext
+	ragContext.symbol = symbol
+
+	stockProfile, err := rag.dataService.GetStockProfile(symbol)
+	if err != nil {
+		return "", &DataServiceError{Message: fmt.Sprintf("GetStockProfile failed: %s", err)}
+	}
+	ragContext.stockProfile = stockProfile
+
+	stockFinancialRatios, err := rag.dataService.GetFinancialRatios(symbol)
+	if err != nil {
+		return "", &DataServiceError{Message: fmt.Sprintf("GetFinancialRatios failed: %s", err)}
+	}
+	ragContext.stockFinancialRatios = stockFinancialRatios
+
+	stockForecast, err := rag.dataService.GetStockForecast(symbol)
+	if err != nil {
+		return "", &DataServiceError{Message: fmt.Sprintf("GetStockForecast failed: %s", err)}
+	}
+	ragContext.stockForecast = stockForecast
+
+	return fmt.Sprintf("%+v\n", ragContext), nil
+}
+
+func (rag StockOverviewRag) GenerateRagResponse(conversation []Message, tags Tags, responseChannel chan<- string) error {
+	// Format the prompt to contain the neccessary context
+	ragContext, err := rag.createRagContext(tags.StockSymbol)
+	if err != nil {
+		return err
+	}
+	// TODO: REMOVE THIS
+	fmt.Printf("RAG CONTEXT IS:\n%s", ragContext)
+	prompt := fmt.Sprintf(prompts.StockOverviewPrompt, ragContext)
+	prompt_msg := Message{
+		Role:    System,
+		Content: prompt,
+	}
+
+	// Add the prompt as the first message in the existing conversation
+	conversation_with_prompt := append([]Message{prompt_msg}, conversation...)
+
+	if err := rag.llm.GenerateResponse(conversation_with_prompt, responseChannel); err != nil {
+		return &RagError{Message: fmt.Sprintf("GenerateResponse failed: %s", err)}
+	}
+
+	return nil
+}

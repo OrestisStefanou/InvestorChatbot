@@ -27,11 +27,13 @@ func main() {
 	sectorRag, _ := services.NewSectorRag(openAiLLM, dataService)
 	educationRag, _ := services.NewEducationRag(openAiLLM)
 	industryRag, _ := services.NewIndustryRag(openAiLLM, dataService)
+	stockOverviewRag, _ := services.NewStockOverviewRag(openAiLLM, dataService)
 
 	topicToRagMap := map[services.Topic]services.Rag{
-		services.SECTORS:    sectorRag,
-		services.EDUCATION:  educationRag,
-		services.INDUSTRIES: industryRag,
+		services.SECTORS:        sectorRag,
+		services.EDUCATION:      educationRag,
+		services.INDUSTRIES:     industryRag,
+		services.STOCK_OVERVIEW: stockOverviewRag,
 	}
 
 	sessionService, _ := services.NewInMemorySession()
