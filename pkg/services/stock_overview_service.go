@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"investbot/pkg/domain"
 	"investbot/pkg/services/prompts"
+	"time"
 )
 
 type StockOverviewDataService interface {
@@ -13,6 +14,7 @@ type StockOverviewDataService interface {
 }
 
 type stockOverviewContext struct {
+	currentDate          string
 	symbol               string
 	stockProfile         domain.StockProfile
 	stockFinancialRatios []domain.FinancialRatios
@@ -31,6 +33,7 @@ func NewStockOverviewRag(llm Llm, stockOverviewDataService StockOverviewDataServ
 func (rag StockOverviewRag) createRagContext(symbol string) (string, error) {
 	var ragContext stockOverviewContext
 	ragContext.symbol = symbol
+	ragContext.currentDate = time.Now().Format("2006-01-02")
 
 	stockProfile, err := rag.dataService.GetStockProfile(symbol)
 	if err != nil {
