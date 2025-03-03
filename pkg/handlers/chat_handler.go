@@ -22,9 +22,12 @@ func NewChatHandler(chatService ChatService) (*ChatHandler, error) {
 }
 
 type TopicTags struct {
-	SectorName   string `json:"sector_name"`
-	IndustryName string `json:"industry_name"`
-	StockSymbol  string `json:"stock_symbol"`
+	SectorName      string `json:"sector_name"`
+	IndustryName    string `json:"industry_name"`
+	StockSymbol     string `json:"stock_symbol"`
+	BalanceSheet    bool   `json:"balance_sheet"`
+	IncomeStatement bool   `json:"income_statement"`
+	CashFlow        bool   `json:"cash_flow"`
 }
 
 type ChatRequest struct {
@@ -65,9 +68,12 @@ func (h *ChatHandler) ChatCompletion(c echo.Context) error {
 	}
 
 	tags := services.Tags{
-		SectorName:   chatRequest.Tags.SectorName,
-		IndustryName: chatRequest.Tags.IndustryName,
-		StockSymbol:  chatRequest.Tags.StockSymbol,
+		SectorName:      chatRequest.Tags.SectorName,
+		IndustryName:    chatRequest.Tags.IndustryName,
+		StockSymbol:     chatRequest.Tags.StockSymbol,
+		BalanceSheet:    chatRequest.Tags.BalanceSheet,
+		IncomeStatement: chatRequest.Tags.IncomeStatement,
+		CashFlow:        chatRequest.Tags.CashFlow,
 	}
 
 	enc := json.NewEncoder(c.Response())

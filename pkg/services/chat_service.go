@@ -6,9 +6,12 @@ import (
 )
 
 type Tags struct {
-	SectorName   string
-	IndustryName string
-	StockSymbol  string
+	SectorName      string
+	IndustryName    string
+	StockSymbol     string
+	BalanceSheet    bool
+	IncomeStatement bool
+	CashFlow        bool
 }
 
 type Rag interface {
@@ -18,10 +21,11 @@ type Rag interface {
 type Topic string
 
 const (
-	EDUCATION      Topic = "education"
-	SECTORS        Topic = "sectors"
-	INDUSTRIES     Topic = "industries"
-	STOCK_OVERVIEW Topic = "stock_overview"
+	EDUCATION        Topic = "education"
+	SECTORS          Topic = "sectors"
+	INDUSTRIES       Topic = "industries"
+	STOCK_OVERVIEW   Topic = "stock_overview"
+	STOCK_FINANCIALS Topic = "stock_financials"
 )
 
 type ChatService struct {

@@ -62,8 +62,7 @@ func (rag StockOverviewRag) GenerateRagResponse(conversation []Message, tags Tag
 	if err != nil {
 		return err
 	}
-	// TODO: REMOVE THIS
-	fmt.Printf("RAG CONTEXT IS:\n%s", ragContext)
+
 	prompt := fmt.Sprintf(prompts.StockOverviewPrompt, ragContext)
 	prompt_msg := Message{
 		Role:    System,
