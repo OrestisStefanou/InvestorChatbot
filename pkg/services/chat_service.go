@@ -12,6 +12,7 @@ type Tags struct {
 	BalanceSheet    bool
 	IncomeStatement bool
 	CashFlow        bool
+	EtfSymbol       string
 }
 
 type Rag interface {
@@ -26,6 +27,7 @@ const (
 	INDUSTRIES       Topic = "industries"
 	STOCK_OVERVIEW   Topic = "stock_overview"
 	STOCK_FINANCIALS Topic = "stock_financials"
+	ETFS             Topic = "etfs"
 )
 
 type ChatService struct {
