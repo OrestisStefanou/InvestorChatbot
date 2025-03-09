@@ -73,3 +73,8 @@ func (mds MarketDataScraper) GetEtfOverview(symbol string) (domain.EtfOverview, 
 func (mds MarketDataScraper) GetStockProfile(symbol string) (domain.StockProfile, error) {
 	return scrapeStockProfile(symbol)
 }
+
+// GetMarketNews returns the most recent news of the stock markets
+func (mds MarketDataScraper) GetMarketNews() ([]domain.NewsArticle, error) {
+	return scrapeMarketNews()
+}
