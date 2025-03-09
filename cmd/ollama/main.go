@@ -7,7 +7,7 @@ import (
 
 func main() {
 	dataService := marketDataScraper.MarketDataScraper{}
-	news, _ := dataService.GetMarketNews()
+	news, _ := dataService.GetStockNews("abnb")
 	for _, v := range news {
 		fmt.Printf("%+v\n", v)
 	}

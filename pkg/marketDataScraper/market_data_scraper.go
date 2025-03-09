@@ -78,3 +78,9 @@ func (mds MarketDataScraper) GetStockProfile(symbol string) (domain.StockProfile
 func (mds MarketDataScraper) GetMarketNews() ([]domain.NewsArticle, error) {
 	return scrapeMarketNews()
 }
+
+// GetStockNews returns the most recent news of the given stock symbol
+// symbol parameter should be in lowercase
+func (mds MarketDataScraper) GetStockNews(symbol string) ([]domain.NewsArticle, error) {
+	return scrapeStockNews(symbol)
+}
