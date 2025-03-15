@@ -30,6 +30,7 @@ func main() {
 	stockOverviewRag, _ := services.NewStockOverviewRag(openAiLLM, dataService)
 	stockFinancialsRag, _ := services.NewStockFinancialsRag(openAiLLM, dataService)
 	etfRag, _ := services.NewEtfRag(openAiLLM, dataService)
+	newsRag, _ := services.NewMarketNewsRag(openAiLLM, dataService)
 
 	topicToRagMap := map[services.Topic]services.Rag{
 		services.SECTORS:          sectorRag,
@@ -38,6 +39,7 @@ func main() {
 		services.STOCK_OVERVIEW:   stockOverviewRag,
 		services.STOCK_FINANCIALS: stockFinancialsRag,
 		services.ETFS:             etfRag,
+		services.NEWS:             newsRag,
 	}
 
 	sessionService, _ := services.NewInMemorySession()

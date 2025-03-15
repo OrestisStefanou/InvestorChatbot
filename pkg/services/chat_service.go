@@ -28,6 +28,7 @@ const (
 	STOCK_OVERVIEW   Topic = "stock_overview"
 	STOCK_FINANCIALS Topic = "stock_financials"
 	ETFS             Topic = "etfs"
+	NEWS             Topic = "news"
 )
 
 type ChatService struct {
