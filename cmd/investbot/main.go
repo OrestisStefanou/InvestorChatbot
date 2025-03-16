@@ -31,6 +31,7 @@ func main() {
 	stockFinancialsRag, _ := services.NewStockFinancialsRag(openAiLLM, dataService)
 	etfRag, _ := services.NewEtfRag(openAiLLM, dataService)
 	newsRag, _ := services.NewMarketNewsRag(openAiLLM, dataService)
+	followUpQuestionsRag, _ := services.NewFollowUpQuestionsRag(openAiLLM)
 
 	topicToRagMap := map[services.Topic]services.Rag{
 		services.SECTORS:          sectorRag,
@@ -44,11 +45,14 @@ func main() {
 
 	sessionService, _ := services.NewInMemorySession()
 	chatService, _ := services.NewChatService(topicToRagMap, sessionService)
+	followUpQuestionsService, _ := services.NewFollowUpQuestionsService(sessionService, followUpQuestionsRag)
 
 	chatHandler, _ := handlers.NewChatHandler(chatService)
 	sessionHandler, _ := handlers.NewSessionHandler(sessionService)
+	followUpQuestionsHandler, _ := handlers.NewFollowUpQuestionsHandler(*followUpQuestionsService)
 
 	e.POST("/chat", chatHandler.ChatCompletion)
 	e.POST("/session", sessionHandler.CreateNewSession)
+	e.POST("/follow_up_questions", followUpQuestionsHandler.GenerateFollowUpQuestions)
 	e.Logger.Fatal(e.Start(":1323"))
 }
