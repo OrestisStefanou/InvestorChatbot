@@ -7,6 +7,9 @@ type Config struct {
 
 	// Ollama configs
 	OllamaBaseUrl string
+
+	// App configs
+	FaqLimit int // Number of faq to return in through the endpoint
 }
 
 func LoadConfig() (Config, error) {
@@ -15,5 +18,7 @@ func LoadConfig() (Config, error) {
 		OpenAiBaseUrl: "https://api.openai.com/v1",
 
 		OllamaBaseUrl: "http://localhost:11434",
+
+		FaqLimit: 5,
 	}, nil
 }

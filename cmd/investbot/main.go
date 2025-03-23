@@ -46,13 +46,16 @@ func main() {
 	sessionService, _ := services.NewInMemorySession()
 	chatService, _ := services.NewChatService(topicToRagMap, sessionService)
 	followUpQuestionsService, _ := services.NewFollowUpQuestionsService(sessionService, followUpQuestionsRag)
+	faqService, _ := services.NewFaqService(config.FaqLimit)
 
 	chatHandler, _ := handlers.NewChatHandler(chatService)
 	sessionHandler, _ := handlers.NewSessionHandler(sessionService)
 	followUpQuestionsHandler, _ := handlers.NewFollowUpQuestionsHandler(*followUpQuestionsService)
+	faqHandler, _ := handlers.NewFaqHandler(*faqService)
 
 	e.POST("/chat", chatHandler.ChatCompletion)
 	e.POST("/session", sessionHandler.CreateNewSession)
 	e.POST("/follow_up_questions", followUpQuestionsHandler.GenerateFollowUpQuestions)
+	e.GET("/faq", faqHandler.GetFaq)
 	e.Logger.Fatal(e.Start(":1323"))
 }
