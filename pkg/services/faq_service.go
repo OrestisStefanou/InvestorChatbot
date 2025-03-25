@@ -15,6 +15,7 @@ type FaqService struct {
 func NewFaqService(faqLimit int) (*FaqService, error) {
 	topicToFaq := map[Topic][]string{
 		EDUCATION: faq.EduationFaq,
+		SECTORS:   faq.SectorsFaq,
 	}
 
 	return &FaqService{topicToFaq: topicToFaq, faqLimit: faqLimit}, nil
