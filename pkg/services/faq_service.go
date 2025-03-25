@@ -7,22 +7,32 @@ import (
 	"math/rand"
 )
 
+type FaqTopic string
+
+const (
+	EDUCATION_FAQ_TOPIC      FaqTopic = "education"
+	SECTORS_FAQ_TOPIC        FaqTopic = "sectors"
+	STOCK_OVERVIEW_FAQ_TOPIC FaqTopic = "stock_overview"
+	BALANCE_SHEET_FAQ_TOPIC  FaqTopic = "balance_sheet"
+)
+
 type FaqService struct {
-	topicToFaq map[Topic][]string
+	topicToFaq map[FaqTopic][]string
 	faqLimit   int
 }
 
 func NewFaqService(faqLimit int) (*FaqService, error) {
-	topicToFaq := map[Topic][]string{
-		EDUCATION:      faq.EduationFaq,
-		SECTORS:        faq.SectorsFaq,
-		STOCK_OVERVIEW: faq.StockOverviewFaq,
+	topicToFaq := map[FaqTopic][]string{
+		EDUCATION_FAQ_TOPIC:      faq.EduationFaq,
+		SECTORS_FAQ_TOPIC:        faq.SectorsFaq,
+		STOCK_OVERVIEW_FAQ_TOPIC: faq.StockOverviewFaq,
+		BALANCE_SHEET_FAQ_TOPIC:  faq.BalanceSheetFaq,
 	}
 
 	return &FaqService{topicToFaq: topicToFaq, faqLimit: faqLimit}, nil
 }
 
-func (s FaqService) GetFaqForTopic(topic Topic) ([]string, error) {
+func (s FaqService) GetFaqForTopic(topic FaqTopic) ([]string, error) {
 	faqSlice, found := s.topicToFaq[topic]
 	if !found {
 		return nil, &errors.TopicNotFoundError{Message: fmt.Sprintf("Faq for %s not found", topic)}
