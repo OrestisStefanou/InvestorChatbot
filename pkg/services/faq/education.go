@@ -9,6 +9,9 @@ var EduationFaq = []string{
 	"What is the difference between investing and trading?",
 	"What factors influence stock prices and market movements?",
 	"What is a stock index (e.g., S&P 500, Dow Jones), and why does it matter?",
+	"What is a balance sheet and how can I use it?",
+	"What is an income statement and how can I use it?",
+	"What is a cash flow and how can I use it?",
 
 	// Risk and Return
 	"What does 'risk vs. reward' mean in investing?",
