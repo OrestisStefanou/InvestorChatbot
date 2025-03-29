@@ -15,6 +15,7 @@ const (
 	STOCK_OVERVIEW_FAQ_TOPIC   FaqTopic = "stock_overview"
 	BALANCE_SHEET_FAQ_TOPIC    FaqTopic = "balance_sheet"
 	INCOME_STATEMENT_FAQ_TOPIC FaqTopic = "income_statement"
+	CASh_FLOW_FAQ_TOPIC        FaqTopic = "cash_flow"
 )
 
 type FaqService struct {
@@ -29,6 +30,7 @@ func NewFaqService(faqLimit int) (*FaqService, error) {
 		STOCK_OVERVIEW_FAQ_TOPIC:   faq.StockOverviewFaq,
 		BALANCE_SHEET_FAQ_TOPIC:    faq.BalanceSheetFaq,
 		INCOME_STATEMENT_FAQ_TOPIC: faq.IncomeStatementFaq,
+		CASh_FLOW_FAQ_TOPIC:        faq.CashFlowFaq,
 	}
 
 	return &FaqService{topicToFaq: topicToFaq, faqLimit: faqLimit}, nil
