@@ -10,10 +10,11 @@ import (
 type FaqTopic string
 
 const (
-	EDUCATION_FAQ_TOPIC      FaqTopic = "education"
-	SECTORS_FAQ_TOPIC        FaqTopic = "sectors"
-	STOCK_OVERVIEW_FAQ_TOPIC FaqTopic = "stock_overview"
-	BALANCE_SHEET_FAQ_TOPIC  FaqTopic = "balance_sheet"
+	EDUCATION_FAQ_TOPIC        FaqTopic = "education"
+	SECTORS_FAQ_TOPIC          FaqTopic = "sectors"
+	STOCK_OVERVIEW_FAQ_TOPIC   FaqTopic = "stock_overview"
+	BALANCE_SHEET_FAQ_TOPIC    FaqTopic = "balance_sheet"
+	INCOME_STATEMENT_FAQ_TOPIC FaqTopic = "income_statement"
 )
 
 type FaqService struct {
@@ -23,10 +24,11 @@ type FaqService struct {
 
 func NewFaqService(faqLimit int) (*FaqService, error) {
 	topicToFaq := map[FaqTopic][]string{
-		EDUCATION_FAQ_TOPIC:      faq.EduationFaq,
-		SECTORS_FAQ_TOPIC:        faq.SectorsFaq,
-		STOCK_OVERVIEW_FAQ_TOPIC: faq.StockOverviewFaq,
-		BALANCE_SHEET_FAQ_TOPIC:  faq.BalanceSheetFaq,
+		EDUCATION_FAQ_TOPIC:        faq.EduationFaq,
+		SECTORS_FAQ_TOPIC:          faq.SectorsFaq,
+		STOCK_OVERVIEW_FAQ_TOPIC:   faq.StockOverviewFaq,
+		BALANCE_SHEET_FAQ_TOPIC:    faq.BalanceSheetFaq,
+		INCOME_STATEMENT_FAQ_TOPIC: faq.IncomeStatementFaq,
 	}
 
 	return &FaqService{topicToFaq: topicToFaq, faqLimit: faqLimit}, nil
