@@ -47,15 +47,18 @@ func main() {
 	chatService, _ := services.NewChatService(topicToRagMap, sessionService)
 	followUpQuestionsService, _ := services.NewFollowUpQuestionsService(sessionService, followUpQuestionsRag)
 	faqService, _ := services.NewFaqService(config.FaqLimit)
+	tickerService, _ := services.NewTickerServiceImpl(dataService)
 
 	chatHandler, _ := handlers.NewChatHandler(chatService)
 	sessionHandler, _ := handlers.NewSessionHandler(sessionService)
-	followUpQuestionsHandler, _ := handlers.NewFollowUpQuestionsHandler(*followUpQuestionsService)
-	faqHandler, _ := handlers.NewFaqHandler(*faqService)
+	followUpQuestionsHandler, _ := handlers.NewFollowUpQuestionsHandler(followUpQuestionsService)
+	faqHandler, _ := handlers.NewFaqHandler(faqService)
+	tickerHandler, _ := handlers.NewTickerHandler(tickerService)
 
 	e.POST("/chat", chatHandler.ChatCompletion)
 	e.POST("/session", sessionHandler.CreateNewSession)
 	e.POST("/follow_up_questions", followUpQuestionsHandler.GenerateFollowUpQuestions)
 	e.GET("/faq", faqHandler.GetFaq)
+	e.GET("tickers", tickerHandler.GetTickers)
 	e.Logger.Fatal(e.Start(":1323"))
 }

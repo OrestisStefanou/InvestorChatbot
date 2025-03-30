@@ -7,11 +7,15 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-type FaqHandler struct {
-	faqService services.FaqService
+type FaqService interface {
+	GetFaqForTopic(topic services.FaqTopic) ([]string, error)
 }
 
-func NewFaqHandler(faqService services.FaqService) (*FaqHandler, error) {
+type FaqHandler struct {
+	faqService FaqService
+}
+
+func NewFaqHandler(faqService FaqService) (*FaqHandler, error) {
 	return &FaqHandler{
 		faqService: faqService,
 	}, nil

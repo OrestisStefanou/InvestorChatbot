@@ -2,6 +2,7 @@ package marketDataScraper
 
 import (
 	"encoding/json"
+	"fmt"
 	"investbot/pkg/domain"
 	"net/http"
 )
@@ -11,12 +12,12 @@ func scrapeEtfs() ([]domain.Etf, error) {
 
 	resp, err := http.Get(url)
 	if err != nil {
-		return []domain.Etf{}, nil
+		return []domain.Etf{}, err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return []domain.Etf{}, nil
+		return []domain.Etf{}, fmt.Errorf("Call to get etfs failed with status: %d", resp.StatusCode)
 	}
 
 	// Define an anonymous struct to match the JSON structure
@@ -35,7 +36,7 @@ func scrapeEtfs() ([]domain.Etf, error) {
 
 	err = json.NewDecoder(resp.Body).Decode(&apiResponse)
 	if err != nil {
-		return []domain.Etf{}, nil
+		return []domain.Etf{}, err
 	}
 
 	etfs := make([]domain.Etf, 0, len(apiResponse.Data.Data))

@@ -32,3 +32,8 @@ type StockForecast struct {
 	Estimations []StockEstimation
 	TargetPrice StockTargetPrc
 }
+
+type Ticker struct {
+	Symbol      string
+	CompanyName string
+}

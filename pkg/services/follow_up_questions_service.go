@@ -47,7 +47,6 @@ func (rag FollowUpQuestionsRagImpl) GenerateFollowUpQuestions(conversation []Mes
 		select {
 		case chunk, isOpen := <-chunkChannel:
 			if !isOpen {
-				//fmt.Printf("FINAL RESPONSE\n %s", responseMessage)
 				shouldExit = true
 				continue
 			}
@@ -58,14 +57,6 @@ func (rag FollowUpQuestionsRagImpl) GenerateFollowUpQuestions(conversation []Mes
 			}
 		}
 	}
-
-	// lines := strings.Split(responseMessage, "\n")
-
-	// fmt.Println("\n-----------------------------")
-
-	// for _, line := range lines {
-	// 	fmt.Println(line)
-	// }
 
 	return strings.Split(responseMessage, "\n"), nil
 }

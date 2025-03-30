@@ -2,14 +2,17 @@ package handlers
 
 import (
 	"fmt"
-	"investbot/pkg/services"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
 )
 
+type FollowUpService interface {
+	GenerateFollowUpQuestions(sessionId string, followUpQuestionsNum int) ([]string, error)
+}
+
 type FollowUpQuestionsHandler struct {
-	followUpQuestionsService services.FollowUpQuestionsService
+	followUpQuestionsService FollowUpService
 }
 
 type FollowUpQuestionsResponse struct {
@@ -33,7 +36,7 @@ func (r *FollowUpQuestionsRequest) validate() error {
 	return nil
 }
 
-func NewFollowUpQuestionsHandler(followUpQuestionsService services.FollowUpQuestionsService) (*FollowUpQuestionsHandler, error) {
+func NewFollowUpQuestionsHandler(followUpQuestionsService FollowUpService) (*FollowUpQuestionsHandler, error) {
 	return &FollowUpQuestionsHandler{followUpQuestionsService: followUpQuestionsService}, nil
 }
 

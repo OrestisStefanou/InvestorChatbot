@@ -84,3 +84,8 @@ func (mds MarketDataScraper) GetMarketNews() ([]domain.NewsArticle, error) {
 func (mds MarketDataScraper) GetStockNews(symbol string) ([]domain.NewsArticle, error) {
 	return scrapeStockNews(symbol)
 }
+
+// GetTickers returns a list of Tickers(stock symbol and company name)
+func (mds MarketDataScraper) GetTickers() ([]domain.Ticker, error) {
+	return scrapeStockList()
+}
