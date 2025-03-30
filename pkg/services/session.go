@@ -28,11 +28,12 @@ func (sv MockSessionService) CreateNewSession() (sessionId string, err error) {
 }
 
 type InMemorySession struct {
-	rwMutex  sync.RWMutex
-	sessions map[string][]Message
+	rwMutex      sync.RWMutex
+	sessions     map[string][]Message
+	convMsgLimit int
 }
 
-func NewInMemorySession() (*InMemorySession, error) {
+func NewInMemorySession(convMsgLimit int) (*InMemorySession, error) {
 	sessions := make(map[string][]Message)
 	return &InMemorySession{sessions: sessions}, nil
 }
@@ -45,7 +46,12 @@ func (s *InMemorySession) GetConversationBySessionId(sessionId string) ([]Messag
 		return nil, fmt.Errorf("Conversation with sessionID: %s not found", sessionId)
 	}
 
-	return conversation, nil
+	limit := s.convMsgLimit
+	if limit > len(conversation) {
+		limit = len(conversation) // Avoid out-of-bounds error
+	}
+
+	return conversation[len(conversation)-limit:], nil
 }
 
 func (s *InMemorySession) SetConversationForSessionId(conversation []Message, sessionId string) error {

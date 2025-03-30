@@ -43,7 +43,7 @@ func main() {
 		services.NEWS:             newsRag,
 	}
 
-	sessionService, _ := services.NewInMemorySession()
+	sessionService, _ := services.NewInMemorySession(config.ConvMsgLimit)
 	chatService, _ := services.NewChatService(topicToRagMap, sessionService)
 	followUpQuestionsService, _ := services.NewFollowUpQuestionsService(sessionService, followUpQuestionsRag)
 	faqService, _ := services.NewFaqService(config.FaqLimit)

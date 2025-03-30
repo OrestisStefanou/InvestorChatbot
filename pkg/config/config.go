@@ -9,7 +9,8 @@ type Config struct {
 	OllamaBaseUrl string
 
 	// App configs
-	FaqLimit int // Number of faq to return in through the endpoint
+	FaqLimit     int // Number of faq to return in through the endpoint
+	ConvMsgLimit int // The number of most recent messages to get from a session
 }
 
 func LoadConfig() (Config, error) {
@@ -19,6 +20,7 @@ func LoadConfig() (Config, error) {
 
 		OllamaBaseUrl: "http://localhost:11434",
 
-		FaqLimit: 5,
+		FaqLimit:     5,
+		ConvMsgLimit: 10,
 	}, nil
 }
