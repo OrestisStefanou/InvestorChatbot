@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"investbot/pkg/domain"
 	"investbot/pkg/services/prompts"
+	"strings"
 )
 
 type EtfDataService interface {
@@ -78,4 +79,51 @@ func (rag EtfRag) GenerateRagResponse(conversation []Message, tags Tags, respons
 	}
 
 	return nil
+}
+
+type EtfService struct {
+	dataService EtfDataService
+}
+
+func NewEtfService(dataService EtfDataService) (*EtfService, error) {
+	return &EtfService{dataService: dataService}, nil
+}
+
+type EtfFilterOptions struct {
+	SearchString string
+}
+
+func (f EtfFilterOptions) IsEmpty() bool {
+	return f.SearchString == ""
+}
+
+func (f EtfFilterOptions) HasSearchString() bool {
+	return f.SearchString != ""
+}
+
+func (s EtfService) GetEtfs(filters EtfFilterOptions) ([]domain.Etf, error) {
+	etfs, err := s.dataService.GetEtfs()
+	if err != nil {
+		return nil, err
+	}
+
+	if filters.IsEmpty() {
+		return etfs, nil
+	}
+
+	if filters.HasSearchString() {
+		filteredEtfs := make([]domain.Etf, 0)
+		for _, e := range etfs {
+			search := strings.ToLower(filters.SearchString)
+			symbol := strings.ToLower(e.Symbol)
+			etfName := strings.ToLower(e.Name)
+			if strings.Contains(symbol, search) || strings.Contains(etfName, search) {
+				filteredEtfs = append(filteredEtfs, e)
+			}
+
+		}
+		return filteredEtfs, nil
+	}
+
+	return etfs, nil
 }

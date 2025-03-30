@@ -13,7 +13,7 @@ type TickerService struct {
 	dataService TickerDataService
 }
 
-func NewTickerServiceImpl(dataService TickerDataService) (*TickerService, error) {
+func NewTickerService(dataService TickerDataService) (*TickerService, error) {
 	return &TickerService{
 		dataService: dataService,
 	}, nil

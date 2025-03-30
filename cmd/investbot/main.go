@@ -47,18 +47,21 @@ func main() {
 	chatService, _ := services.NewChatService(topicToRagMap, sessionService)
 	followUpQuestionsService, _ := services.NewFollowUpQuestionsService(sessionService, followUpQuestionsRag)
 	faqService, _ := services.NewFaqService(config.FaqLimit)
-	tickerService, _ := services.NewTickerServiceImpl(dataService)
+	tickerService, _ := services.NewTickerService(dataService)
+	etfService, _ := services.NewEtfService(dataService)
 
 	chatHandler, _ := handlers.NewChatHandler(chatService)
 	sessionHandler, _ := handlers.NewSessionHandler(sessionService)
 	followUpQuestionsHandler, _ := handlers.NewFollowUpQuestionsHandler(followUpQuestionsService)
 	faqHandler, _ := handlers.NewFaqHandler(faqService)
 	tickerHandler, _ := handlers.NewTickerHandler(tickerService)
+	etfHandler, _ := handlers.NewEtfHandler(etfService)
 
 	e.POST("/chat", chatHandler.ChatCompletion)
 	e.POST("/session", sessionHandler.CreateNewSession)
 	e.POST("/follow_up_questions", followUpQuestionsHandler.GenerateFollowUpQuestions)
 	e.GET("/faq", faqHandler.GetFaq)
-	e.GET("tickers", tickerHandler.GetTickers)
+	e.GET("/tickers", tickerHandler.GetTickers)
+	e.GET("/etfs", etfHandler.GetEtfs)
 	e.Logger.Fatal(e.Start(":1323"))
 }
