@@ -11,6 +11,7 @@ type SessionService interface {
 	GetConversationBySessionId(sessionId string) ([]Message, error)
 	SetConversationForSessionId(conversation []Message, sessionId string) error
 	CreateNewSession() (sessionId string, err error)
+	AddMessage(sessionId string, msg Message) error
 }
 
 type MockSessionService struct{}
@@ -35,7 +36,7 @@ type InMemorySession struct {
 
 func NewInMemorySession(convMsgLimit int) (*InMemorySession, error) {
 	sessions := make(map[string][]Message)
-	return &InMemorySession{sessions: sessions}, nil
+	return &InMemorySession{sessions: sessions, convMsgLimit: convMsgLimit}, nil
 }
 
 func (s *InMemorySession) GetConversationBySessionId(sessionId string) ([]Message, error) {
@@ -50,8 +51,29 @@ func (s *InMemorySession) GetConversationBySessionId(sessionId string) ([]Messag
 	if limit > len(conversation) {
 		limit = len(conversation) // Avoid out-of-bounds error
 	}
+	MostRecentConv := conversation[len(conversation)-limit:]
 
-	return conversation[len(conversation)-limit:], nil
+	copySlice := make([]Message, len(MostRecentConv))
+
+	// Copy elements from original to new slice
+	copy(copySlice, MostRecentConv)
+
+	return copySlice, nil
+}
+
+func (s *InMemorySession) AddMessage(sessionId string, msg Message) error {
+	s.rwMutex.Lock()
+	defer s.rwMutex.Unlock()
+
+	conversation, ok := s.sessions[sessionId]
+	if !ok {
+		return fmt.Errorf("Conversation with sessionID: %s not found", sessionId)
+	}
+
+	conversation = append(conversation, msg)
+	s.sessions[sessionId] = conversation
+
+	return nil
 }
 
 func (s *InMemorySession) SetConversationForSessionId(conversation []Message, sessionId string) error {

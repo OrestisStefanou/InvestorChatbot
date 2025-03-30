@@ -67,6 +67,7 @@ func (s *ChatService) GenerateResponse(
 	questionMessage := Message{
 		Role: User, Content: question,
 	}
+	s.sessionService.AddMessage(sessionId, questionMessage)
 	conversation = append(conversation, questionMessage)
 
 	var responseMessage string
@@ -99,8 +100,7 @@ func (s *ChatService) GenerateResponse(
 		}
 	}
 
-	conversation = append(conversation, Message{Role: Assistant, Content: responseMessage})
-	s.sessionService.SetConversationForSessionId(conversation, sessionId)
+	s.sessionService.AddMessage(sessionId, Message{Role: Assistant, Content: responseMessage})
 
 	return nil
 }
