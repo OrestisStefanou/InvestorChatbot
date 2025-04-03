@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -70,15 +71,46 @@ func main() {
 		log.Fatal("Error parsing HTML:", err)
 	}
 
+	// // Find all tables in the document
+	// doc.Find("table").Each(func(index int, tableHtml *goquery.Selection) {
+	// 	// Print each table (you can customize this part to extract specific data)
+	// 	fmt.Println("Table", index+1, ":")
+	// 	tableHtml.Each(func(rowIndex int, rowHtml *goquery.Selection) {
+	// 		rowHtml.Find("td").Each(func(cellIndex int, cellHtml *goquery.Selection) {
+	// 			fmt.Print(cellHtml.Text(), "\t")
+	// 		})
+	// 		fmt.Println()
+	// 	})
+	// })
 	// Find all tables in the document
 	doc.Find("table").Each(func(index int, tableHtml *goquery.Selection) {
-		// Print each table (you can customize this part to extract specific data)
-		fmt.Println("Table", index+1, ":")
-		tableHtml.Each(func(rowIndex int, rowHtml *goquery.Selection) {
+		// For each table, extract rows and print in JSON format
+		tableHtml.Find("tr").Each(func(rowIndex int, rowHtml *goquery.Selection) {
+			// Skip empty rows (optional)
+			if rowHtml.Children().Length() == 0 {
+				return
+			}
+
+			// Create a map to hold the row data
+			rowData := make(map[string]interface{})
+
+			// For each cell in the row, map column to value (you can customize this part based on your table structure)
 			rowHtml.Find("td").Each(func(cellIndex int, cellHtml *goquery.Selection) {
-				fmt.Print(cellHtml.Text(), "\t")
+				// You can customize the keys based on the columns' index or content (e.g., Column 1, Column 2)
+				columnKey := fmt.Sprintf("Column%d", cellIndex+1)
+				cellValue := cellHtml.Text()
+				rowData[columnKey] = cellValue
 			})
-			fmt.Println()
+
+			// Marshal the map into JSON
+			rowJSON, err := json.Marshal(rowData)
+			if err != nil {
+				log.Println("Error marshaling row data to JSON:", err)
+				return
+			}
+
+			// Print the JSON string
+			fmt.Println(string(rowJSON))
 		})
 	})
 }
