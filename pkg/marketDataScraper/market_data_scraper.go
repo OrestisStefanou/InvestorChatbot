@@ -89,3 +89,13 @@ func (mds MarketDataScraper) GetStockNews(symbol string) ([]domain.NewsArticle, 
 func (mds MarketDataScraper) GetTickers() ([]domain.Ticker, error) {
 	return scrapeStockList()
 }
+
+// GetSuperInvestors returns a list of SuperInvestors (Name)
+func (mds MarketDataScraper) GetSuperInvestors() ([]domain.SuperInvestor, error) {
+	return scrapeSuperInvestors()
+}
+
+// GetSuperInvestorPortfolio returns the portfolio of the given super investor
+func (mds MarketDataScraper) GetSuperInvestorPortfolio(superInvestorName string) (domain.SuperInvestorPortfolio, error) {
+	return scrapeSuperInvestorPortfolio(superInvestorName)
+}
