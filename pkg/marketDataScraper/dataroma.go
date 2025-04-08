@@ -3,6 +3,7 @@ package marketDataScraper
 import (
 	"fmt"
 	"investbot/pkg/domain"
+	"investbot/pkg/errors"
 	"net/http"
 	"strings"
 
@@ -72,7 +73,7 @@ func scrapeSuperInvestorPortfolio(superInvestorName string) (domain.SuperInvesto
 
 	portfolioLink, found := investorToPortfolioLinkMap[superInvestorName]
 	if !found {
-		return domain.SuperInvestorPortfolio{}, fmt.Errorf("Portfolio for super investor: %s not found", superInvestorName)
+		return domain.SuperInvestorPortfolio{}, &errors.SuperInvestorPortfolioNotFoundError{Message: fmt.Sprintf("Portfolio for super investor: %s not found", superInvestorName)}
 	}
 
 	client := &http.Client{}

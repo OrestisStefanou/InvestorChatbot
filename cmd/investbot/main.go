@@ -49,6 +49,7 @@ func main() {
 	faqService, _ := services.NewFaqService(config.FaqLimit)
 	tickerService, _ := services.NewTickerService(dataService)
 	etfService, _ := services.NewEtfService(dataService)
+	superInvestorService, _ := services.NewSuperInvestorService(dataService)
 
 	chatHandler, _ := handlers.NewChatHandler(chatService)
 	sessionHandler, _ := handlers.NewSessionHandler(sessionService)
@@ -56,6 +57,7 @@ func main() {
 	faqHandler, _ := handlers.NewFaqHandler(faqService)
 	tickerHandler, _ := handlers.NewTickerHandler(tickerService)
 	etfHandler, _ := handlers.NewEtfHandler(etfService)
+	superInvestorHandler, _ := handlers.NewSuperInvestorHandler(superInvestorService)
 
 	e.POST("/chat", chatHandler.ChatCompletion)
 	e.POST("/session", sessionHandler.CreateNewSession)
@@ -63,5 +65,7 @@ func main() {
 	e.GET("/faq", faqHandler.GetFaq)
 	e.GET("/tickers", tickerHandler.GetTickers)
 	e.GET("/etfs", etfHandler.GetEtfs)
+	e.GET("/super_investors", superInvestorHandler.GetSuperInvestors)
+	e.GET("/super_investors/portfolio/:super_investor", superInvestorHandler.GetSuperInvestorPortfolio)
 	e.Logger.Fatal(e.Start(":1323"))
 }

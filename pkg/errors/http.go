@@ -10,7 +10,7 @@ type HTTPError struct {
 	Message    string
 }
 
-func (e *HTTPError) Error() string {
+func (e HTTPError) Error() string {
 	return fmt.Sprintf("HTTP error: %s (status code: %d)", e.Message, e.StatusCode)
 }
 
@@ -20,7 +20,7 @@ type JSONMarshalError struct {
 	Err     error
 }
 
-func (e *JSONMarshalError) Error() string {
+func (e JSONMarshalError) Error() string {
 	return fmt.Sprintf("JSON marshal error: %s: %v", e.Message, e.Err)
 }
 
@@ -30,6 +30,6 @@ type StreamError struct {
 	Err     error
 }
 
-func (e *StreamError) Error() string {
+func (e StreamError) Error() string {
 	return fmt.Sprintf("Stream error: %s: %v", e.Message, e.Err)
 }
