@@ -1,8 +1,10 @@
 package main
 
 import (
+	"fmt"
 	"investbot/pkg/config"
 	"investbot/pkg/handlers"
+	"investbot/pkg/llama"
 	"investbot/pkg/marketDataScraper"
 	"investbot/pkg/openAI"
 	"investbot/pkg/services"
@@ -11,27 +13,43 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+func getLlm(conf config.Config) (services.Llm, error) {
+	var llm services.Llm
+	var err error
+	switch conf.LlmProvider {
+	case config.OPEN_AI:
+		openAiClient, _ := openAI.NewOpenAiClient(conf.OpenAiKey, conf.OpenAiBaseUrl)
+		llm, err = openAI.NewOpenAiLLM(conf.OpenAiModelName, openAiClient, float64(conf.BaseLlmTemperature))
+	case config.OLLAMA:
+		llamaClient, _ := llama.NewOllamaClient(conf.OllamaBaseUrl)
+		llm, err = llama.NewLlamaLLM(llama.ModelName(conf.OllamaModelName), llamaClient, conf.BaseLlmTemperature)
+	default:
+		err = fmt.Errorf("No valid llm provider found")
+	}
+
+	return llm, err
+}
+
 func main() {
 	e := echo.New()
 
-	config, _ := config.LoadConfig()
-	openAiClient, _ := openAI.NewOpenAiClient(config.OpenAiKey, config.OpenAiBaseUrl)
+	conf, _ := config.LoadConfig()
 
-	openAiLLM, err := openAI.NewOpenAiLLM(openAI.GPT4_MINI, openAiClient, 0.2)
+	llm, err := getLlm(conf)
 	if err != nil {
 		log.Fatal(err)
 	}
 	// llamaClient, _ := llama.NewOllamaClient(config.OllamaBaseUrl)
 	// llamaLLM, _ := llama.NewLlamaLLM("llama3.2", llamaClient, 0.2)
 	dataService := marketDataScraper.MarketDataScraper{}
-	sectorRag, _ := services.NewSectorRag(openAiLLM, dataService)
-	educationRag, _ := services.NewEducationRag(openAiLLM)
-	industryRag, _ := services.NewIndustryRag(openAiLLM, dataService)
-	stockOverviewRag, _ := services.NewStockOverviewRag(openAiLLM, dataService)
-	stockFinancialsRag, _ := services.NewStockFinancialsRag(openAiLLM, dataService)
-	etfRag, _ := services.NewEtfRag(openAiLLM, dataService)
-	newsRag, _ := services.NewMarketNewsRag(openAiLLM, dataService)
-	followUpQuestionsRag, _ := services.NewFollowUpQuestionsRag(openAiLLM)
+	sectorRag, _ := services.NewSectorRag(llm, dataService)
+	educationRag, _ := services.NewEducationRag(llm)
+	industryRag, _ := services.NewIndustryRag(llm, dataService)
+	stockOverviewRag, _ := services.NewStockOverviewRag(llm, dataService)
+	stockFinancialsRag, _ := services.NewStockFinancialsRag(llm, dataService)
+	etfRag, _ := services.NewEtfRag(llm, dataService)
+	newsRag, _ := services.NewMarketNewsRag(llm, dataService)
+	followUpQuestionsRag, _ := services.NewFollowUpQuestionsRag(llm)
 
 	topicToRagMap := map[services.Topic]services.Rag{
 		services.SECTORS:          sectorRag,
@@ -43,10 +61,10 @@ func main() {
 		services.NEWS:             newsRag,
 	}
 
-	sessionService, _ := services.NewInMemorySession(config.ConvMsgLimit)
+	sessionService, _ := services.NewInMemorySession(conf.ConvMsgLimit)
 	chatService, _ := services.NewChatService(topicToRagMap, sessionService)
 	followUpQuestionsService, _ := services.NewFollowUpQuestionsService(sessionService, followUpQuestionsRag)
-	faqService, _ := services.NewFaqService(config.FaqLimit)
+	faqService, _ := services.NewFaqService(conf.FaqLimit)
 	tickerService, _ := services.NewTickerService(dataService)
 	etfService, _ := services.NewEtfService(dataService)
 	superInvestorService, _ := services.NewSuperInvestorService(dataService)
