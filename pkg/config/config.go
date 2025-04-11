@@ -1,5 +1,12 @@
 package config
 
+import (
+	"os"
+	"strconv"
+
+	"github.com/joho/godotenv"
+)
+
 type Config struct {
 	// OpenAI configs
 	OpenAiKey     string
@@ -14,13 +21,30 @@ type Config struct {
 }
 
 func LoadConfig() (Config, error) {
+	_ = godotenv.Load() // Load .env file, ignore errors if not found
+
+	faqLimit, err := strconv.Atoi(getEnv("FAQ_LIMIT", "5"))
+	if err != nil {
+		faqLimit = 5
+	}
+
+	convMsgLimit, err := strconv.Atoi(getEnv("CONV_MSG_LIMIT", "10"))
+	if err != nil {
+		convMsgLimit = 10
+	}
+
 	return Config{
-		OpenAiKey:     "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",
-		OpenAiBaseUrl: "https://api.openai.com/v1",
-
-		OllamaBaseUrl: "http://localhost:11434",
-
-		FaqLimit:     5,
-		ConvMsgLimit: 10,
+		OpenAiKey:     getEnv("OPEN_AI_API_KEY", ""),
+		OpenAiBaseUrl: getEnv("OPENAI_BASE_URL", "https://api.openai.com/v1"),
+		OllamaBaseUrl: getEnv("OLLAMA_BASE_URL", "http://localhost:11434"),
+		FaqLimit:      faqLimit,
+		ConvMsgLimit:  convMsgLimit,
 	}, nil
+}
+
+func getEnv(key, fallback string) string {
+	if value, exists := os.LookupEnv(key); exists {
+		return value
+	}
+	return fallback
 }

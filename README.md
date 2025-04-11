@@ -34,7 +34,7 @@ Investor Chatbot is a conversational AI designed to help beginner investors make
    ```
 4. Set up API keys in a `.env` file:
    ```bash
-   OPEN_API_KEY=your_api_key_here
+   OPEN_AI_API_KEY=your_api_key_here
    ```
 5. Run the chatbot:
    ```bash
