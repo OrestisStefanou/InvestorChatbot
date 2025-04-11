@@ -54,7 +54,7 @@ func (s *ChatService) GenerateResponse(
 
 	if !found {
 		// Use default RAG in this case?
-		return fmt.Errorf("Rag for topic %s not found", topic)
+		return &errors.InvalidTopicError{Message: fmt.Sprintf("Invalid topic %s", topic)}
 	}
 
 	conversation, err := s.sessionService.GetConversationBySessionId(sessionId)

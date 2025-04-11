@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
+	investbotErr "investbot/pkg/errors"
 	"investbot/pkg/services"
 	"net/http"
 
@@ -107,7 +108,15 @@ func (h *ChatHandler) ChatCompletion(c echo.Context) error {
 
 		case err := <-errorChannel:
 			if err != nil {
-				return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+				switch e := err.(type) {
+				case *investbotErr.SessionNotFoundError:
+					return c.JSON(http.StatusBadRequest, map[string]string{"error": e.Error()})
+				case *investbotErr.InvalidTopicError:
+					return c.JSON(http.StatusBadRequest, map[string]string{"error": e.Error()})
+				default:
+					return c.JSON(http.StatusInternalServerError, map[string]string{"error": e.Error()})
+				}
+
 			}
 		}
 	}
