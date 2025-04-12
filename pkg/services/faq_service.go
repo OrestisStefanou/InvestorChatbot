@@ -41,7 +41,7 @@ func NewFaqService(faqLimit int) (*FaqService, error) {
 func (s FaqService) GetFaqForTopic(topic FaqTopic) ([]string, error) {
 	faqSlice, found := s.topicToFaq[topic]
 	if !found {
-		return nil, &errors.TopicNotFoundError{Message: fmt.Sprintf("Faq for %s not found", topic)}
+		return nil, &errors.FaqTopicNotFoundError{Message: fmt.Sprintf("FaqTopic for %s not found", topic)}
 	}
 
 	randomFaq := s.pickRandomStrings(faqSlice, s.faqLimit)

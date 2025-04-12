@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"fmt"
+	"investbot/pkg/errors"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -55,7 +56,12 @@ func (h *FollowUpQuestionsHandler) GenerateFollowUpQuestions(c echo.Context) err
 	followUpQuestions, err := h.followUpQuestionsService.GenerateFollowUpQuestions(request.SessionID, request.NumberOfQuestions)
 
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		switch e := err.(type) {
+		case *errors.SessionNotFoundError:
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": e.Error()})
+		default:
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		}
 	}
 
 	response := FollowUpQuestionsResponse{FollowUpQuestions: followUpQuestions}

@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"investbot/pkg/errors"
 	"investbot/pkg/services"
 	"net/http"
 
@@ -31,7 +32,13 @@ func (h *FaqHandler) GetFaq(c echo.Context) error {
 	faq, err := h.faqService.GetFaqForTopic(services.FaqTopic(topic))
 
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+		switch e := err.(type) {
+		case *errors.FaqTopicNotFoundError:
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": e.Error()})
+		default:
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		}
+
 	}
 
 	response := GetFaqResponse{Faq: faq}
