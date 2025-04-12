@@ -1,3 +1,49 @@
+# Create New Session API
+
+## Endpoint
+
+### POST `/session`
+
+Creates a new session and returns the session ID.
+
+## Request Parameters
+
+_No parameters are required in the request body or query._
+
+## Response
+
+### Success Response (201 Created)
+
+#### Example Response Body:
+```json
+{
+  "session_id": "abc123xyz"
+}
+```
+
+### Error Response (500 Internal Server Error)
+
+#### Example Response Body:
+```json
+{
+  "error": "failed to create session"
+}
+```
+
+## Notes
+- This endpoint is used to create a new session on the server.
+- A successful request returns a `session_id`, which can be used in the chat endpoint.
+- If an error occurs during session creation, a relevant error message will be returned in the response body.
+
+## Example Request
+```sh
+POST /session
+```
+
+This request would create a new session and return the newly generated session ID.
+
+--- 
+
 # Get Sector Stocks API
 
 ## Endpoint
