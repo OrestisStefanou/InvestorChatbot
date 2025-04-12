@@ -71,7 +71,7 @@ func main() {
 
 	chatHandler, _ := handlers.NewChatHandler(chatService)
 	sessionHandler, _ := handlers.NewSessionHandler(sessionService)
-	followUpQuestionsHandler, _ := handlers.NewFollowUpQuestionsHandler(followUpQuestionsService)
+	followUpQuestionsHandler, _ := handlers.NewFollowUpQuestionsHandler(followUpQuestionsService, conf.FollowUpQuestionsNum)
 	faqHandler, _ := handlers.NewFaqHandler(faqService)
 	tickerHandler, _ := handlers.NewTickerHandler(tickerService)
 	etfHandler, _ := handlers.NewEtfHandler(etfService)

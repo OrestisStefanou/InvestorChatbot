@@ -26,10 +26,11 @@ type Config struct {
 	OllamaModelName string
 
 	// App configs
-	LlmProvider        LlmProvider // Valid values are: "OPEN_AI", "OLLAMA"
-	FaqLimit           int         // Number of faq to return in through the endpoint
-	ConvMsgLimit       int         // The number of most recent messages to get from a session
-	BaseLlmTemperature float32
+	LlmProvider          LlmProvider // Valid values are: "OPEN_AI", "OLLAMA"
+	FaqLimit             int         // Number of faq to return in through the endpoint
+	ConvMsgLimit         int         // The number of most recent messages to get from a session
+	BaseLlmTemperature   float32
+	FollowUpQuestionsNum int
 }
 
 func LoadConfig() (Config, error) {
@@ -48,6 +49,11 @@ func LoadConfig() (Config, error) {
 		convMsgLimit = 10
 	}
 
+	followUpQuestionsNum, err := strconv.Atoi(getEnv("FOLLOW_UP_QUESTIONS_NUM", "5"))
+	if err != nil {
+		followUpQuestionsNum = 5
+	}
+
 	llmProvider := getEnv("LLM_PROVIDER", "OPEN_AI")
 
 	openAiModelName := getEnv("OPEN_AI_MODEL_NAME", "gpt-4o-mini")
@@ -55,15 +61,16 @@ func LoadConfig() (Config, error) {
 	ollamaModelName := getEnv("OLLAMA_MODEL_NAME", "llama3.2")
 
 	return Config{
-		OpenAiKey:          getEnv("OPEN_AI_API_KEY", ""),
-		OpenAiBaseUrl:      getEnv("OPENAI_BASE_URL", "https://api.openai.com/v1"),
-		OllamaBaseUrl:      getEnv("OLLAMA_BASE_URL", "http://localhost:11434"),
-		FaqLimit:           faqLimit,
-		ConvMsgLimit:       convMsgLimit,
-		LlmProvider:        LlmProvider(llmProvider),
-		OpenAiModelName:    openAI.ModelName(openAiModelName),
-		OllamaModelName:    ollamaModelName,
-		BaseLlmTemperature: getEnvFloat32("BASE_LLM_TEMPERATURE", 0.2),
+		OpenAiKey:            getEnv("OPEN_AI_API_KEY", ""),
+		OpenAiBaseUrl:        getEnv("OPENAI_BASE_URL", "https://api.openai.com/v1"),
+		OllamaBaseUrl:        getEnv("OLLAMA_BASE_URL", "http://localhost:11434"),
+		FaqLimit:             faqLimit,
+		ConvMsgLimit:         convMsgLimit,
+		LlmProvider:          LlmProvider(llmProvider),
+		OpenAiModelName:      openAI.ModelName(openAiModelName),
+		OllamaModelName:      ollamaModelName,
+		BaseLlmTemperature:   getEnvFloat32("BASE_LLM_TEMPERATURE", 0.2),
+		FollowUpQuestionsNum: followUpQuestionsNum,
 	}, nil
 }
 

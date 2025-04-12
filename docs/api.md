@@ -44,10 +44,6 @@ This request would create a new session and return the newly generated session I
 
 --- 
 
-Absolutely! Here's the full API documentation for the `/chat` POST endpoint, based on the code you shared:
-
----
-
 # Chat Completion API
 
 ## Endpoint
@@ -154,6 +150,92 @@ This request would trigger a streamed AI response about the semiconductor indust
 
 ---
 
+
+# Generate Follow-Up Questions API
+
+## Endpoint
+
+### POST `/follow_up_questions`
+
+Generates a list of follow-up questions based on the current session context.
+
+## Request Body
+
+| Field               | Type    | Required | Description                                                             |
+|--------------------|---------|----------|-------------------------------------------------------------------------|
+| `session_id`        | string  | Yes      | A valid session ID obtained from the `/session` endpoint.               |
+| `number_of_questions` | int  | No       | The number of follow-up questions to generate. Defaults to `5` if not provided or set to `0`. |
+
+### Example Request Body
+```json
+{
+  "session_id": "abc123xyz",
+  "number_of_questions": 3
+}
+```
+
+## Response
+
+### Success Response (200 OK)
+
+Returns a list of AI-generated follow-up questions relevant to the conversation context.
+
+#### Example Response Body:
+```json
+{
+  "follow_up_questions": [
+    "Would you like to see a breakdown of the revenue sources?",
+    "Should I compare this company's performance with its competitors?",
+    "Do you want to explore the impact of macroeconomic trends?"
+  ]
+}
+```
+
+### Error Responses
+
+#### 400 Bad Request
+Occurs when required fields are missing or the session ID is invalid.
+
+```json
+{
+  "error": "session_id field is required"
+}
+```
+
+```json
+{
+  "error": "session not found"
+}
+```
+
+#### 500 Internal Server Error
+Returned when an unexpected server error occurs.
+
+```json
+{
+  "error": "an unexpected error occurred while generating follow-up questions"
+}
+```
+
+## Notes
+- If `number_of_questions` is not provided or set to `0`, the service will default to returning **5** questions.
+- A valid `session_id` is required and must correspond to an active chat session.
+- This endpoint is useful for guiding users toward deeper exploration or next steps in their inquiry.
+
+## Example Request
+```sh
+POST /follow_up_questions
+Content-Type: application/json
+
+{
+  "session_id": "abc123xyz",
+  "number_of_questions": 5
+}
+```
+
+This request would return 5 follow-up questions tailored to the given session.
+
+---
 
 # Get Sector Stocks API
 

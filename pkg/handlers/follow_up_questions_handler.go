@@ -14,6 +14,7 @@ type FollowUpService interface {
 
 type FollowUpQuestionsHandler struct {
 	followUpQuestionsService FollowUpService
+	followUpQuestionsNum     int
 }
 
 type FollowUpQuestionsResponse struct {
@@ -30,15 +31,14 @@ func (r *FollowUpQuestionsRequest) validate() error {
 		return fmt.Errorf("session_id field is required")
 	}
 
-	if r.NumberOfQuestions == 0 {
-		r.NumberOfQuestions = 5
-	}
-
 	return nil
 }
 
-func NewFollowUpQuestionsHandler(followUpQuestionsService FollowUpService) (*FollowUpQuestionsHandler, error) {
-	return &FollowUpQuestionsHandler{followUpQuestionsService: followUpQuestionsService}, nil
+func NewFollowUpQuestionsHandler(followUpQuestionsService FollowUpService, followUpQuestionsNum int) (*FollowUpQuestionsHandler, error) {
+	return &FollowUpQuestionsHandler{
+		followUpQuestionsService: followUpQuestionsService,
+		followUpQuestionsNum:     followUpQuestionsNum,
+	}, nil
 }
 
 func (h *FollowUpQuestionsHandler) GenerateFollowUpQuestions(c echo.Context) error {
@@ -51,6 +51,10 @@ func (h *FollowUpQuestionsHandler) GenerateFollowUpQuestions(c echo.Context) err
 	err = request.validate()
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+	}
+
+	if request.NumberOfQuestions == 0 {
+		request.NumberOfQuestions = h.followUpQuestionsNum
 	}
 
 	followUpQuestions, err := h.followUpQuestionsService.GenerateFollowUpQuestions(request.SessionID, request.NumberOfQuestions)
