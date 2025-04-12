@@ -44,6 +44,117 @@ This request would create a new session and return the newly generated session I
 
 --- 
 
+Absolutely! Here's the full API documentation for the `/chat` POST endpoint, based on the code you shared:
+
+---
+
+# Chat Completion API
+
+## Endpoint
+
+### POST `/chat`
+
+Generates a streaming chat response based on the user's question, topic, session, and contextual tags (like stock or financial statement info).
+
+## Request Body
+
+| Field             | Type      | Required | Description                                                                 |
+|------------------|-----------|----------|-----------------------------------------------------------------------------|
+| `question`        | string    | Yes      | The user's question to be answered.                                         |
+| `topic`           | string    | Yes      | The context/topic for the chat (e.g., "finance", "markets").                |
+| `session_id`      | string    | Yes      | A valid session ID created via the `/session` endpoint.                     |
+| `topic_tags`      | object    | No       | Optional tags to add financial context. See `Topic Tags` below.             |
+
+### Topic Tags (Optional `topic_tags` object)
+
+| Field              | Type    | Required | Description                                                              |
+|-------------------|---------|----------|--------------------------------------------------------------------------|
+| `sector_name`      | string  | No       | Name of the relevant sector (e.g., "Technology").                         |
+| `industry_name`    | string  | No       | Name of the industry (e.g., "Semiconductors").                            |
+| `stock_symbol`     | string  | No       | Specific stock symbol (e.g., "AAPL").                                     |
+| `balance_sheet`    | boolean | No       | Whether to include balance sheet context.                                |
+| `income_statement` | boolean | No       | Whether to include income statement context.                             |
+| `cash_flow`        | boolean | No       | Whether to include cash flow context.                                    |
+| `etf_symbol`       | string  | No       | ETF symbol if the question is related to an ETF.                          |
+
+### Example Request Body
+```json
+{
+  "question": "How did Apple perform last quarter?",
+  "topic": "stock_overview",
+  "session_id": "abc123xyz",
+  "topic_tags": {
+    "stock_symbol": "AAPL"
+  }
+}
+```
+
+## Response
+
+### Success Response (200 OK – Streamed)
+
+The response is a stream of JSON-encoded text chunks representing the chat reply. Each chunk is a string:
+```json
+"Apple reported strong earnings with increased revenue in Q4..."
+```
+
+> Note: This is streamed using server-sent events (chunked HTTP), not returned as a complete JSON object.
+
+### Error Responses
+
+#### 400 Bad Request
+Occurs when the request payload is invalid or missing required fields.
+
+```json
+{
+  "error": "question field is required"
+}
+```
+
+```json
+{
+  "error": "session not found"
+}
+```
+
+```json
+{
+  "error": "invalid topic"
+}
+```
+
+#### 500 Internal Server Error
+
+```json
+{
+  "error": "an unexpected error occurred"
+}
+```
+
+## Notes
+- Fields `question`, `topic`, and `session_id` are required.
+- If `session_id` is invalid or expired, a 400 error will be returned.
+- This endpoint returns a **streaming** response, suitable for chat UIs that render text incrementally.
+- The `topic_tags` object allows for fine-grained control over the context of the AI's response, especially when discussing financials.
+
+## Example Request
+```sh
+POST /chat
+Content-Type: application/json
+
+{
+  "question": "What is the sentiment of the latest market news?",
+  "topic": "news",
+  "session_id": "abc123xyz",
+  "topic_tags": {}
+}
+```
+
+This request would trigger a streamed AI response about the semiconductor industry.
+
+---
+
+
 # Get Sector Stocks API
 
 ## Endpoint
