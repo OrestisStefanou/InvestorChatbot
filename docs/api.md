@@ -249,7 +249,7 @@ Retrieves a list of frequently asked questions (FAQs) for a specific topic.
 
 | Parameter | Type   | Required | Description |
 |-----------|--------|----------|-------------|
-| `topic`   | string | Yes      | The FAQ topic identifier. Must be one of the supported topics: `education`, `sectors`, `stock_overview`, `balance_sheet`, `income_statement`, `cash_flow`, `etfs`. |
+| `faq_topic`   | string | Yes      | The FAQ topic identifier. Must be one of the supported topics: `education`, `sectors`, `stock_overview`, `balance_sheet`, `income_statement`, `cash_flow`, `etfs`. |
 
 ## Response
 
