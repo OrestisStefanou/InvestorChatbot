@@ -526,3 +526,69 @@ GET /sectors
 
 This request would return a list of all available sectors and their details.
 
+---
+
+# Get ETFs API
+
+## Endpoint
+
+### GET `/etfs`
+
+Retrieves a list of exchange-traded funds (ETFs), optionally filtered by a search string.
+
+## Request Parameters
+
+| Parameter      | Type   | Required | Description |
+|----------------|--------|----------|-------------|
+| `search_string`| string | No       | A search query to filter ETFs by symbol or name. |
+
+## Response
+
+### Success Response (200 OK)
+
+#### Example Response Body:
+```json
+{
+  "etfs": [
+    {
+      "symbol": "SPY",
+      "name": "SPDR S&P 500 ETF Trust",
+      "asset_class": "Equity",
+      "aum": 411000000000
+    },
+    {
+      "symbol": "QQQ",
+      "name": "Invesco QQQ Trust",
+      "asset_class": "Equity",
+      "aum": 200000000000
+    }
+  ]
+}
+```
+
+### Error Response (500 Internal Server Error)
+
+Returned when an internal server error occurs while retrieving ETFs.
+
+```json
+{
+  "error": "An unexpected error occurred while retrieving ETFs"
+}
+```
+
+## Notes
+- The `search_string` parameter allows filtering by ETF `symbol` or `name`. It is case-insensitive and supports partial matches.
+- The response returns a list of ETFs, each including:
+  - `symbol`: The ticker symbol of the ETF.
+  - `name`: The full name of the ETF.
+  - `asset_class`: The asset class category (e.g., Equity, Bond, Commodity).
+  - `aum`: Assets under management, represented as a float.
+
+## Example Request
+```sh
+GET /etfs?search_string=nasdaq
+```
+
+This request would return ETFs whose symbol or name includes "nasdaq".
+
+---
