@@ -237,6 +237,85 @@ This request would return 5 follow-up questions tailored to the given session.
 
 ---
 
+# Get FAQs by Topic API
+
+## Endpoint
+
+### GET `/faq`
+
+Retrieves a list of frequently asked questions (FAQs) for a specific topic.
+
+## Request Parameters
+
+| Parameter | Type   | Required | Description |
+|-----------|--------|----------|-------------|
+| `topic`   | string | Yes      | The FAQ topic identifier. Must be one of the supported topics: `education`, `sectors`, `stock_overview`, `balance_sheet`, `income_statement`, `cash_flow`, `etfs`. |
+
+## Response
+
+### Success Response (200 OK)
+
+#### Example Response Body:
+```json
+{
+  "FAQs": [
+    "What is the stock market?",
+    "How does compound interest work?",
+    "What is the difference between stocks and ETFs?"
+  ]
+}
+```
+
+### Error Responses
+
+#### 400 Bad Request
+Returned when the `topic` parameter is missing or invalid.
+
+```json
+{
+  "error": "Missing or invalid 'topic' parameter"
+}
+```
+
+#### 404 Not Found
+Returned when the provided topic does not exist in the system.
+
+```json
+{
+  "error": "FaqTopic for 'cryptocurrency' not found"
+}
+```
+
+#### 500 Internal Server Error
+Returned when an internal error occurs while fetching the FAQs.
+
+```json
+{
+  "error": "An error occurred while retrieving FAQs"
+}
+```
+
+## Notes
+- The `topic` parameter is case-sensitive and must exactly match one of the following values:
+  - `education`
+  - `sectors`
+  - `stock_overview`
+  - `balance_sheet`
+  - `income_statement`
+  - `cash_flow`
+  - `etfs`
+- The response returns up to `faqLimit` randomly selected FAQs from the topic category.
+- If the topic is not found, a `FaqTopicNotFoundError` is returned.
+
+## Example Request
+```sh
+GET /faq?topic=education
+```
+
+This request would return a limited set of education-related FAQs.
+
+--- 
+
 # Get Sector Stocks API
 
 ## Endpoint
