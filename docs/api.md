@@ -258,7 +258,7 @@ Retrieves a list of frequently asked questions (FAQs) for a specific topic.
 #### Example Response Body:
 ```json
 {
-  "FAQs": [
+  "faq": [
     "What is the stock market?",
     "How does compound interest work?",
     "What is the difference between stocks and ETFs?"
@@ -309,12 +309,93 @@ Returned when an internal error occurs while fetching the FAQs.
 
 ## Example Request
 ```sh
-GET /faq?topic=education
+GET /faq?faq_topic=education
 ```
 
 This request would return a limited set of education-related FAQs.
 
 --- 
+
+# Get Tickers API
+
+## Endpoint
+
+### GET `/tickers`
+
+Retrieves a list of stock tickers with optional filtering, pagination, and search.
+
+## Request Parameters
+
+| Parameter      | Type   | Required | Description |
+|----------------|--------|----------|-------------|
+| `limit`        | int    | No       | Limits the number of results returned. Must be a valid integer. |
+| `page`         | int    | No       | The page number for paginated results. Must be a valid integer. |
+| `search_string`| string | No       | A search query to filter tickers by symbol or company name. |
+
+## Response
+
+### Success Response (200 OK)
+
+#### Example Response Body:
+```json
+{
+  "tickers": [
+    {
+      "symbol": "AAPL",
+      "company_name": "Apple Inc."
+    },
+    {
+      "symbol": "GOOGL",
+      "company_name": "Alphabet Inc."
+    }
+  ]
+}
+```
+
+### Error Responses
+
+#### 400 Bad Request
+
+Returned when `limit` or `page` is provided but is not a valid integer.
+
+```json
+{
+  "error": "limit query param must be a valid integer"
+}
+```
+
+```json
+{
+  "error": "page query param must be a valid integer"
+}
+```
+
+#### 500 Internal Server Error
+
+Returned when an internal server error occurs while retrieving tickers.
+
+```json
+{
+  "error": "An unexpected error occurred while retrieving tickers"
+}
+```
+
+## Notes
+- If `limit` is not provided, the service may return all tickers or a default number based on internal logic.
+- `search_string` can match either the `symbol` or `company_name` fields of a ticker.
+- The results support pagination through the `limit` and `page` parameters.
+- Tickers are returned as objects containing:
+  - `symbol`: The ticker symbol of the company.
+  - `company_name`: The full name of the company.
+
+## Example Request
+```sh
+GET /tickers?limit=10&page=2&search_string=apple
+```
+
+This request would return the second page of up to 10 tickers that match the search string "apple".
+
+---
 
 # Get Sector Stocks API
 
