@@ -592,3 +592,57 @@ GET /etfs?search_string=nasdaq
 This request would return ETFs whose symbol or name includes "nasdaq".
 
 ---
+
+# Get FAQ Topics API
+
+## Endpoint
+
+### GET `/topics`
+
+Retrieves a list of all available FAQ topics supported by the system.
+
+## Request Parameters
+
+This endpoint does **not** require any request parameters.
+
+## Response
+
+### Success Response (200 OK)
+
+#### Example Response Body:
+```json
+{
+  "topics": [
+    "education",
+    "sectors",
+    "stock_overview",
+    "stock_financials",
+    "etfs",
+    "news"
+  ]
+}
+```
+
+### Error Response (500 Internal Server Error)
+
+Returned if an unexpected server error occurs.
+
+```json
+{
+  "error": "An unexpected error occurred while retrieving topics"
+}
+```
+
+## Notes
+- This endpoint returns a flat list of string values representing the available FAQ topics.
+- The topics returned here can be used as valid `topic` values for the `/faq` endpoint.
+- These values are case-sensitive and should be passed exactly as returned when used in requests.
+
+## Example Request
+```sh
+GET /topics
+```
+
+This request would return a list of all valid FAQ topic identifiers.
+
+---
