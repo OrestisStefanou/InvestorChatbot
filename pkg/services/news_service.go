@@ -29,29 +29,33 @@ func NewMarketNewsRag(llm Llm, newsDataService NewsDataService) (*MarketNewsRag,
 func (rag MarketNewsRag) createRagContext(stockSymbols []string) (string, error) {
 	ragContext := make([]ragNewsContext, 0, len(stockSymbols))
 	var err error
+	context := ragNewsContext{}
+	// Keep only the last 10 news
+	limit := 10
 
-	// TODO: Update the logic below
-	// If stock symbols then fetch stock news else fetch market news
-	for _, symbol := range stockSymbols {
-		context := ragNewsContext{}
-		var news []domain.NewsArticle
-		if symbol != "" {
+	if len(stockSymbols) > 0 {
+		for _, symbol := range stockSymbols {
+			var news []domain.NewsArticle
+
 			news, err = rag.dataService.GetStockNews(symbol)
 			if err != nil {
 				return "", &DataServiceError{Message: fmt.Sprintf("GetStockNews failed: %s", err)}
 			}
-		} else {
-			news, err = rag.dataService.GetMarketNews()
-			if err != nil {
-				return "", &DataServiceError{Message: fmt.Sprintf("GetMarketNews failed: %s", err)}
-			}
-		}
-		// Keep only the last 10 news
-		limit := 10
-		if len(news) < limit {
-			limit = len(news)
-		}
 
+			if len(news) < limit {
+				limit = len(news)
+			}
+
+			context.currentDate = time.Now().Format("2006-01-02")
+			context.news = news[:limit]
+
+			ragContext = append(ragContext, context)
+		}
+	} else {
+		news, err := rag.dataService.GetMarketNews()
+		if err != nil {
+			return "", &DataServiceError{Message: fmt.Sprintf("GetMarketNews failed: %s", err)}
+		}
 		context.currentDate = time.Now().Format("2006-01-02")
 		context.news = news[:limit]
 
