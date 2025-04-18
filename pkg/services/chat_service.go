@@ -8,7 +8,7 @@ import (
 type Tags struct {
 	SectorName      string
 	IndustryName    string
-	StockSymbol     string
+	StockSymbols    []string
 	BalanceSheet    bool
 	IncomeStatement bool
 	CashFlow        bool

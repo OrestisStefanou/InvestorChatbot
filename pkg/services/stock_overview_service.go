@@ -30,35 +30,41 @@ func NewStockOverviewRag(llm Llm, stockOverviewDataService StockOverviewDataServ
 	return &StockOverviewRag{llm: llm, dataService: stockOverviewDataService}, nil
 }
 
-func (rag StockOverviewRag) createRagContext(symbol string) (string, error) {
-	var ragContext stockOverviewContext
-	ragContext.symbol = symbol
-	ragContext.currentDate = time.Now().Format("2006-01-02")
+func (rag StockOverviewRag) createRagContext(symbols []string) (string, error) {
+	ragContext := make([]stockOverviewContext, 0, len(symbols))
 
-	stockProfile, err := rag.dataService.GetStockProfile(symbol)
-	if err != nil {
-		return "", &DataServiceError{Message: fmt.Sprintf("GetStockProfile failed: %s", err)}
-	}
-	ragContext.stockProfile = stockProfile
+	for _, symbol := range symbols {
+		context := stockOverviewContext{}
+		context.symbol = symbol
+		context.currentDate = time.Now().Format("2006-01-02")
 
-	stockFinancialRatios, err := rag.dataService.GetFinancialRatios(symbol)
-	if err != nil {
-		return "", &DataServiceError{Message: fmt.Sprintf("GetFinancialRatios failed: %s", err)}
-	}
-	ragContext.stockFinancialRatios = stockFinancialRatios
+		stockProfile, err := rag.dataService.GetStockProfile(symbol)
+		if err != nil {
+			return "", &DataServiceError{Message: fmt.Sprintf("GetStockProfile failed: %s", err)}
+		}
+		context.stockProfile = stockProfile
 
-	stockForecast, err := rag.dataService.GetStockForecast(symbol)
-	if err != nil {
-		return "", &DataServiceError{Message: fmt.Sprintf("GetStockForecast failed: %s", err)}
+		stockFinancialRatios, err := rag.dataService.GetFinancialRatios(symbol)
+		if err != nil {
+			return "", &DataServiceError{Message: fmt.Sprintf("GetFinancialRatios failed: %s", err)}
+		}
+		context.stockFinancialRatios = stockFinancialRatios
+
+		stockForecast, err := rag.dataService.GetStockForecast(symbol)
+		if err != nil {
+			return "", &DataServiceError{Message: fmt.Sprintf("GetStockForecast failed: %s", err)}
+		}
+		context.stockForecast = stockForecast
+
+		ragContext = append(ragContext, context)
 	}
-	ragContext.stockForecast = stockForecast
 
 	return fmt.Sprintf("%+v\n", ragContext), nil
 }
 
 func (rag StockOverviewRag) GenerateRagResponse(conversation []Message, tags Tags, responseChannel chan<- string) error {
 	// Format the prompt to contain the neccessary context
-	ragContext, err := rag.createRagContext(tags.StockSymbol)
+	ragContext, err := rag.createRagContext(tags.StockSymbols)
 	if err != nil {
 		return err
 	}
