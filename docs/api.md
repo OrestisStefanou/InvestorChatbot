@@ -57,7 +57,7 @@ Generates a streaming chat response based on the user's question, topic, session
 | Field             | Type      | Required | Description                                                                 |
 |------------------|-----------|----------|-----------------------------------------------------------------------------|
 | `question`        | string    | Yes      | The user's question to be answered.                                         |
-| `topic`           | string    | Yes      | The context/topic for the chat (e.g., "finance", "markets").                |
+| `topic`           | string    | Yes      | The context/topic for the chat (e.g., "education", "markets").                |
 | `session_id`      | string    | Yes      | A valid session ID created via the `/session` endpoint.                     |
 | `topic_tags`      | object    | No       | Optional tags to add financial context. See `Topic Tags` below.             |
 
@@ -129,6 +129,7 @@ Occurs when the request payload is invalid or missing required fields.
 
 ## Notes
 - Fields `question`, `topic`, and `session_id` are required.
+- The topic field available values can be retrieved using the `GET /topics` endpoint
 - If `session_id` is invalid or expired, a 400 error will be returned.
 - This endpoint returns a **streaming** response, suitable for chat UIs that render text incrementally.
 - The `topic_tags` object allows for fine-grained control over the context of the AI's response, especially when discussing financials.

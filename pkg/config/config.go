@@ -29,8 +29,8 @@ type Config struct {
 	LlmProvider          LlmProvider // Valid values are: "OPEN_AI", "OLLAMA"
 	FaqLimit             int         // Number of faq to return in through the endpoint
 	ConvMsgLimit         int         // The number of most recent messages to get from a session
-	BaseLlmTemperature   float32
-	FollowUpQuestionsNum int
+	BaseLlmTemperature   float32     // The temperature to use for the base llm(currently there is only one llm that is used in all the rags)
+	FollowUpQuestionsNum int         // The number of follow-up questions that the GET /follow_up_questions will return
 }
 
 func LoadConfig() (Config, error) {
