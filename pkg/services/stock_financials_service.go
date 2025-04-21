@@ -31,32 +31,38 @@ func NewStockFinancialsRag(llm Llm, stockFinancialsDataService StockFinancialsDa
 }
 
 func (rag StockFinancialsRag) createRagContext(tags Tags) (string, error) {
-	var ragContext stockFinancialsContext
-	ragContext.symbol = tags.StockSymbol
-	ragContext.currentDate = time.Now().Format("2006-01-02")
+	ragContext := make([]stockFinancialsContext, 0, len(tags.StockSymbols))
 
-	if tags.BalanceSheet {
-		balanceSheets, err := rag.dataService.GetBalanceSheets(tags.StockSymbol)
-		if err != nil {
-			return "", &DataServiceError{Message: fmt.Sprintf("GetBalanceSheets failed: %s", err)}
-		}
-		ragContext.balanceSheets = balanceSheets
-	}
+	for _, symbol := range tags.StockSymbols {
+		context := stockFinancialsContext{}
+		context.symbol = symbol
+		context.currentDate = time.Now().Format("2006-01-02")
 
-	if tags.CashFlow {
-		cashFlows, err := rag.dataService.GetCashFlows(tags.StockSymbol)
-		if err != nil {
-			return "", &DataServiceError{Message: fmt.Sprintf("GetCashFlows failed: %s", err)}
+		if tags.BalanceSheet {
+			balanceSheets, err := rag.dataService.GetBalanceSheets(symbol)
+			if err != nil {
+				return "", &DataServiceError{Message: fmt.Sprintf("GetBalanceSheets failed: %s", err)}
+			}
+			context.balanceSheets = balanceSheets
 		}
-		ragContext.cashFlows = cashFlows
-	}
 
-	if tags.IncomeStatement {
-		incomeStatements, err := rag.dataService.GetIncomeStatements(tags.StockSymbol)
-		if err != nil {
-			return "", &DataServiceError{Message: fmt.Sprintf("GetIncomeStatements failed: %s", err)}
+		if tags.CashFlow {
+			cashFlows, err := rag.dataService.GetCashFlows(symbol)
+			if err != nil {
+				return "", &DataServiceError{Message: fmt.Sprintf("GetCashFlows failed: %s", err)}
+			}
+			context.cashFlows = cashFlows
 		}
-		ragContext.incomeStatements = incomeStatements
+
+		if tags.IncomeStatement {
+			incomeStatements, err := rag.dataService.GetIncomeStatements(symbol)
+			if err != nil {
+				return "", &DataServiceError{Message: fmt.Sprintf("GetIncomeStatements failed: %s", err)}
+			}
+			context.incomeStatements = incomeStatements
+		}
+
+		ragContext = append(ragContext, context)
 	}
 
 	return fmt.Sprintf("%+v\n", ragContext), nil

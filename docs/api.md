@@ -67,7 +67,7 @@ Generates a streaming chat response based on the user's question, topic, session
 |-------------------|---------|----------|--------------------------------------------------------------------------|
 | `sector_name`      | string  | No       | Name of the relevant sector (e.g., "Technology").                         |
 | `industry_name`    | string  | No       | Name of the industry (e.g., "Semiconductors").                            |
-| `stock_symbol`     | string  | No       | Specific stock symbol (e.g., "AAPL").                                     |
+| `stock_symbols`    | string[]| No       | List of stock symbols (e.g., ["AAPL", "MSFT"]).                           |
 | `balance_sheet`    | boolean | No       | Whether to include balance sheet context.                                |
 | `income_statement` | boolean | No       | Whether to include income statement context.                             |
 | `cash_flow`        | boolean | No       | Whether to include cash flow context.                                    |
@@ -80,7 +80,7 @@ Generates a streaming chat response based on the user's question, topic, session
   "topic": "stock_overview",
   "session_id": "abc123xyz",
   "topic_tags": {
-    "stock_symbol": "AAPL"
+    "stock_symbols": ["AAPL"]
   }
 }
 ```

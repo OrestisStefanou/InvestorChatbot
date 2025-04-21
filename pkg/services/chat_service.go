@@ -8,7 +8,7 @@ import (
 type Tags struct {
 	SectorName      string
 	IndustryName    string
-	StockSymbol     string
+	StockSymbols    []string
 	BalanceSheet    bool
 	IncomeStatement bool
 	CashFlow        bool
@@ -86,7 +86,7 @@ func (s *ChatService) GenerateResponse(
 		select {
 		case chunk, isOpen := <-chunkChannel:
 			if !isOpen {
-				fmt.Printf("FINAL RESPONSE\n %s", responseMessage)
+				fmt.Printf("\n\nFINAL RESPONSE\n %s", responseMessage)
 				shouldExit = true
 				close(responseChannel)
 				continue

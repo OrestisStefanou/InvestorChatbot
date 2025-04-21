@@ -26,37 +26,48 @@ func NewMarketNewsRag(llm Llm, newsDataService NewsDataService) (*MarketNewsRag,
 	return &MarketNewsRag{llm: llm, dataService: newsDataService}, nil
 }
 
-func (rag MarketNewsRag) createRagContext(stockSymbol string) (string, error) {
-	var ragContext ragNewsContext
+func (rag MarketNewsRag) createRagContext(stockSymbols []string) (string, error) {
+	ragContext := make([]ragNewsContext, 0, len(stockSymbols))
 	var err error
+	context := ragNewsContext{}
+	// Keep only the last 10 news
+	limit := 10
 
-	var news []domain.NewsArticle
-	if stockSymbol != "" {
-		news, err = rag.dataService.GetStockNews(stockSymbol)
-		if err != nil {
-			return "", &DataServiceError{Message: fmt.Sprintf("GetStockNews failed: %s", err)}
+	if len(stockSymbols) > 0 {
+		for _, symbol := range stockSymbols {
+			var news []domain.NewsArticle
+
+			news, err = rag.dataService.GetStockNews(symbol)
+			if err != nil {
+				return "", &DataServiceError{Message: fmt.Sprintf("GetStockNews failed: %s", err)}
+			}
+
+			if len(news) < limit {
+				limit = len(news)
+			}
+
+			context.currentDate = time.Now().Format("2006-01-02")
+			context.news = news[:limit]
+
+			ragContext = append(ragContext, context)
 		}
 	} else {
-		news, err = rag.dataService.GetMarketNews()
+		news, err := rag.dataService.GetMarketNews()
 		if err != nil {
 			return "", &DataServiceError{Message: fmt.Sprintf("GetMarketNews failed: %s", err)}
 		}
-	}
-	// Keep only the last 10 news
-	limit := 10
-	if len(news) < limit {
-		limit = len(news)
-	}
+		context.currentDate = time.Now().Format("2006-01-02")
+		context.news = news[:limit]
 
-	ragContext.currentDate = time.Now().Format("2006-01-02")
-	ragContext.news = news[:limit]
+		ragContext = append(ragContext, context)
+	}
 
 	return fmt.Sprintf("%+v\n", ragContext), nil
 }
 
 func (rag MarketNewsRag) GenerateRagResponse(conversation []Message, tags Tags, responseChannel chan<- string) error {
 	// Format the prompt to contain the neccessary context
-	ragContext, err := rag.createRagContext(tags.StockSymbol)
+	ragContext, err := rag.createRagContext(tags.StockSymbols)
 	if err != nil {
 		return err
 	}
