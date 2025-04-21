@@ -28,31 +28,26 @@ func (mds MarketDataScraper) GetIndustries() ([]domain.Industry, error) {
 }
 
 // GetStockForecsat returns the forecast for a stock
-// symbol parameter should be in lowercase
 func (mds MarketDataScraper) GetStockForecast(symbol string) (domain.StockForecast, error) {
 	return scrapeStockForecast(symbol)
 }
 
 // GetBalanceSheets returns a list of balance sheets for a stock
-// symbol parameter should be in lowercase
 func (mds MarketDataScraper) GetBalanceSheets(symbol string) ([]domain.BalanceSheet, error) {
 	return scrapeBalanceSheets(symbol)
 }
 
 // GetIncomeStatements returns a list of income statements for a stock
-// symbol parameter should be in lowercase
 func (mds MarketDataScraper) GetIncomeStatements(symbol string) ([]domain.IncomeStatement, error) {
 	return scrapeIncomeStatements(symbol)
 }
 
 // GetCashFlows returns a list of cash flows for a stock
-// symbol parameter should be in lowercase
 func (mds MarketDataScraper) GetCashFlows(symbol string) ([]domain.CashFlow, error) {
 	return scrapeCashFlows(symbol)
 }
 
 // GetFinancialRatios returns a list of financial ratios for a stock
-// symbol parameter should be in lowercase
 func (mds MarketDataScraper) GetFinancialRatios(symbol string) ([]domain.FinancialRatios, error) {
 	return scrapeFinancialRatios(symbol)
 }
@@ -69,7 +64,6 @@ func (mds MarketDataScraper) GetEtfOverview(symbol string) (domain.EtfOverview, 
 }
 
 // GetStockProfile returns the profile of a stock
-// symbol parameter should be in lowercase
 func (mds MarketDataScraper) GetStockProfile(symbol string) (domain.StockProfile, error) {
 	return scrapeStockProfile(symbol)
 }
@@ -80,7 +74,6 @@ func (mds MarketDataScraper) GetMarketNews() ([]domain.NewsArticle, error) {
 }
 
 // GetStockNews returns the most recent news of the given stock symbol
-// symbol parameter should be in lowercase
 func (mds MarketDataScraper) GetStockNews(symbol string) ([]domain.NewsArticle, error) {
 	return scrapeStockNews(symbol)
 }

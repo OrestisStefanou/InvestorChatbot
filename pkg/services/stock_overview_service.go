@@ -11,14 +11,19 @@ type StockOverviewDataService interface {
 	GetStockProfile(symbol string) (domain.StockProfile, error)
 	GetFinancialRatios(symbol string) ([]domain.FinancialRatios, error)
 	GetStockForecast(symbol string) (domain.StockForecast, error)
+	GetIndustryStocks(industry string) ([]domain.IndustryStock, error)
+}
+
+type competitorsAvgFinancialRatios struct {
 }
 
 type stockOverviewContext struct {
-	currentDate          string
-	symbol               string
-	stockProfile         domain.StockProfile
-	stockFinancialRatios []domain.FinancialRatios
-	stockForecast        domain.StockForecast
+	currentDate                   string
+	symbol                        string
+	stockProfile                  domain.StockProfile
+	stockFinancialRatios          []domain.FinancialRatios
+	stockForecast                 domain.StockForecast
+	competitorsAvgFinancialRatios competitorsAvgFinancialRatios
 }
 
 type StockOverviewRag struct {
@@ -28,6 +33,49 @@ type StockOverviewRag struct {
 
 func NewStockOverviewRag(llm Llm, stockOverviewDataService StockOverviewDataService) (*StockOverviewRag, error) {
 	return &StockOverviewRag{llm: llm, dataService: stockOverviewDataService}, nil
+}
+
+func (rag StockOverviewRag) GetStockCompetitors(stockProfile domain.StockProfile, symbol string) ([]domain.IndustryStock, error) {
+	// Fetch the industry stocks
+	industryStocks, err := rag.dataService.GetIndustryStocks(stockProfile.IndustryUrlName)
+	if err != nil {
+		return nil, err
+	}
+
+	competitors := make([]domain.IndustryStock, 0, 10)
+	for i, stock := range industryStocks {
+		if stock.Symbol == symbol {
+			beforeCount := i
+			afterCount := len(industryStocks) - i - 1
+
+			start := 0
+			end := 0
+
+			if beforeCount >= 5 && afterCount >= 5 {
+				// Ideal: 5 before, 5 after
+				start = i - 5
+				end = i + 6
+			} else if beforeCount < 5 {
+				// Not enough before: take up to 10 after
+				start = i + 1
+				end = min(i+11, len(industryStocks))
+			} else if afterCount < 5 {
+				// Not enough after: take up to 10 before
+				start = max(0, i-10)
+				end = i
+			}
+
+			// Append from start to end (excluding the matched item)
+			competitors = append(competitors, industryStocks[start:end]...)
+			break
+		}
+	}
+
+	return competitors, nil
+}
+
+func (rag StockOverviewRag) getCompetitorsAvgFinancialRatios(symbols []string) (competitorsAvgFinancialRatios, error) {
+	return competitorsAvgFinancialRatios{}, nil
 }
 
 func (rag StockOverviewRag) createRagContext(symbols []string) (string, error) {

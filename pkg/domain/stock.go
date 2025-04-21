@@ -1,14 +1,16 @@
 package domain
 
 type StockProfile struct {
-	Name        string
-	Description string
-	Country     string
-	Founded     int
-	IpoDate     string
-	Industry    string
-	Sector      string
-	Ceo         string
+	Name            string
+	Description     string
+	Country         string
+	Founded         int
+	IpoDate         string
+	Industry        string
+	IndustryUrlName string
+	Sector          string
+	SectorUrlName   string
+	Ceo             string
 }
 
 type StockEstimation struct {

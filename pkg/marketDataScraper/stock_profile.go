@@ -6,6 +6,7 @@ import (
 	"investbot/pkg/domain"
 	"io"
 	"net/http"
+	"strings"
 )
 
 func scrapeStockProfile(symbol string) (domain.StockProfile, error) {
@@ -68,13 +69,14 @@ func scrapeStockProfile(symbol string) (domain.StockProfile, error) {
 
 	industryData := data[int(industryDataIndex)].(map[string]interface{})
 	industryNameIndex := industryData["value"].(float64)
-
+	industryUrlIndex := industryData["url"].(float64)
 	sectorDataIndex, ok := stockProfileData["sector"].(float64)
 	if !ok {
 		return domain.StockProfile{}, fmt.Errorf("unexpected structure for 'sector'")
 	}
 	sectorData := data[int(sectorDataIndex)].(map[string]interface{})
 	sectorNameIndex := sectorData["value"].(float64)
+	sectorUrlIndex := sectorData["url"].(float64)
 
 	stockNameINdex := stockProfileData["name"].(float64)
 	stockCountryIndex := stockProfileData["country"].(float64)
@@ -82,14 +84,23 @@ func scrapeStockProfile(symbol string) (domain.StockProfile, error) {
 	stockIpoDateIndex := stockProfileData["ipoDate"].(float64)
 	stockCeoIndex := stockProfileData["ceo"].(float64)
 
+	industryUrl := data[int(industryUrlIndex)].(string)
+	sectorUrl := data[int(sectorUrlIndex)].(string)
+
+	// Example: stocks/industry/consumer-electronics
+	industryUrlName := strings.Split(industryUrl, "/")[2]
+	sectorUrlName := strings.Split(sectorUrl, "/")[2]
+
 	return domain.StockProfile{
-		Name:        data[int(stockNameINdex)].(string),
-		Description: data[int(descriptionIndex)].(string),
-		Country:     data[int(stockCountryIndex)].(string),
-		Founded:     int(data[int(stockFoundedIndex)].(float64)),
-		IpoDate:     data[int(stockIpoDateIndex)].(string),
-		Industry:    data[int(industryNameIndex)].(string),
-		Sector:      data[int(sectorNameIndex)].(string),
-		Ceo:         data[int(stockCeoIndex)].(string),
+		Name:            data[int(stockNameINdex)].(string),
+		Description:     data[int(descriptionIndex)].(string),
+		Country:         data[int(stockCountryIndex)].(string),
+		Founded:         int(data[int(stockFoundedIndex)].(float64)),
+		IpoDate:         data[int(stockIpoDateIndex)].(string),
+		Industry:        data[int(industryNameIndex)].(string),
+		IndustryUrlName: industryUrlName,
+		Sector:          data[int(sectorNameIndex)].(string),
+		SectorUrlName:   sectorUrlName,
+		Ceo:             data[int(stockCeoIndex)].(string),
 	}, nil
 }
