@@ -192,6 +192,39 @@ curl --location 'http://localhost:1323/chat' \
 }'
 ```
 
+## 📰 How to ask a question about ETFs
+
+### 🔧 Request
+
+```bash
+curl --location 'http://localhost:1323/chat' \
+--header 'Content-Type: application/json' \
+--data '{
+  "question": "What are the key advantages of investing in ETFs?",
+  "topic": "etfs",
+  "session_id": "<session_id>",
+  "topic_tags": {}
+}'
+```
+
+## 📰 How to ask a question about a specific ETF (Goldman Sachs Physical Gold ETF in this example with etf_symbol=AAAU)
+
+### 🔧 Request
+
+```bash
+curl --location 'http://localhost:1323/chat' \
+--header 'Content-Type: application/json' \
+--data '{
+  "question": "Which are the holdings of this ETF?",
+  "topic": "etfs",
+  "session_id": "<session_id>",
+  "topic_tags": {
+    "etf_symbol": "AAAU"
+  }
+}'
+```
+
+
 ## 📰 How to get a summary of the latest market news for NVDA
 
 ### 🔧 Request
