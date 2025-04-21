@@ -1,9 +1,5 @@
 # Investor Chatbot
 
-![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)
-![GitHub issues](https://img.shields.io/github/issues/yourusername/repo-name)
-![GitHub stars](https://img.shields.io/github/stars/yourusername/repo-name?style=social)
-
 ## 📌 Overview
 Investor Chatbot is a conversational AI designed to help beginner investors make informed investment decisions based on financial data, industry trends, and market news. It can answer questions and provide insights into:
 
@@ -41,6 +37,8 @@ Investor Chatbot is a conversational AI designed to help beginner investors make
    make run_investbot
    ```
 
+[Runtime config settings](docs/config.md)
+
 ## 🎯 Usage
 - Start the chatbot locally:
   ```bash
@@ -62,6 +60,10 @@ Investor Chatbot is a conversational AI designed to help beginner investors make
   }'
   ```
 
+[API usage examples](docs/api_request_examples.md)
+
+[API reference](docs/api.md)
+
 ## 📦 Dependencies
 - Golang
 - OpenAI API (for LLM)
@@ -75,6 +77,8 @@ Contributions are welcome! Please follow these steps:
 2. Create a new branch (`feature-branch`)
 3. Commit changes and push
 4. Create a pull request
+
+[Project structure doc](docs/project_structure.md)
 
 ## 📜 License
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
