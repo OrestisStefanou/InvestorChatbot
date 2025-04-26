@@ -13,6 +13,7 @@ def fetch_topics():
     except:
         return []
 
+
 def create_session():
     try:
         response = requests.post(f"{BASE_URL}/session")
@@ -20,12 +21,36 @@ def create_session():
     except:
         return ""
 
-def fetch_faq(topic):
+
+def fetch_faq(topic, include_bs, include_is, include_cf):
+    topic_to_faq_topic = {
+        "education": "education",
+        "sectors": "sectors",
+        "stock_overview": "stock_overview",
+        "etfs": "etfs",
+        "stock_financials": "stock_overview",
+    }
+    
+    faq_topic = topic_to_faq_topic.get(topic)
+
+    if topic == "stock_financials":
+        if include_bs:
+            faq_topic = "balance_sheet"
+        if include_is:
+            faq_topic = "income_statement"
+        if include_cf:
+            faq_topic = "cash_flow"
+
+    if not faq_topic:
+        return []
+
+    print(f"Fetching FAQs for topic: {faq_topic}")
     try:
-        response = requests.get(f"{BASE_URL}/faq", params={"faq_topic": topic})
+        response = requests.get(f"{BASE_URL}/faq", params={"faq_topic": faq_topic})
         return response.json().get("faq", [])
     except Exception as e:
         return [f"Error fetching FAQs: {str(e)}"]
+
 
 def fetch_follow_ups(session_id, number_of_questions=5):
     try:
@@ -35,8 +60,8 @@ def fetch_follow_ups(session_id, number_of_questions=5):
     except Exception as e:
         return [f"Error fetching follow-up questions: {str(e)}"]
 
-# ========== Chat + Follow Up Logic ==========
 
+# ========== Chat + Follow Up Logic ==========
 def ask_question(question, topic, sector, industry, tickers, include_bs, include_is, include_cf, etf):
     session_id = create_session()
     topic_tags = {}
@@ -89,17 +114,17 @@ def ask_question(question, topic, sector, industry, tickers, include_bs, include
         follow_ups_text = ""
     yield buffer, follow_ups_text
 
-# ========== FAQ update logic ==========
 
-def update_faq(selected_topic):
+# ========== FAQ update logic ==========
+def update_faq(selected_topic, include_bs, include_is, include_cf):
     if selected_topic:
-        faqs = fetch_faq(selected_topic)
+        faqs = fetch_faq(selected_topic, include_bs, include_is, include_cf)
         faq_text = "### FAQs\n" + "\n".join([f"- {q}" for q in faqs])
         return faq_text
     return ""
 
-# ========== Build Gradio UI ==========
 
+# ========== Build Gradio UI ==========
 topics = fetch_topics()
 
 with gr.Blocks() as demo:
@@ -127,7 +152,7 @@ with gr.Blocks() as demo:
     # Update FAQ on topic selection
     topic_dropdown.change(
         fn=update_faq,
-        inputs=topic_dropdown,
+        inputs=[topic_dropdown, include_bs, include_is, include_cf],
         outputs=faq_box
     )
 
