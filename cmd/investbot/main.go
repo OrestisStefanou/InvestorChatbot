@@ -39,9 +39,9 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	// llamaClient, _ := llama.NewOllamaClient(config.OllamaBaseUrl)
-	// llamaLLM, _ := llama.NewLlamaLLM("llama3.2", llamaClient, 0.2)
-	dataService := marketDataScraper.MarketDataScraper{}
+
+	cache, _ := services.NewBadgerCacheService()
+	dataService := marketDataScraper.NewMarketDataScraperWithCache(cache, conf)
 	sectorRag, _ := services.NewSectorRag(llm, dataService)
 	educationRag, _ := services.NewEducationRag(llm)
 	industryRag, _ := services.NewIndustryRag(llm, dataService)

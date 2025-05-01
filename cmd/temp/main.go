@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
-	"time"
-
+	"investbot/pkg/config"
+	"investbot/pkg/marketDataScraper"
 	"investbot/pkg/services"
 )
 
@@ -14,20 +14,20 @@ type User struct {
 
 func main() {
 	cache, _ := services.NewBadgerCacheService()
+	conf, _ := config.LoadConfig()
+	mds := marketDataScraper.NewMarketDataScraperWithCache(cache, conf)
 
-	user := User{ID: 1, Name: "Alice"}
-	cache.Set("user:1", user, time.Minute)
-
-	var u User
-	err := cache.Get("user:1", &u)
-	if err == nil {
-		fmt.Println(u.Name) // Output: Alice
+	sectorStocks, err := mds.GetSectorStocks("technology")
+	if err != nil {
+		fmt.Println(err)
 	}
+	fmt.Println(sectorStocks[:10])
 
-	time.Sleep(time.Second * 65)
+	fmt.Println("--------------------------------")
 
-	err = cache.Get("user:1", &u)
-	if err == nil {
-		fmt.Println(u.Name) // Output: Alice
+	sectorStocks, err = mds.GetSectorStocks("technology")
+	if err != nil {
+		fmt.Println(err)
 	}
+	fmt.Println(sectorStocks[:10])
 }

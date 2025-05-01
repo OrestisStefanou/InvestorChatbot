@@ -31,6 +31,7 @@ type Config struct {
 	ConvMsgLimit         int         // The number of most recent messages to get from a session
 	BaseLlmTemperature   float32     // The temperature to use for the base llm(currently there is only one llm that is used in all the rags)
 	FollowUpQuestionsNum int         // The number of follow-up questions that the GET /follow_up_questions will return
+	CacheTtl             int         // The ttl for the cache in seconds
 }
 
 func LoadConfig() (Config, error) {
@@ -54,6 +55,11 @@ func LoadConfig() (Config, error) {
 		followUpQuestionsNum = 5
 	}
 
+	cacheTtl, err := strconv.Atoi(getEnv("CACHE_TTL", "3600"))
+	if err != nil {
+		cacheTtl = 3600
+	}
+
 	llmProvider := getEnv("LLM_PROVIDER", "OPEN_AI")
 
 	openAiModelName := getEnv("OPEN_AI_MODEL_NAME", "gpt-4o-mini")
@@ -71,6 +77,7 @@ func LoadConfig() (Config, error) {
 		OllamaModelName:      ollamaModelName,
 		BaseLlmTemperature:   getEnvFloat32("BASE_LLM_TEMPERATURE", 0.2),
 		FollowUpQuestionsNum: followUpQuestionsNum,
+		CacheTtl:             cacheTtl,
 	}, nil
 }
 
