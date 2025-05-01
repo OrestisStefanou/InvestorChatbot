@@ -2,25 +2,32 @@ package main
 
 import (
 	"fmt"
-	"investbot/pkg/marketDataScraper"
-	"log"
+	"time"
+
+	"investbot/pkg/services"
 )
 
+type User struct {
+	ID   int
+	Name string
+}
+
 func main() {
-	scraper := marketDataScraper.MarketDataScraper{}
-	portfolio, err := scraper.GetSuperInvestorPortfolio("Warren Buffett - Berkshire Hathaway")
+	cache, _ := services.NewBadgerCacheService()
 
-	if err != nil {
-		log.Fatal(err)
+	user := User{ID: 1, Name: "Alice"}
+	cache.Set("user:1", user, time.Minute)
+
+	var u User
+	err := cache.Get("user:1", &u)
+	if err == nil {
+		fmt.Println(u.Name) // Output: Alice
 	}
 
-	fmt.Println("HOLDINGS")
-	for _, v := range portfolio.Holdings {
-		fmt.Printf("%+v\n", v)
-	}
+	time.Sleep(time.Second * 65)
 
-	fmt.Println("SECTOR ANALYSIS")
-	for _, v := range portfolio.SectorAnalysis {
-		fmt.Printf("%+v\n", v)
+	err = cache.Get("user:1", &u)
+	if err == nil {
+		fmt.Println(u.Name) // Output: Alice
 	}
 }
