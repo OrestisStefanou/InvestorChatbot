@@ -11,8 +11,8 @@ type UserRepository struct {
 	db *badger.DB
 }
 
-func NewUserRepository(db *badger.DB) *UserRepository {
-	return &UserRepository{db: db}
+func NewUserRepository(db *badger.DB) (*UserRepository, error) {
+	return &UserRepository{db: db}, nil
 }
 
 func (r *UserRepository) GetUser(email string) (domain.User, error) {

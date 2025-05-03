@@ -7,9 +7,11 @@ import (
 	"investbot/pkg/llama"
 	"investbot/pkg/marketDataScraper"
 	"investbot/pkg/openAI"
+	"investbot/pkg/repositories"
 	"investbot/pkg/services"
 	"log"
 
+	badger "github.com/dgraph-io/badger/v4"
 	"github.com/labstack/echo/v4"
 )
 
@@ -35,7 +37,18 @@ func main() {
 
 	conf, _ := config.LoadConfig()
 
+	db, err := badger.Open(badger.DefaultOptions(conf.BadgerDbPath))
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer db.Close()
+
 	llm, err := getLlm(conf)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	userRepository, err := repositories.NewUserRepository(db)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -50,6 +63,7 @@ func main() {
 	etfRag, _ := services.NewEtfRag(llm, dataService)
 	newsRag, _ := services.NewMarketNewsRag(llm, dataService)
 	followUpQuestionsRag, _ := services.NewFollowUpQuestionsRag(llm)
+	userService, _ := services.NewUserService(userRepository)
 
 	topicToRagMap := map[services.Topic]services.Rag{
 		services.SECTORS:          sectorRag,
@@ -78,6 +92,7 @@ func main() {
 	superInvestorHandler, _ := handlers.NewSuperInvestorHandler(superInvestorService)
 	sectorHandler, _ := handlers.NewSectorHandler(dataService)
 	topicHandler, _ := handlers.NewTopicHandler()
+	userHandler, _ := handlers.NewUserHandler(userService)
 
 	e.POST("/chat", chatHandler.ChatCompletion)
 	e.POST("/session", sessionHandler.CreateNewSession)
@@ -90,5 +105,6 @@ func main() {
 	e.GET("/sectors", sectorHandler.GetSectors)
 	e.GET("/sectors/stocks/:sector", sectorHandler.GetSectorStocks)
 	e.GET("/topics", topicHandler.GetTopics)
+	e.POST("/user", userHandler.CreateUser)
 	e.Logger.Fatal(e.Start(":1323"))
 }
