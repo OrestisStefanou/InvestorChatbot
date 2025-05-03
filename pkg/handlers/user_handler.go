@@ -2,7 +2,9 @@ package handlers
 
 import (
 	"errors"
+	"fmt"
 	"investbot/pkg/domain"
+	investbotErr "investbot/pkg/errors"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -29,16 +31,16 @@ type CreateUserRequest struct {
 
 func (r *CreateUserRequest) Validate() error {
 	if r.Email == "" {
-		return errors.New("email is required")
+		return fmt.Errorf("email is required")
 	}
 
 	if r.Name == "" {
-		return errors.New("name is required")
+		return fmt.Errorf("name is required")
 	}
 
 	if r.RiskAppetite != "" {
 		if r.RiskAppetite != "conservative" && r.RiskAppetite != "balanced" && r.RiskAppetite != "growth" && r.RiskAppetite != "high" {
-			return errors.New("invalid risk appetite, valid values are: conservative, balanced, growth, high")
+			return fmt.Errorf("invalid risk appetite, valid values are: conservative, balanced, growth, high")
 		}
 	}
 
@@ -70,6 +72,9 @@ func (h *UserHandler) CreateUser(c echo.Context) error {
 
 	userCreated, err := h.userService.CreateUser(user)
 	if err != nil {
+		if errors.As(err, &investbotErr.UserAlreadyExistsError{}) {
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+		}
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
 

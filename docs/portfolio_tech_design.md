@@ -17,3 +17,5 @@
 
 
 Use noqsql database as a starting point for faster development?
+
+Update api docs with the new endpoints for user and portfolio

@@ -1,8 +1,8 @@
 package services
 
 import (
-	"errors"
 	"investbot/pkg/domain"
+	"investbot/pkg/errors"
 )
 
 type UserRepository interface {
@@ -29,7 +29,7 @@ func (s *UserService) CreateUser(user domain.User) (domain.User, error) {
 	}
 
 	if existingUser.Email != "" {
-		return domain.User{}, errors.New("user already exists")
+		return domain.User{}, errors.UserAlreadyExistsError{Message: "User with this email already exists"}
 	}
 	return s.userRepository.CreateUser(user)
 }
