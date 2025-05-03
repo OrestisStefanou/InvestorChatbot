@@ -28,6 +28,14 @@ type CreateUserRequest struct {
 }
 
 func (r *CreateUserRequest) Validate() error {
+	if r.Email == "" {
+		return errors.New("email is required")
+	}
+
+	if r.Name == "" {
+		return errors.New("name is required")
+	}
+
 	if r.RiskAppetite != "" {
 		if r.RiskAppetite != "conservative" && r.RiskAppetite != "balanced" && r.RiskAppetite != "growth" && r.RiskAppetite != "high" {
 			return errors.New("invalid risk appetite, valid values are: conservative, balanced, growth, high")

@@ -1,11 +1,12 @@
 package services
 
 import (
+	"errors"
 	"investbot/pkg/domain"
 )
 
 type UserRepository interface {
-	GetUser(id string) (domain.User, error)
+	GetUser(email string) (domain.User, error)
 	CreateUser(user domain.User) (domain.User, error)
 }
 
@@ -17,10 +18,18 @@ func NewUserService(userRepository UserRepository) (*UserService, error) {
 	return &UserService{userRepository: userRepository}, nil
 }
 
-func (s *UserService) GetUser(id string) (domain.User, error) {
-	return s.userRepository.GetUser(id)
+func (s *UserService) GetUser(email string) (domain.User, error) {
+	return s.userRepository.GetUser(email)
 }
 
 func (s *UserService) CreateUser(user domain.User) (domain.User, error) {
+	existingUser, err := s.GetUser(user.Email)
+	if err != nil {
+		return domain.User{}, err
+	}
+
+	if existingUser.Email != "" {
+		return domain.User{}, errors.New("user already exists")
+	}
 	return s.userRepository.CreateUser(user)
 }
