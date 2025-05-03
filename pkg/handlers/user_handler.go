@@ -3,17 +3,21 @@ package handlers
 import (
 	"errors"
 	"investbot/pkg/domain"
-	"investbot/pkg/services"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
 )
 
-type UserHandler struct {
-	userService services.UserService
+type UserService interface {
+	GetUser(id string) (domain.User, error)
+	CreateUser(user domain.User) (domain.User, error)
 }
 
-func NewUserHandler(userService services.UserService) *UserHandler {
+type UserHandler struct {
+	userService UserService
+}
+
+func NewUserHandler(userService UserService) *UserHandler {
 	return &UserHandler{userService: userService}
 }
 
