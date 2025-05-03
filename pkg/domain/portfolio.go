@@ -10,12 +10,11 @@ const (
 
 type PortfolioHolding struct {
 	AssetClass AssetClass
-	AssetID    string
+	AssetID    string // This is usually the symbol of the asset
 	Quantity   float64
 }
 
 type Portfolio struct {
-	ID       string
-	UserID   string
-	Holdings []PortfolioHolding
+	UserEmail string
+	Holdings  []PortfolioHolding
 }
