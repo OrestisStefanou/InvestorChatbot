@@ -29,7 +29,7 @@ type CreateUserRequest struct {
 	RiskAppetite string `json:"risk_appetite"`
 }
 
-func (r *CreateUserRequest) Validate() error {
+func (r CreateUserRequest) validate() error {
 	if r.Email == "" {
 		return fmt.Errorf("email is required")
 	}
@@ -60,7 +60,7 @@ func (h *UserHandler) CreateUser(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, CreateUserResponse{ID: ""})
 	}
 
-	if err := request.Validate(); err != nil {
+	if err := request.validate(); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 
