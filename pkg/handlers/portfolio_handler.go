@@ -43,7 +43,7 @@ func (r CreatePortfolioRequest) validate() error {
 			return fmt.Errorf("asset_class is required")
 		}
 
-		if h.AssetClass != "stock" || h.AssetClass != "etf" || h.AssetClass != "crypto" {
+		if h.AssetClass != "stock" && h.AssetClass != "etf" && h.AssetClass != "crypto" {
 			return fmt.Errorf("asset_class valid values are: stock, etf, crypto")
 		}
 
