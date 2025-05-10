@@ -33,18 +33,20 @@ func (s *PortfolioService) GetUserPortfolio(userEmail string) (domain.Portfolio,
 }
 
 func (s *PortfolioService) CreateUserPortfolio(portfolio domain.Portfolio) error {
+	// TODO: Check that the symbols are valid and if duplicates exist
 	return s.portfolioRepository.CreateUserPortfolio(portfolio)
 }
 
 func (s *PortfolioService) UpdateUserPortfolio(portfolio domain.Portfolio) error {
-	portfolio, err := s.portfolioRepository.GetUserPortfolio(portfolio.UserEmail)
+	userPortfolio, err := s.portfolioRepository.GetUserPortfolio(portfolio.UserEmail)
 	if err != nil {
 		return err
 	}
 
-	if portfolio.UserEmail == "" {
+	if userPortfolio.UserEmail == "" {
 		return errors.PortfolioNotFoundError{UserEmail: portfolio.UserEmail}
 	}
 
+	// TODO: Check that the symbols are valid and if duplicates exist
 	return s.portfolioRepository.UpdateUserPortfolio(portfolio)
 }

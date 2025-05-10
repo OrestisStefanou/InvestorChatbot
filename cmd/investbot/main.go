@@ -53,6 +53,11 @@ func main() {
 		log.Fatal(err)
 	}
 
+	portfolioRepository, err := repositories.NewPortfolioRepository(db)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	cache, _ := services.NewBadgerCacheService()
 	dataService := marketDataScraper.NewMarketDataScraperWithCache(cache, conf)
 	sectorRag, _ := services.NewSectorRag(llm, dataService)
@@ -63,7 +68,6 @@ func main() {
 	etfRag, _ := services.NewEtfRag(llm, dataService)
 	newsRag, _ := services.NewMarketNewsRag(llm, dataService)
 	followUpQuestionsRag, _ := services.NewFollowUpQuestionsRag(llm)
-	userService, _ := services.NewUserService(userRepository)
 
 	topicToRagMap := map[services.Topic]services.Rag{
 		services.SECTORS:          sectorRag,
@@ -82,6 +86,8 @@ func main() {
 	tickerService, _ := services.NewTickerService(dataService)
 	etfService, _ := services.NewEtfService(dataService)
 	superInvestorService, _ := services.NewSuperInvestorService(dataService)
+	userService, _ := services.NewUserService(userRepository)
+	portfolioService, _ := services.NewPortfolioService(portfolioRepository)
 
 	chatHandler, _ := handlers.NewChatHandler(chatService)
 	sessionHandler, _ := handlers.NewSessionHandler(sessionService)
@@ -93,6 +99,7 @@ func main() {
 	sectorHandler, _ := handlers.NewSectorHandler(dataService)
 	topicHandler, _ := handlers.NewTopicHandler()
 	userHandler, _ := handlers.NewUserHandler(userService)
+	portfolioHandler, _ := handlers.NewPortfolioHandler(portfolioService)
 
 	e.POST("/chat", chatHandler.ChatCompletion)
 	e.POST("/session", sessionHandler.CreateNewSession)
@@ -106,5 +113,8 @@ func main() {
 	e.GET("/sectors/stocks/:sector", sectorHandler.GetSectorStocks)
 	e.GET("/topics", topicHandler.GetTopics)
 	e.POST("/user", userHandler.CreateUser)
+	e.POST("/portfolio", portfolioHandler.CreateUserPortfolio) // TODO: ADD AUTHENTICATION
+	e.PUT("/portfolio", portfolioHandler.UpdateUserPortfolio)  // TODO: ADD AUTHENTICATION
+	e.GET("/portfolio", portfolioHandler.GetUserPortfolio)
 	e.Logger.Fatal(e.Start(":1323"))
 }
