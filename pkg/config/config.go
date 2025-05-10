@@ -32,6 +32,9 @@ type Config struct {
 	BaseLlmTemperature   float32     // The temperature to use for the base llm(currently there is only one llm that is used in all the rags)
 	FollowUpQuestionsNum int         // The number of follow-up questions that the GET /follow_up_questions will return
 	CacheTtl             int         // The ttl for the cache in seconds
+
+	// Badger configs
+	BadgerDbPath string
 }
 
 func LoadConfig() (Config, error) {
@@ -78,6 +81,7 @@ func LoadConfig() (Config, error) {
 		BaseLlmTemperature:   getEnvFloat32("BASE_LLM_TEMPERATURE", 0.2),
 		FollowUpQuestionsNum: followUpQuestionsNum,
 		CacheTtl:             cacheTtl,
+		BadgerDbPath:         getEnv("BADGER_DB_PATH", "badger.db"),
 	}, nil
 }
 
