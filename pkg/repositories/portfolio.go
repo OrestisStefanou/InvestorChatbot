@@ -2,7 +2,10 @@ package repositories
 
 import (
 	"encoding/json"
+	"errors"
 	"investbot/pkg/domain"
+
+	investbotErr "investbot/pkg/errors"
 
 	badger "github.com/dgraph-io/badger/v4"
 )
@@ -20,6 +23,9 @@ func (r *PortfolioRepository) GetUserPortfolio(userEmail string) (domain.Portfol
 	err := r.db.View(func(txn *badger.Txn) error {
 		item, err := txn.Get([]byte(userEmail))
 		if err != nil {
+			if errors.Is(err, badger.ErrKeyNotFound) {
+				return investbotErr.PortfolioNotFoundError{UserEmail: userEmail}
+			}
 			return err
 		}
 
