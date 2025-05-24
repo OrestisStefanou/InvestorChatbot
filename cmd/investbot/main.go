@@ -48,11 +48,6 @@ func main() {
 		log.Fatal(err)
 	}
 
-	userRepository, err := repositories.NewUserRepository(db)
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	portfolioRepository, err := repositories.NewPortfolioRepository(db)
 	if err != nil {
 		log.Fatal(err)
@@ -86,7 +81,6 @@ func main() {
 	tickerService, _ := services.NewTickerService(dataService)
 	etfService, _ := services.NewEtfService(dataService)
 	superInvestorService, _ := services.NewSuperInvestorService(dataService)
-	userService, _ := services.NewUserService(userRepository)
 	portfolioService, _ := services.NewPortfolioService(portfolioRepository)
 
 	chatHandler, _ := handlers.NewChatHandler(chatService)
@@ -98,7 +92,6 @@ func main() {
 	superInvestorHandler, _ := handlers.NewSuperInvestorHandler(superInvestorService)
 	sectorHandler, _ := handlers.NewSectorHandler(dataService)
 	topicHandler, _ := handlers.NewTopicHandler()
-	userHandler, _ := handlers.NewUserHandler(userService)
 	portfolioHandler, _ := handlers.NewPortfolioHandler(portfolioService)
 
 	e.POST("/chat", chatHandler.ChatCompletion)
@@ -112,9 +105,8 @@ func main() {
 	e.GET("/sectors", sectorHandler.GetSectors)
 	e.GET("/sectors/stocks/:sector", sectorHandler.GetSectorStocks)
 	e.GET("/topics", topicHandler.GetTopics)
-	e.POST("/user", userHandler.CreateUser)
-	e.POST("/portfolio", portfolioHandler.CreateUserPortfolio) // TODO: ADD AUTHENTICATION
-	e.PUT("/portfolio", portfolioHandler.UpdateUserPortfolio)  // TODO: ADD AUTHENTICATION
-	e.GET("/portfolio", portfolioHandler.GetUserPortfolio)
+	e.POST("/portfolio", portfolioHandler.CreatePortfolio)
+	e.PUT("/portfolio/:portfolio_id", portfolioHandler.UpdatePortfolio)
+	e.GET("/portfolio/:portfolio_id", portfolioHandler.GetPortfolioById)
 	e.Logger.Fatal(e.Start(":1323"))
 }

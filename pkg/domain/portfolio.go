@@ -1,11 +1,21 @@
 package domain
 
+import "time"
+
 type AssetClass string
 
 const (
 	Stock  AssetClass = "stock"
 	ETF    AssetClass = "etf"
 	Crypto AssetClass = "crypto"
+)
+
+type RiskLevel string
+
+const (
+	LowRiskLevel    RiskLevel = "low"
+	MediumRiskLevel RiskLevel = "medium"
+	HighRiskLevel   RiskLevel = "high"
 )
 
 type PortfolioHolding struct {
@@ -15,6 +25,10 @@ type PortfolioHolding struct {
 }
 
 type Portfolio struct {
-	UserEmail string
+	ID        string
+	Name      string
+	RiskLevel RiskLevel
 	Holdings  []PortfolioHolding
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }

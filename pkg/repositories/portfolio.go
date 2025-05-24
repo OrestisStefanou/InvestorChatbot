@@ -18,13 +18,13 @@ func NewPortfolioRepository(db *badger.DB) (*PortfolioRepository, error) {
 	return &PortfolioRepository{db: db}, nil
 }
 
-func (r *PortfolioRepository) GetUserPortfolio(userEmail string) (domain.Portfolio, error) {
+func (r *PortfolioRepository) GetPortfolioById(portfolioID string) (domain.Portfolio, error) {
 	var portfolio domain.Portfolio
 	err := r.db.View(func(txn *badger.Txn) error {
-		item, err := txn.Get([]byte(userEmail))
+		item, err := txn.Get([]byte(portfolioID))
 		if err != nil {
 			if errors.Is(err, badger.ErrKeyNotFound) {
-				return investbotErr.PortfolioNotFoundError{UserEmail: userEmail}
+				return investbotErr.PortfolioNotFoundError{PortfolioID: portfolioID}
 			}
 			return err
 		}
@@ -37,27 +37,27 @@ func (r *PortfolioRepository) GetUserPortfolio(userEmail string) (domain.Portfol
 	return portfolio, err
 }
 
-func (r *PortfolioRepository) CreateUserPortfolio(portfolio domain.Portfolio) error {
+func (r *PortfolioRepository) CreatePortfolio(portfolio domain.Portfolio) error {
 	err := r.db.Update(func(txn *badger.Txn) error {
 		portfolioBytes, err := json.Marshal(portfolio)
 		if err != nil {
 			return err
 		}
 
-		return txn.Set([]byte(portfolio.UserEmail), portfolioBytes)
+		return txn.Set([]byte(portfolio.ID), portfolioBytes)
 	})
 
 	return err
 }
 
-func (r *PortfolioRepository) UpdateUserPortfolio(portfolio domain.Portfolio) error {
+func (r *PortfolioRepository) UpdatePortfolio(portfolio domain.Portfolio) error {
 	err := r.db.Update(func(txn *badger.Txn) error {
 		portfolioBytes, err := json.Marshal(portfolio)
 		if err != nil {
 			return err
 		}
 
-		return txn.Set([]byte(portfolio.UserEmail), portfolioBytes)
+		return txn.Set([]byte(portfolio.ID), portfolioBytes)
 	})
 
 	return err

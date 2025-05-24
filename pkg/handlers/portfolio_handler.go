@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"investbot/pkg/domain"
 	"net/http"
+	"time"
 
 	investbotErr "investbot/pkg/errors"
 
@@ -12,9 +13,9 @@ import (
 )
 
 type PortfolioService interface {
-	GetUserPortfolio(userEmail string) (domain.Portfolio, error)
-	CreateUserPortfolio(portfolio domain.Portfolio) error
-	UpdateUserPortfolio(portfolio domain.Portfolio) error
+	GetPortfolioById(portfolioID string) (domain.Portfolio, error)
+	CreatePortfolio(portfolio domain.Portfolio) error
+	UpdatePortfolio(portfolio domain.Portfolio) error
 }
 
 type PortfolioHandler struct {
@@ -32,13 +33,21 @@ type PortfolioHolding struct {
 }
 
 type CreatePortfolioRequest struct {
-	UserEmail string             `json:"user_email"`
-	Holdings  []PortfolioHolding `json:"holdings"`
+	PortfolioID string             `json:"portfolio_id"`
+	Name        string             `json:"name"`
+	RiskLevel   string             `json:"risk_level"`
+	Holdings    []PortfolioHolding `json:"holdings"`
 }
 
 func (r CreatePortfolioRequest) validate() error {
-	if r.UserEmail == "" {
-		return fmt.Errorf("user_email is required")
+	if r.PortfolioID == "" {
+		return fmt.Errorf("portfolio_id is required")
+	}
+
+	if r.RiskLevel != "" {
+		if r.RiskLevel != "low" && r.RiskLevel != "medium" && r.RiskLevel != "high" {
+			return fmt.Errorf("risk_level valid values are: low, medium, high")
+		}
 	}
 
 	for _, h := range r.Holdings {
@@ -58,7 +67,7 @@ func (r CreatePortfolioRequest) validate() error {
 	return nil
 }
 
-func (h *PortfolioHandler) CreateUserPortfolio(c echo.Context) error {
+func (h *PortfolioHandler) CreatePortfolio(c echo.Context) error {
 	request := CreatePortfolioRequest{}
 	if err := c.Bind(&request); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
@@ -81,11 +90,13 @@ func (h *PortfolioHandler) CreateUserPortfolio(c echo.Context) error {
 	}
 
 	portfolio := domain.Portfolio{
-		UserEmail: request.UserEmail,
+		ID:        request.PortfolioID,
+		Name:      request.Name,
+		RiskLevel: domain.RiskLevel(request.RiskLevel),
 		Holdings:  portfolioHoldings,
 	}
 
-	err := h.portfolioService.CreateUserPortfolio(portfolio)
+	err := h.portfolioService.CreatePortfolio(portfolio)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
@@ -93,24 +104,33 @@ func (h *PortfolioHandler) CreateUserPortfolio(c echo.Context) error {
 	return c.JSON(http.StatusCreated, map[string]string{"Message": "Portfolio created"})
 }
 
-type GetUserPortfolioResponse struct {
-	Holdings []PortfolioHolding `json:"holdings"`
+type GetPortfolioResponse struct {
+	Name      string             `json:"name"`
+	RiskLevel string             `json:"risk_level"`
+	Holdings  []PortfolioHolding `json:"holdings"`
+	CreatedAt string             `json:"created_at"`
+	UpdatedAt string             `json:"updated_at"`
 }
 
-func (h *PortfolioHandler) GetUserPortfolio(c echo.Context) error {
-	userEmail := c.QueryParam("user_email") // TODO: We should extract the email from a jwt
+func (h *PortfolioHandler) GetPortfolioById(c echo.Context) error {
+	portfolioID := c.Param("portfolio_id")
 
-	portfolio, err := h.portfolioService.GetUserPortfolio(userEmail)
+	portfolio, err := h.portfolioService.GetPortfolioById(portfolioID)
 	if err != nil {
-		notFoundError := investbotErr.PortfolioNotFoundError{UserEmail: userEmail}
+		notFoundError := investbotErr.PortfolioNotFoundError{PortfolioID: portfolioID}
 		if errors.As(err, &notFoundError) {
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 		}
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
 
-	response := GetUserPortfolioResponse{}
-	response.Holdings = make([]PortfolioHolding, 0, len(portfolio.Holdings))
+	response := GetPortfolioResponse{
+		Name:      portfolio.Name,
+		RiskLevel: string(portfolio.RiskLevel),
+		Holdings:  make([]PortfolioHolding, 0, len(portfolio.Holdings)),
+		CreatedAt: portfolio.CreatedAt.Format(time.RFC3339),
+		UpdatedAt: portfolio.UpdatedAt.Format(time.RFC3339),
+	}
 	for _, h := range portfolio.Holdings {
 		response.Holdings = append(
 			response.Holdings,
@@ -125,14 +145,16 @@ func (h *PortfolioHandler) GetUserPortfolio(c echo.Context) error {
 	return c.JSON(http.StatusOK, response)
 }
 
-type UpdateUserPortfolioRequest struct {
-	Holdings []PortfolioHolding `json:"holdings"`
+type UpdatePortfolioRequest struct {
+	Name      string             `json:"name"`
+	RiskLevel string             `json:"risk_level"`
+	Holdings  []PortfolioHolding `json:"holdings"`
 }
 
-func (h *PortfolioHandler) UpdateUserPortfolio(c echo.Context) error {
-	userEmail := c.QueryParam("user_email") // TODO: We should extract the email from a jwt
+func (h *PortfolioHandler) UpdatePortfolio(c echo.Context) error {
+	portfolioID := c.Param("portfolio_id")
 
-	request := UpdateUserPortfolioRequest{}
+	request := UpdatePortfolioRequest{}
 	if err := c.Bind(&request); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
@@ -150,13 +172,15 @@ func (h *PortfolioHandler) UpdateUserPortfolio(c echo.Context) error {
 	}
 
 	portfolio := domain.Portfolio{
-		UserEmail: userEmail,
+		ID:        portfolioID,
+		Name:      request.Name,
+		RiskLevel: domain.RiskLevel(request.RiskLevel),
 		Holdings:  portfolioHoldings,
 	}
 
-	err := h.portfolioService.UpdateUserPortfolio(portfolio)
+	err := h.portfolioService.UpdatePortfolio(portfolio)
 	if err != nil {
-		notFoundError := investbotErr.PortfolioNotFoundError{UserEmail: userEmail}
+		notFoundError := investbotErr.PortfolioNotFoundError{PortfolioID: portfolioID}
 		if errors.As(err, &notFoundError) {
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 		}
