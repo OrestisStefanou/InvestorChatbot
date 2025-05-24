@@ -3,12 +3,13 @@ package services
 import (
 	"investbot/pkg/domain"
 	"investbot/pkg/errors"
+	"time"
 )
 
 type PortfolioRepository interface {
-	GetUserPortfolio(userEmail string) (domain.Portfolio, error)
-	CreateUserPortfolio(portfolio domain.Portfolio) error
-	UpdateUserPortfolio(portfolio domain.Portfolio) error
+	GetPortfolioById(portfolioID string) (domain.Portfolio, error)
+	CreatePortfolio(portfolio domain.Portfolio) error
+	UpdatePortfolio(portfolio domain.Portfolio) error
 }
 
 type PortfolioService struct {
@@ -19,34 +20,33 @@ func NewPortfolioService(portfolioRepository PortfolioRepository) (*PortfolioSer
 	return &PortfolioService{portfolioRepository: portfolioRepository}, nil
 }
 
-func (s *PortfolioService) GetUserPortfolio(userEmail string) (domain.Portfolio, error) {
-	portfolio, err := s.portfolioRepository.GetUserPortfolio(userEmail)
+func (s *PortfolioService) GetPortfolioById(portfolioID string) (domain.Portfolio, error) {
+	portfolio, err := s.portfolioRepository.GetPortfolioById(portfolioID)
 	if err != nil {
 		return domain.Portfolio{}, err
 	}
 
-	if portfolio.UserEmail == "" {
-		return domain.Portfolio{}, errors.PortfolioNotFoundError{UserEmail: userEmail}
+	if portfolio.ID == "" {
+		return domain.Portfolio{}, errors.PortfolioNotFoundError{PortfolioID: portfolioID}
 	}
 
 	return portfolio, nil
 }
 
-func (s *PortfolioService) CreateUserPortfolio(portfolio domain.Portfolio) error {
+func (s *PortfolioService) CreatePortfolio(portfolio domain.Portfolio) error {
 	// TODO: Check that the symbols are valid and if duplicates exist
-	return s.portfolioRepository.CreateUserPortfolio(portfolio)
+	portfolio.CreatedAt = time.Now()
+	return s.portfolioRepository.CreatePortfolio(portfolio)
 }
 
-func (s *PortfolioService) UpdateUserPortfolio(portfolio domain.Portfolio) error {
-	userPortfolio, err := s.portfolioRepository.GetUserPortfolio(portfolio.UserEmail)
+func (s *PortfolioService) UpdatePortfolio(portfolio domain.Portfolio) error {
+	dbPortfolio, err := s.portfolioRepository.GetPortfolioById(portfolio.ID)
 	if err != nil {
 		return err
 	}
 
-	if userPortfolio.UserEmail == "" {
-		return errors.PortfolioNotFoundError{UserEmail: portfolio.UserEmail}
-	}
-
 	// TODO: Check that the symbols are valid and if duplicates exist
-	return s.portfolioRepository.UpdateUserPortfolio(portfolio)
+	portfolio.UpdatedAt = time.Now()
+	portfolio.CreatedAt = dbPortfolio.CreatedAt
+	return s.portfolioRepository.UpdatePortfolio(portfolio)
 }

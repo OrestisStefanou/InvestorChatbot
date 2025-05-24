@@ -105,8 +105,8 @@ func main() {
 	e.GET("/sectors", sectorHandler.GetSectors)
 	e.GET("/sectors/stocks/:sector", sectorHandler.GetSectorStocks)
 	e.GET("/topics", topicHandler.GetTopics)
-	e.POST("/portfolio", portfolioHandler.CreateUserPortfolio)
-	e.PUT("/portfolio", portfolioHandler.UpdateUserPortfolio)
-	e.GET("/portfolio", portfolioHandler.GetUserPortfolio)
+	e.POST("/portfolio", portfolioHandler.CreatePortfolio)
+	e.PUT("/portfolio/:portfolio_id", portfolioHandler.UpdatePortfolio)
+	e.GET("/portfolio/:portfolio_id", portfolioHandler.GetPortfolioById)
 	e.Logger.Fatal(e.Start(":1323"))
 }
