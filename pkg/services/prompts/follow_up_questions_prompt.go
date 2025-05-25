@@ -8,7 +8,7 @@ will be given to another investing expert so take that into consideration regard
 basically you provide the users some follow up questions that they can ask another investing expert.
 
 ## CONVERSATION
-%s
+%+v
 
 ## RESPONSE FORMAT
 Your answer MUST have the following format:

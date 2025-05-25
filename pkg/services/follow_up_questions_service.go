@@ -23,13 +23,13 @@ func (rag FollowUpQuestionsRagImpl) GenerateFollowUpQuestions(conversation []Mes
 	followUpQuestions := make([]string, 0, followUpQuestionsNum)
 
 	prompt := fmt.Sprintf(prompts.FollowUpQuestionsPrompt, followUpQuestionsNum, conversation)
-	prompt_msg := Message{
+	promptMsg := Message{
 		Role:    System,
 		Content: prompt,
 	}
 
 	// Add the prompt as the first message in the existing conversation
-	conversation_with_prompt := append([]Message{prompt_msg}, conversation...)
+	conversation_with_prompt := append([]Message{promptMsg}, conversation...)
 
 	var responseMessage string
 	chunkChannel := make(chan string)
