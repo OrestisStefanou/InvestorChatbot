@@ -40,7 +40,6 @@ func (te TopicExtractor) ExtractTopic(conversation []Message) (Topic, error) {
 				shouldExit = true
 				continue
 			}
-			fmt.Println(chunk)
 			responseMessage += chunk
 		case err := <-errorChannel:
 			if err != nil {
