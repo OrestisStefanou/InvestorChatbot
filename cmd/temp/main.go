@@ -3,31 +3,55 @@ package main
 import (
 	"fmt"
 	"investbot/pkg/config"
-	"investbot/pkg/marketDataScraper"
+	"investbot/pkg/llama"
+	"investbot/pkg/openAI"
 	"investbot/pkg/services"
+	"log"
 )
 
-type User struct {
-	ID   int
-	Name string
+func getLlm(conf config.Config) (services.Llm, error) {
+	var llm services.Llm
+	var err error
+	switch conf.LlmProvider {
+	case config.OPEN_AI:
+		openAiClient, _ := openAI.NewOpenAiClient(conf.OpenAiKey, conf.OpenAiBaseUrl)
+		llm, err = openAI.NewOpenAiLLM(conf.OpenAiModelName, openAiClient, float64(conf.BaseLlmTemperature))
+	case config.OLLAMA:
+		llamaClient, _ := llama.NewOllamaClient(conf.OllamaBaseUrl)
+		llm, err = llama.NewLlamaLLM(llama.ModelName(conf.OllamaModelName), llamaClient, conf.BaseLlmTemperature)
+	default:
+		err = fmt.Errorf("No valid llm provider found")
+	}
+
+	return llm, err
 }
 
 func main() {
-	cache, _ := services.NewBadgerCacheService()
 	conf, _ := config.LoadConfig()
-	mds := marketDataScraper.NewMarketDataScraperWithCache(cache, conf)
-
-	sectorStocks, err := mds.GetSectorStocks("technology")
+	llm, err := getLlm(conf)
 	if err != nil {
-		fmt.Println(err)
+		log.Fatal(err)
 	}
-	fmt.Println(sectorStocks[:10])
-
-	fmt.Println("--------------------------------")
-
-	sectorStocks, err = mds.GetSectorStocks("technology")
+	topicExtractor, _ := services.NewTopicExtractor(llm)
+	conversation := []services.Message{
+		services.Message{
+			Content: "What are the benefits of investing?",
+			Role:    services.User,
+		},
+		services.Message{
+			Content: "It helps you grow your money over time to beat inflation",
+			Role:    services.Assistant,
+		},
+		services.Message{
+			Content: "What is inflation?",
+			Role:    services.User,
+		},
+	}
+	topic, err := topicExtractor.ExtractTopic(conversation)
 	if err != nil {
-		fmt.Println(err)
+		log.Fatal(err)
 	}
-	fmt.Println(sectorStocks[:10])
+
+	fmt.Printf("Topic is: %s\n", topic)
+
 }

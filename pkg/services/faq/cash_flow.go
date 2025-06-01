@@ -1,7 +1,7 @@
 package faq
 
 var CashFlowFaq = []string{
-	"What is the company’s overall financial health based on its cash flowa?",
+	"What is the company’s overall financial health based on its cash flow?",
 	"Can you give me an overview of the cash flow?",
 	"How has the company's operating cash flow trended over the past five years?",
 	"Is the company consistently generating positive cash flow from operations?",

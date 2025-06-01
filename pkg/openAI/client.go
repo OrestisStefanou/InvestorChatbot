@@ -120,8 +120,8 @@ func (client OpenAiClient) Chat(parameters ChatParameters, chunkChannel chan<- s
 
 	// Create a scanner to stream the response
 	scanner := bufio.NewScanner(resp.Body)
-	var chunk chunk
 	for scanner.Scan() {
+		chunk := chunk{}
 		chunkBytes := scanner.Bytes()
 
 		// Check if the chunk indicates the end of the stream
