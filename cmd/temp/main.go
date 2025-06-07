@@ -59,7 +59,7 @@ func main() {
 	tagExtractor, _ := services.NewTagExtractor(llm, dataService)
 	conversation := []services.Message{
 		services.Message{
-			Content: "Which financial ratios can I use to evaluate a company?",
+			Content: "Can you compare the income statements of Nvidia and AMD?",
 			Role:    services.User,
 		},
 		// services.Message{
@@ -71,7 +71,7 @@ func main() {
 		// 	Role:    services.User,
 		// },
 	}
-	tags, err := tagExtractor.ExtractTags(services.STOCK_OVERVIEW, conversation)
+	tags, err := tagExtractor.ExtractTags(services.STOCK_FINANCIALS, conversation)
 	if err != nil {
 		fmt.Printf("Err: %s", err)
 	}

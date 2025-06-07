@@ -18,8 +18,11 @@ type TagExtractor struct {
 }
 
 type llmTagExtractorResponse struct {
-	Sector       string   `json:"sector_name"`
-	StockSymbols []string `json:"stock_symbols"`
+	Sector          string   `json:"sector_name"`
+	StockSymbols    []string `json:"stock_symbols"`
+	BalanceSheet    bool     `json:"balance_sheet"`
+	IncomeStatement bool     `json:"income_statement"`
+	CashFlow        bool     `json:"cash_flow"`
 }
 
 func NewTagExtractor(llm Llm, marketDataService MarketDataService) (*TagExtractor, error) {
@@ -27,13 +30,19 @@ func NewTagExtractor(llm Llm, marketDataService MarketDataService) (*TagExtracto
 }
 
 func (te TagExtractor) ExtractTags(topic Topic, conversation []Message) (Tags, error) {
+	var tags Tags
+	var err error
 	switch topic {
 	case SECTORS:
-		return te.extractSectorTags(conversation)
+		tags, err = te.extractSectorTags(conversation)
 	case STOCK_OVERVIEW:
-		return te.extractStockOverviewTags(conversation)
+		tags, err = te.extractStockOverviewTags(conversation)
+	case STOCK_FINANCIALS:
+		tags, err = te.extractStockFinancialsTags(conversation)
+	default:
+		err = fmt.Errorf("Unsupported topic: %s for tag extraction.", topic)
 	}
-	return Tags{}, nil
+	return tags, err
 }
 
 func (te TagExtractor) extractSectorTags(conversation []Message) (Tags, error) {
@@ -68,16 +77,39 @@ func (te TagExtractor) extractStockOverviewTags(conversation []Message) (Tags, e
 	}
 
 	prompt := fmt.Sprintf(prompts.StockOverviewTagExtractorPrompt, stockSymbols, conversation)
-
 	llmResponse, err := te.getLlmResponse(prompt)
-	var result llmTagExtractorResponse
 
+	var result llmTagExtractorResponse
 	err = json.Unmarshal([]byte(llmResponse), &result)
 	if err != nil {
 		return Tags{}, err
 	}
 
 	return Tags{StockSymbols: result.StockSymbols}, nil
+}
+
+func (te TagExtractor) extractStockFinancialsTags(conversation []Message) (Tags, error) {
+	// Format the sector tag extraction prompt message
+	stockSymbols, err := te.marketDataService.GetTickers()
+	if err != nil {
+		return Tags{}, err
+	}
+
+	prompt := fmt.Sprintf(prompts.StockFinancialsTagExtractorPrompt, stockSymbols, conversation)
+	llmResponse, err := te.getLlmResponse(prompt)
+
+	var result llmTagExtractorResponse
+	err = json.Unmarshal([]byte(llmResponse), &result)
+	if err != nil {
+		return Tags{}, err
+	}
+
+	return Tags{
+		StockSymbols:    result.StockSymbols,
+		BalanceSheet:    result.BalanceSheet,
+		CashFlow:        result.CashFlow,
+		IncomeStatement: result.IncomeStatement,
+	}, nil
 }
 
 func (te TagExtractor) getLlmResponse(prompt string) (string, error) {
