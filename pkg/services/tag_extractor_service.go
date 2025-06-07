@@ -9,11 +9,17 @@ import (
 
 type MarketDataService interface {
 	GetSectors() ([]domain.Sector, error)
+	GetTickers() ([]domain.Ticker, error)
 }
 
 type TagExtractor struct {
 	llm               Llm
 	marketDataService MarketDataService
+}
+
+type llmTagExtractorResponse struct {
+	Sector       string   `json:"sector_name"`
+	StockSymbols []string `json:"stock_symbols"`
 }
 
 func NewTagExtractor(llm Llm, marketDataService MarketDataService) (*TagExtractor, error) {
@@ -24,6 +30,8 @@ func (te TagExtractor) ExtractTags(topic Topic, conversation []Message) (Tags, e
 	switch topic {
 	case SECTORS:
 		return te.extractSectorTags(conversation)
+	case STOCK_OVERVIEW:
+		return te.extractStockOverviewTags(conversation)
 	}
 	return Tags{}, nil
 }
@@ -41,29 +49,35 @@ func (te TagExtractor) extractSectorTags(conversation []Message) (Tags, error) {
 	}
 
 	prompt := fmt.Sprintf(prompts.SectorTagExtractorPrompt, sectorsPlaceholderString, conversation)
-
-	fmt.Printf("\n\nPrompt:\n%s\n\n", prompt)
-
 	llmResponse, err := te.getLlmResponse(prompt)
-	fmt.Printf("Response:\n %s", llmResponse)
 
-	var result map[string]interface{}
-
-	// Unmarshal the JSON string into the map
+	var result llmTagExtractorResponse
 	err = json.Unmarshal([]byte(llmResponse), &result)
 	if err != nil {
-		fmt.Println("Error parsing JSON:", err)
-		return Tags{}, nil
+		return Tags{}, err
 	}
 
-	// Print the parsed map
-	fmt.Printf("\n\n%+v", result)
+	return Tags{SectorName: result.Sector}, nil
+}
 
-	if result["sector_name"] == "technology" {
-		fmt.Print("\n\nALL GOOD MATE")
+func (te TagExtractor) extractStockOverviewTags(conversation []Message) (Tags, error) {
+	// Format the sector tag extraction prompt message
+	stockSymbols, err := te.marketDataService.GetTickers()
+	if err != nil {
+		return Tags{}, err
 	}
 
-	return Tags{}, nil
+	prompt := fmt.Sprintf(prompts.StockOverviewTagExtractorPrompt, stockSymbols, conversation)
+
+	llmResponse, err := te.getLlmResponse(prompt)
+	var result llmTagExtractorResponse
+
+	err = json.Unmarshal([]byte(llmResponse), &result)
+	if err != nil {
+		return Tags{}, err
+	}
+
+	return Tags{StockSymbols: result.StockSymbols}, nil
 }
 
 func (te TagExtractor) getLlmResponse(prompt string) (string, error) {

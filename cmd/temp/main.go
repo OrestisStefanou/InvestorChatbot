@@ -59,7 +59,7 @@ func main() {
 	tagExtractor, _ := services.NewTagExtractor(llm, dataService)
 	conversation := []services.Message{
 		services.Message{
-			Content: "What can you tell me about the tech sector?",
+			Content: "Which financial ratios can I use to evaluate a company?",
 			Role:    services.User,
 		},
 		// services.Message{
@@ -71,6 +71,9 @@ func main() {
 		// 	Role:    services.User,
 		// },
 	}
-	tagExtractor.ExtractTags(services.SECTORS, conversation)
-
+	tags, err := tagExtractor.ExtractTags(services.STOCK_OVERVIEW, conversation)
+	if err != nil {
+		fmt.Printf("Err: %s", err)
+	}
+	fmt.Printf("Tags: %+v", tags)
 }
