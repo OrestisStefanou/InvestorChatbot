@@ -43,6 +43,8 @@ func (te TagExtractor) ExtractTags(topic Topic, conversation []Message) (Tags, e
 		tags, err = te.extractStockFinancialsTags(conversation)
 	case ETFS:
 		tags, err = te.extractEtfTags(conversation)
+	case NEWS:
+		tags, err = te.extractMarketNewsTags(conversation)
 	default:
 		err = fmt.Errorf("Unsupported topic: %s for tag extraction.", topic)
 	}
@@ -139,6 +141,24 @@ func (te TagExtractor) extractEtfTags(conversation []Message) (Tags, error) {
 	}
 
 	return Tags{EtfSymbol: result.EtfSymbol}, nil
+}
+
+func (te TagExtractor) extractMarketNewsTags(conversation []Message) (Tags, error) {
+	stockSymbols, err := te.marketDataService.GetTickers()
+	if err != nil {
+		return Tags{}, err
+	}
+
+	prompt := fmt.Sprintf(prompts.NewsTagExtractorPrompt, stockSymbols, conversation)
+	llmResponse, err := te.getLlmResponse(prompt)
+
+	var result llmTagExtractorResponse
+	err = json.Unmarshal([]byte(llmResponse), &result)
+	if err != nil {
+		return Tags{}, err
+	}
+
+	return Tags{StockSymbols: result.StockSymbols}, nil
 }
 
 func (te TagExtractor) getLlmResponse(prompt string) (string, error) {
