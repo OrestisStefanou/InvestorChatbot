@@ -10,6 +10,7 @@ import (
 type MarketDataService interface {
 	GetSectors() ([]domain.Sector, error)
 	GetTickers() ([]domain.Ticker, error)
+	GetEtfs() ([]domain.Etf, error)
 }
 
 type TagExtractor struct {
@@ -23,6 +24,7 @@ type llmTagExtractorResponse struct {
 	BalanceSheet    bool     `json:"balance_sheet"`
 	IncomeStatement bool     `json:"income_statement"`
 	CashFlow        bool     `json:"cash_flow"`
+	EtfSymbol       string   `json:"etf_symbol"`
 }
 
 func NewTagExtractor(llm Llm, marketDataService MarketDataService) (*TagExtractor, error) {
@@ -39,6 +41,8 @@ func (te TagExtractor) ExtractTags(topic Topic, conversation []Message) (Tags, e
 		tags, err = te.extractStockOverviewTags(conversation)
 	case STOCK_FINANCIALS:
 		tags, err = te.extractStockFinancialsTags(conversation)
+	case ETFS:
+		tags, err = te.extractEtfTags(conversation)
 	default:
 		err = fmt.Errorf("Unsupported topic: %s for tag extraction.", topic)
 	}
@@ -46,7 +50,6 @@ func (te TagExtractor) ExtractTags(topic Topic, conversation []Message) (Tags, e
 }
 
 func (te TagExtractor) extractSectorTags(conversation []Message) (Tags, error) {
-	// Format the sector tag extraction prompt message
 	sectors, err := te.marketDataService.GetSectors()
 	if err != nil {
 		return Tags{}, err
@@ -70,7 +73,6 @@ func (te TagExtractor) extractSectorTags(conversation []Message) (Tags, error) {
 }
 
 func (te TagExtractor) extractStockOverviewTags(conversation []Message) (Tags, error) {
-	// Format the sector tag extraction prompt message
 	stockSymbols, err := te.marketDataService.GetTickers()
 	if err != nil {
 		return Tags{}, err
@@ -89,7 +91,6 @@ func (te TagExtractor) extractStockOverviewTags(conversation []Message) (Tags, e
 }
 
 func (te TagExtractor) extractStockFinancialsTags(conversation []Message) (Tags, error) {
-	// Format the sector tag extraction prompt message
 	stockSymbols, err := te.marketDataService.GetTickers()
 	if err != nil {
 		return Tags{}, err
@@ -110,6 +111,34 @@ func (te TagExtractor) extractStockFinancialsTags(conversation []Message) (Tags,
 		CashFlow:        result.CashFlow,
 		IncomeStatement: result.IncomeStatement,
 	}, nil
+}
+
+func (te TagExtractor) extractEtfTags(conversation []Message) (Tags, error) {
+	etfs, err := te.marketDataService.GetEtfs()
+	if err != nil {
+		return Tags{}, err
+	}
+
+	type etfTicker struct {
+		etfName   string
+		etfSymbol string
+	}
+
+	etfSymbols := make([]etfTicker, 0, len(etfs))
+	for _, e := range etfs {
+		etfSymbols = append(etfSymbols, etfTicker{etfName: e.Name, etfSymbol: e.Symbol})
+	}
+
+	prompt := fmt.Sprintf(prompts.EtfTagExtractorPrompt, etfSymbols, conversation)
+	llmResponse, err := te.getLlmResponse(prompt)
+
+	var result llmTagExtractorResponse
+	err = json.Unmarshal([]byte(llmResponse), &result)
+	if err != nil {
+		return Tags{}, err
+	}
+
+	return Tags{EtfSymbol: result.EtfSymbol}, nil
 }
 
 func (te TagExtractor) getLlmResponse(prompt string) (string, error) {
