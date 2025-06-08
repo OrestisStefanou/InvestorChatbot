@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"investbot/pkg/config"
 	"investbot/pkg/llama"
-	"investbot/pkg/marketDataScraper"
 	"investbot/pkg/openAI"
 	"investbot/pkg/services"
 	"log"
@@ -33,33 +32,12 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	cache, _ := services.NewBadgerCacheService()
-	dataService := marketDataScraper.NewMarketDataScraperWithCache(cache, conf)
-	// topicExtractor, _ := services.NewTopicExtractor(llm)
-	// conversation := []services.Message{
-	// 	services.Message{
-	// 		Content: "What are the benefits of investing?",
-	// 		Role:    services.User,
-	// 	},
-	// 	services.Message{
-	// 		Content: "It helps you grow your money over time to beat inflation",
-	// 		Role:    services.Assistant,
-	// 	},
-	// 	services.Message{
-	// 		Content: "What is inflation?",
-	// 		Role:    services.User,
-	// 	},
-	// }
-	// topic, err := topicExtractor.ExtractTopic(conversation)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-
-	// fmt.Printf("Topic is: %s\n", topic)
-	tagExtractor, _ := services.NewTagExtractor(llm, dataService)
+	//cache, _ := services.NewBadgerCacheService()
+	//dataService := marketDataScraper.NewMarketDataScraperWithCache(cache, conf)
+	topicExtractor, _ := services.NewTopicExtractor(llm)
 	conversation := []services.Message{
 		services.Message{
-			Content: "Can you summarize the latest market news of Amazon?",
+			Content: "What is the eps ratio?",
 			Role:    services.User,
 		},
 		// services.Message{
@@ -71,9 +49,30 @@ func main() {
 		// 	Role:    services.User,
 		// },
 	}
-	tags, err := tagExtractor.ExtractTags(services.NEWS, conversation)
+	topic, err := topicExtractor.ExtractTopic(conversation)
 	if err != nil {
-		fmt.Printf("Err: %s", err)
+		log.Fatal(err)
 	}
-	fmt.Printf("Tags: %+v", tags)
+
+	fmt.Printf("Topic is: %s\n", topic)
+	// tagExtractor, _ := services.NewTagExtractor(llm, dataService)
+	// conversation := []services.Message{
+	// 	services.Message{
+	// 		Content: "Can you summarize the latest market news of Amazon?",
+	// 		Role:    services.User,
+	// 	},
+	// 	// services.Message{
+	// 	// 	Content: "It helps you grow your money over time to beat inflation",
+	// 	// 	Role:    services.Assistant,
+	// 	// },
+	// 	// services.Message{
+	// 	// 	Content: "What is inflation?",
+	// 	// 	Role:    services.User,
+	// 	// },
+	// }
+	// tags, err := tagExtractor.ExtractTags(services.NEWS, conversation)
+	// if err != nil {
+	// 	fmt.Printf("Err: %s", err)
+	// }
+	// fmt.Printf("Tags: %+v", tags)
 }

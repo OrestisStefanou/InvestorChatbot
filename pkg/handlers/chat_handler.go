@@ -12,6 +12,7 @@ import (
 
 type ChatService interface {
 	GenerateResponse(topic services.Topic, tags services.Tags, sessionId string, question string, responseChannel chan<- string) error
+	ExtractTopicAndTags(question string, sessionId string) (services.Topic, services.Tags, error)
 }
 
 type ChatHandler struct {
@@ -120,4 +121,63 @@ func (h *ChatHandler) ChatCompletion(c echo.Context) error {
 			}
 		}
 	}
+}
+
+type ExtractTopicAndTagsRequest struct {
+	Question  string `json:"question"`
+	SessionID string `json:"session_id"`
+}
+
+func (r ExtractTopicAndTagsRequest) validate() error {
+	if r.Question == "" {
+		return fmt.Errorf("question field is required")
+	}
+
+	if r.SessionID == "" {
+		return fmt.Errorf("session_id field is required")
+	}
+
+	return nil
+}
+
+type ExtractTopicAndTagsResponse struct {
+	Topic string    `json:"topic"`
+	Tags  TopicTags `json:"topic_tags"`
+}
+
+func (h *ChatHandler) ExtractTopicAndTags(c echo.Context) error {
+	extractTopicAndTagsRequest := new(ExtractTopicAndTagsRequest)
+	if err := c.Bind(extractTopicAndTagsRequest); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+	}
+
+	err := extractTopicAndTagsRequest.validate()
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+	}
+
+	topic, tags, err := h.chatService.ExtractTopicAndTags(extractTopicAndTagsRequest.Question, extractTopicAndTagsRequest.SessionID)
+	if err != nil {
+		switch e := err.(type) {
+		case *investbotErr.SessionNotFoundError:
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": e.Error()})
+		default:
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		}
+	}
+
+	response := ExtractTopicAndTagsResponse{
+		Topic: string(topic),
+		Tags: TopicTags{
+			SectorName:      tags.SectorName,
+			IndustryName:    tags.IndustryName,
+			StockSymbols:    tags.StockSymbols,
+			BalanceSheet:    tags.BalanceSheet,
+			IncomeStatement: tags.IncomeStatement,
+			CashFlow:        tags.CashFlow,
+			EtfSymbol:       tags.EtfSymbol,
+		},
+	}
+
+	return c.JSON(http.StatusOK, response)
 }

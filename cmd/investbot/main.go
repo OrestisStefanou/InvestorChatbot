@@ -75,7 +75,9 @@ func main() {
 	}
 
 	sessionService, _ := services.NewInMemorySession(conf.ConvMsgLimit)
-	chatService, _ := services.NewChatService(topicToRagMap, sessionService)
+	topicExtractorService, _ := services.NewTopicExtractor(llm)
+	tagExtractorService, _ := services.NewTagExtractor(llm, dataService)
+	chatService, _ := services.NewChatService(topicToRagMap, sessionService, topicExtractorService, tagExtractorService)
 	followUpQuestionsService, _ := services.NewFollowUpQuestionsService(sessionService, followUpQuestionsRag)
 	faqService, _ := services.NewFaqService(conf.FaqLimit)
 	tickerService, _ := services.NewTickerService(dataService)
@@ -95,6 +97,7 @@ func main() {
 	portfolioHandler, _ := handlers.NewPortfolioHandler(portfolioService)
 
 	e.POST("/chat", chatHandler.ChatCompletion)
+	e.POST("/chat/extract_topic_and_tags", chatHandler.ExtractTopicAndTags)
 	e.POST("/session", sessionHandler.CreateNewSession)
 	e.POST("/follow_up_questions", followUpQuestionsHandler.GenerateFollowUpQuestions)
 	e.GET("/faq", faqHandler.GetFaq)
