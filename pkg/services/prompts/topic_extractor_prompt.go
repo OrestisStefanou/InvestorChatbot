@@ -54,7 +54,9 @@ cash flows falls under this category
 - news: Anything that is related to market or stock news falls under this category
 
 # Response instructions
-Your response MUST BE just the topic and nothing else.
+- Focus on the last question of the conversation, for example if the first messages are about education but the last question is 
+about stock sectors then your response must be sectors.
+- Your response MUST BE just the topic and nothing else.
 
 # Conversation to categorize
 %+v 
