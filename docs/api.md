@@ -156,7 +156,7 @@ This request would trigger a streamed AI response about the semiconductor indust
 
 ### POST `/chat/extract_topic_and_tags`
 
-Extracts the main topic and relevant financial context tags (sector, industry, stock symbols, etc.) from a user's question. This is typically used as a preprocessing step before generating a chat response. You can check [this](docs/topic_tag_extractor.md) for more details on how this works behind 
+Extracts the main topic and relevant financial context tags (sector, industry, stock symbols, etc.) from a user's question. This is typically used as a preprocessing step before generating a chat response. You can check [this](topic_tag_extractor.md) for more details on how this works behind 
 the scenes.
 
 ## Request Body
