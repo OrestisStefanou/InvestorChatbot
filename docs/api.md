@@ -133,6 +133,7 @@ Occurs when the request payload is invalid or missing required fields.
 - If `session_id` is invalid or expired, a 400 error will be returned.
 - This endpoint returns a **streaming** response, suitable for chat UIs that render text incrementally.
 - The `topic_tags` object allows for fine-grained control over the context of the AI's response, especially when discussing financials.
+- You can use `POST /chat/extract_topic_and_tags` endpoint to get the topic and tags if you don't know them before hand.
 
 ## Example Request
 ```sh
@@ -148,6 +149,117 @@ Content-Type: application/json
 ```
 
 This request would trigger a streamed AI response about the semiconductor industry.
+
+---
+
+## Endpoint
+
+### POST `/chat/extract_topic_and_tags`
+
+Extracts the main topic and relevant financial context tags (sector, industry, stock symbols, etc.) from a user's question. This is typically used as a preprocessing step before generating a chat response. You can check [this](docs/topic_tag_extractor.md) for more details on how this works behind 
+the scenes.
+
+## Request Body
+
+| Field        | Type   | Required | Description                                               |
+| ------------ | ------ | -------- | --------------------------------------------------------- |
+| `question`   | string | Yes      | The user's question from which to extract topic and tags. |
+| `session_id` | string | Yes      | A valid session ID created via the `/session` endpoint.   |
+
+### Example Request Body
+
+```json
+{
+  "question": "Tell me about the performance of Apple and Microsoft in the tech sector.",
+  "session_id": "abc123xyz"
+}
+```
+
+## Response
+
+### Success Response (200 OK)
+
+Returns the inferred topic and relevant financial tags extracted from the question.
+
+| Field        | Type   | Description                                    |
+| ------------ | ------ | ---------------------------------------------- |
+| `topic`      | string | The identified topic of the question.          |
+| `topic_tags` | object | Structured metadata tags related to the topic. |
+
+#### Topic Tags (`topic_tags` object)
+
+| Field              | Type      | Description                                          |
+| ------------------ | --------- | ---------------------------------------------------- |
+| `sector_name`      | string    | Name of the relevant sector (e.g., "Technology").    |
+| `industry_name`    | string    | Name of the industry (e.g., "Consumer Electronics"). |
+| `stock_symbols`    | string\[] | List of stock symbols involved in the question.      |
+| `balance_sheet`    | boolean   | Whether the question involves balance sheet data.    |
+| `income_statement` | boolean   | Whether the question involves income statement data. |
+| `cash_flow`        | boolean   | Whether the question involves cash flow data.        |
+| `etf_symbol`       | string    | ETF symbol mentioned, if any.                        |
+
+### Example Success Response
+
+```json
+{
+  "topic": "stock_performance",
+  "topic_tags": {
+    "sector_name": "Technology",
+    "industry_name": "Consumer Electronics",
+    "stock_symbols": ["AAPL", "MSFT"],
+    "balance_sheet": false,
+    "income_statement": true,
+    "cash_flow": false,
+    "etf_symbol": ""
+  }
+}
+```
+
+### Error Responses
+
+#### 400 Bad Request
+
+Occurs if the request is missing required fields or if the session ID is invalid.
+
+```json
+{
+  "error": "question field is required"
+}
+```
+
+```json
+{
+  "error": "session_id field is required"
+}
+```
+
+```json
+{
+  "error": "session not found"
+}
+```
+
+#### 500 Internal Server Error
+
+```json
+{
+  "error": "an unexpected error occurred"
+}
+```
+
+## Example Request
+
+```sh
+POST /chat/extract_topic_and_tags
+Content-Type: application/json
+
+{
+  "question": "How did Microsoft and Apple do in the last earnings season?",
+  "session_id": "abc123xyz"
+}
+```
+
+This request would result in a response identifying the topic as "stock\_performance" and extracting the relevant stock symbols and financial context.
 
 ---
 
