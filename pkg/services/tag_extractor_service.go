@@ -45,8 +45,6 @@ func (te TagExtractor) ExtractTags(topic Topic, conversation []Message) (Tags, e
 		tags, err = te.extractEtfTags(conversation)
 	case NEWS:
 		tags, err = te.extractMarketNewsTags(conversation)
-	default:
-		err = fmt.Errorf("Unsupported topic: %s for tag extraction.", topic)
 	}
 	return tags, err
 }

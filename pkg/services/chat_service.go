@@ -19,6 +19,14 @@ type Rag interface {
 	GenerateRagResponse(conversation []Message, tags Tags, responseChannel chan<- string) error
 }
 
+type TopicExtractorService interface {
+	ExtractTopic(conversation []Message) (Topic, error)
+}
+
+type TagExtractorService interface {
+	ExtractTags(topic Topic, conversation []Message) (Tags, error)
+}
+
 type Topic string
 
 const (
@@ -32,14 +40,23 @@ const (
 )
 
 type ChatService struct {
-	topicToRagMap  map[Topic]Rag
-	sessionService SessionService
+	topicToRagMap         map[Topic]Rag
+	sessionService        SessionService
+	topicExtractorService TopicExtractorService
+	tagExtractorService   TagExtractorService
 }
 
-func NewChatService(topicToRagMap map[Topic]Rag, sessionService SessionService) (*ChatService, error) {
+func NewChatService(
+	topicToRagMap map[Topic]Rag,
+	sessionService SessionService,
+	topicExtractorService TopicExtractorService,
+	tagExtractorService TagExtractorService,
+) (*ChatService, error) {
 	return &ChatService{
-		topicToRagMap:  topicToRagMap,
-		sessionService: sessionService,
+		topicToRagMap:         topicToRagMap,
+		sessionService:        sessionService,
+		topicExtractorService: topicExtractorService,
+		tagExtractorService:   tagExtractorService,
 	}, nil
 }
 
@@ -103,4 +120,30 @@ func (s *ChatService) GenerateResponse(
 	s.sessionService.AddMessage(sessionId, Message{Role: Assistant, Content: responseMessage})
 
 	return nil
+}
+
+func (s *ChatService) ExtractTopicAndTags(question string, sessionId string) (Topic, Tags, error) {
+	conversation, err := s.sessionService.GetConversationBySessionId(sessionId)
+	if err != nil {
+		return "", Tags{}, &errors.SessionNotFoundError{
+			Message: fmt.Sprintf("Conversation for session id: %s not found", sessionId),
+		}
+	}
+
+	questionMessage := Message{
+		Role: User, Content: question,
+	}
+	conversation = append(conversation, questionMessage)
+
+	topic, err := s.topicExtractorService.ExtractTopic(conversation)
+	if err != nil {
+		return "", Tags{}, err
+	}
+
+	tags, err := s.tagExtractorService.ExtractTags(topic, conversation)
+	if err != nil {
+		return "", Tags{}, err
+	}
+
+	return topic, tags, nil
 }
