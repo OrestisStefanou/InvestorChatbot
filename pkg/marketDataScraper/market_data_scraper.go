@@ -106,6 +106,10 @@ func (mds MarketDataScraper) GetSuperInvestorPortfolio(superInvestorName string)
 	return scrapeSuperInvestorPortfolio(superInvestorName)
 }
 
+func (mds MarketDataScraper) GetHistoricalPrices(ticker string, assetClass domain.AssetClass, period domain.Period) (domain.HistoricalPrices, error) {
+	return scrapeHistoricalPrices(ticker, assetClass, period)
+}
+
 type MarketDataScraperWithCache struct {
 	cache services.CacheService
 	conf  config.Config
@@ -463,4 +467,23 @@ func (mds MarketDataScraperWithCache) GetSuperInvestorPortfolio(superInvestorNam
 
 	mds.cache.Set(key, superInvestorPortfolio, time.Duration(mds.conf.CacheTtl)*time.Second)
 	return superInvestorPortfolio, nil
+}
+
+func (mds MarketDataScraperWithCache) GetHistoricalPrices(ticker string, assetClass domain.AssetClass, period domain.Period) (domain.HistoricalPrices, error) {
+	// Check if the data is in the cache
+	var historicalPrices domain.HistoricalPrices
+
+	key := fmt.Sprintf("historical_prices_%s_%s_%s", ticker, assetClass, period)
+	err := mds.cache.Get(key, &historicalPrices)
+	if err == nil {
+		return historicalPrices, nil
+	}
+
+	historicalPrices, err = scrapeHistoricalPrices(ticker, assetClass, period)
+	if err != nil {
+		return domain.HistoricalPrices{}, err
+	}
+
+	mds.cache.Set(key, historicalPrices, time.Duration(mds.conf.CacheTtl)*time.Second)
+	return historicalPrices, nil
 }

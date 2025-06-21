@@ -3,7 +3,9 @@ package main
 import (
 	"fmt"
 	"investbot/pkg/config"
+	"investbot/pkg/domain"
 	"investbot/pkg/llama"
+	"investbot/pkg/marketDataScraper"
 	"investbot/pkg/openAI"
 	"investbot/pkg/services"
 	"log"
@@ -28,51 +30,17 @@ func getLlm(conf config.Config) (services.Llm, error) {
 
 func main() {
 	conf, _ := config.LoadConfig()
-	llm, err := getLlm(conf)
-	if err != nil {
-		log.Fatal(err)
-	}
-	//cache, _ := services.NewBadgerCacheService()
-	//dataService := marketDataScraper.NewMarketDataScraperWithCache(cache, conf)
-	topicExtractor, _ := services.NewTopicExtractor(llm)
-	conversation := []services.Message{
-		services.Message{
-			Content: "What is the eps ratio?",
-			Role:    services.User,
-		},
-		// services.Message{
-		// 	Content: "It helps you grow your money over time to beat inflation",
-		// 	Role:    services.Assistant,
-		// },
-		// services.Message{
-		// 	Content: "What is inflation?",
-		// 	Role:    services.User,
-		// },
-	}
-	topic, err := topicExtractor.ExtractTopic(conversation)
+	cache, _ := services.NewBadgerCacheService()
+	dataService := marketDataScraper.NewMarketDataScraperWithCache(cache, conf)
+
+	historicalPrices, err := dataService.GetHistoricalPrices("spy", domain.ETF, domain.Period1M)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	fmt.Printf("Topic is: %s\n", topic)
-	// tagExtractor, _ := services.NewTagExtractor(llm, dataService)
-	// conversation := []services.Message{
-	// 	services.Message{
-	// 		Content: "Can you summarize the latest market news of Amazon?",
-	// 		Role:    services.User,
-	// 	},
-	// 	// services.Message{
-	// 	// 	Content: "It helps you grow your money over time to beat inflation",
-	// 	// 	Role:    services.Assistant,
-	// 	// },
-	// 	// services.Message{
-	// 	// 	Content: "What is inflation?",
-	// 	// 	Role:    services.User,
-	// 	// },
-	// }
-	// tags, err := tagExtractor.ExtractTags(services.NEWS, conversation)
-	// if err != nil {
-	// 	fmt.Printf("Err: %s", err)
-	// }
-	// fmt.Printf("Tags: %+v", tags)
+	historicalPrices, err = dataService.GetHistoricalPrices("meta", domain.Stock, domain.Period5Y)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("\n\n%+v\n\n", historicalPrices)
 }
