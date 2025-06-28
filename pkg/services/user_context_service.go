@@ -12,6 +12,10 @@ type UserContextRepository interface {
 	UpdateUserContext(userContext domain.UserContext) error
 }
 
+type UserContextDataService interface {
+	GetUserContext(userID string) (domain.UserContext, error)
+}
+
 type UserContextService struct {
 	userContextRepository UserContextRepository
 }

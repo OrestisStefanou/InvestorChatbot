@@ -13,6 +13,7 @@ type Tags struct {
 	IncomeStatement bool
 	CashFlow        bool
 	EtfSymbol       string
+	UserID          string
 }
 
 type Rag interface {

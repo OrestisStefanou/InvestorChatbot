@@ -33,3 +33,7 @@ Make the responses of the chatbot personalized based on the user profile. For ex
 - User context will be passed in the prompt so that the llm can take it into consideration. The existing chat endpoint should be updated so that the user_id can be passed in the body of the request.
 
 - User context should also be passed in the topic and tag extraction prompt so that endpoint should also be updated to accept the user_id in the body of the request. 
+
+- Update api docs
+    - New user context endpoints
+    - Existing chat endpoint

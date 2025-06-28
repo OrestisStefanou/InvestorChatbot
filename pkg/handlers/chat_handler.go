@@ -31,6 +31,7 @@ type TopicTags struct {
 	IncomeStatement bool     `json:"income_statement"`
 	CashFlow        bool     `json:"cash_flow"`
 	EtfSymbol       string   `json:"etf_symbol"`
+	UserID          string   `json:"user_id"`
 }
 
 type ChatRequest struct {
@@ -78,6 +79,7 @@ func (h *ChatHandler) ChatCompletion(c echo.Context) error {
 		IncomeStatement: chatRequest.Tags.IncomeStatement,
 		CashFlow:        chatRequest.Tags.CashFlow,
 		EtfSymbol:       chatRequest.Tags.EtfSymbol,
+		UserID:          chatRequest.Tags.UserID,
 	}
 
 	enc := json.NewEncoder(c.Response())

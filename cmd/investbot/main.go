@@ -55,8 +55,9 @@ func main() {
 
 	cache, _ := services.NewBadgerCacheService()
 	dataService := marketDataScraper.NewMarketDataScraperWithCache(cache, conf)
+	userContextService, _ := services.NewUserContextService(userContextRepository)
 	sectorRag, _ := services.NewSectorRag(llm, dataService)
-	educationRag, _ := services.NewEducationRag(llm)
+	educationRag, _ := services.NewEducationRag(llm, userContextService)
 	industryRag, _ := services.NewIndustryRag(llm, dataService)
 	stockOverviewRag, _ := services.NewStockOverviewRag(llm, dataService)
 	stockFinancialsRag, _ := services.NewStockFinancialsRag(llm, dataService)
@@ -83,7 +84,6 @@ func main() {
 	tickerService, _ := services.NewTickerService(dataService)
 	etfService, _ := services.NewEtfService(dataService)
 	superInvestorService, _ := services.NewSuperInvestorService(dataService)
-	userContextService, _ := services.NewUserContextService(userContextRepository)
 
 	chatHandler, _ := handlers.NewChatHandler(chatService)
 	sessionHandler, _ := handlers.NewSessionHandler(sessionService)
