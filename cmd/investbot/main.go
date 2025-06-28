@@ -53,6 +53,11 @@ func main() {
 		log.Fatal(err)
 	}
 
+	userContextRepository, err := repositories.NewUserContextRepository(db)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	cache, _ := services.NewBadgerCacheService()
 	dataService := marketDataScraper.NewMarketDataScraperWithCache(cache, conf)
 	sectorRag, _ := services.NewSectorRag(llm, dataService)
@@ -84,6 +89,7 @@ func main() {
 	etfService, _ := services.NewEtfService(dataService)
 	superInvestorService, _ := services.NewSuperInvestorService(dataService)
 	portfolioService, _ := services.NewPortfolioService(portfolioRepository)
+	userContextService, _ := services.NewUserContextService(userContextRepository)
 
 	chatHandler, _ := handlers.NewChatHandler(chatService)
 	sessionHandler, _ := handlers.NewSessionHandler(sessionService)
@@ -95,6 +101,7 @@ func main() {
 	sectorHandler, _ := handlers.NewSectorHandler(dataService)
 	topicHandler, _ := handlers.NewTopicHandler()
 	portfolioHandler, _ := handlers.NewPortfolioHandler(portfolioService)
+	userContextHandler, _ := handlers.NewUserContextHandler(userContextService)
 
 	e.POST("/chat", chatHandler.ChatCompletion)
 	e.POST("/chat/extract_topic_and_tags", chatHandler.ExtractTopicAndTags)
@@ -111,5 +118,8 @@ func main() {
 	e.POST("/portfolio", portfolioHandler.CreatePortfolio)
 	e.PUT("/portfolio/:portfolio_id", portfolioHandler.UpdatePortfolio)
 	e.GET("/portfolio/:portfolio_id", portfolioHandler.GetPortfolioById)
+	e.POST("/user_context", userContextHandler.CreateUserContext)
+	e.PUT("/user_context", userContextHandler.UpdateUserContext)
+	e.GET("/user_context/:user_id", userContextHandler.GetUserContext)
 	e.Logger.Fatal(e.Start(":1323"))
 }

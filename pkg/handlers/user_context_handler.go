@@ -104,6 +104,10 @@ func (h *UserContextHandler) CreateUserContext(c echo.Context) error {
 
 	err := h.userContextService.CreateUserContext(userContext)
 	if err != nil {
+		existsError := investbotErr.UserContextAlreadyExistsError{UserID: request.UserID}
+		if errors.As(err, &existsError) {
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+		}
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
 
@@ -116,7 +120,6 @@ type GetUserContextResponse struct {
 
 func (h *UserContextHandler) GetUserContext(c echo.Context) error {
 	userID := c.Param("user_id")
-
 	userContext, err := h.userContextService.GetUserContext(userID)
 	if err != nil {
 		notFoundError := investbotErr.UserContextNotFoundError{UserID: userID}
