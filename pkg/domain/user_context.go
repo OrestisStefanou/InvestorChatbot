@@ -1,5 +1,13 @@
 package domain
 
+type AssetClass string
+
+const (
+	Stock  AssetClass = "stock"
+	ETF    AssetClass = "etf"
+	Crypto AssetClass = "crypto"
+)
+
 type UserPortfolioHolding struct {
 	AssetClass          AssetClass
 	Symbol              string

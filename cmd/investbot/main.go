@@ -48,11 +48,6 @@ func main() {
 		log.Fatal(err)
 	}
 
-	portfolioRepository, err := repositories.NewPortfolioRepository(db)
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	userContextRepository, err := repositories.NewUserContextRepository(db)
 	if err != nil {
 		log.Fatal(err)
@@ -88,7 +83,6 @@ func main() {
 	tickerService, _ := services.NewTickerService(dataService)
 	etfService, _ := services.NewEtfService(dataService)
 	superInvestorService, _ := services.NewSuperInvestorService(dataService)
-	portfolioService, _ := services.NewPortfolioService(portfolioRepository)
 	userContextService, _ := services.NewUserContextService(userContextRepository)
 
 	chatHandler, _ := handlers.NewChatHandler(chatService)
@@ -100,7 +94,6 @@ func main() {
 	superInvestorHandler, _ := handlers.NewSuperInvestorHandler(superInvestorService)
 	sectorHandler, _ := handlers.NewSectorHandler(dataService)
 	topicHandler, _ := handlers.NewTopicHandler()
-	portfolioHandler, _ := handlers.NewPortfolioHandler(portfolioService)
 	userContextHandler, _ := handlers.NewUserContextHandler(userContextService)
 
 	e.POST("/chat", chatHandler.ChatCompletion)
@@ -115,9 +108,6 @@ func main() {
 	e.GET("/sectors", sectorHandler.GetSectors)
 	e.GET("/sectors/stocks/:sector", sectorHandler.GetSectorStocks)
 	e.GET("/topics", topicHandler.GetTopics)
-	e.POST("/portfolio", portfolioHandler.CreatePortfolio)
-	e.PUT("/portfolio/:portfolio_id", portfolioHandler.UpdatePortfolio)
-	e.GET("/portfolio/:portfolio_id", portfolioHandler.GetPortfolioById)
 	e.POST("/user_context", userContextHandler.CreateUserContext)
 	e.PUT("/user_context", userContextHandler.UpdateUserContext)
 	e.GET("/user_context/:user_id", userContextHandler.GetUserContext)
