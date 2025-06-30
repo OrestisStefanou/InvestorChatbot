@@ -22,12 +22,21 @@ type stockOverviewContext struct {
 }
 
 type StockOverviewRag struct {
-	dataService StockOverviewDataService
-	llm         Llm
+	dataService        StockOverviewDataService
+	llm                Llm
+	userContextService UserContextDataService
 }
 
-func NewStockOverviewRag(llm Llm, stockOverviewDataService StockOverviewDataService) (*StockOverviewRag, error) {
-	return &StockOverviewRag{llm: llm, dataService: stockOverviewDataService}, nil
+func NewStockOverviewRag(
+	llm Llm,
+	stockOverviewDataService StockOverviewDataService,
+	userContextService UserContextDataService,
+) (*StockOverviewRag, error) {
+	return &StockOverviewRag{
+		llm:                llm,
+		dataService:        stockOverviewDataService,
+		userContextService: userContextService,
+	}, nil
 }
 
 func (rag StockOverviewRag) createRagContext(symbols []string) (string, error) {
@@ -69,12 +78,20 @@ func (rag StockOverviewRag) GenerateRagResponse(conversation []Message, tags Tag
 		return err
 	}
 
-	prompt := fmt.Sprintf(prompts.StockOverviewPrompt, ragContext)
+	var userContext domain.UserContext
+	if tags.UserID != "" {
+		userContext, err = rag.userContextService.GetUserContext(tags.UserID)
+		if err != nil {
+			return err
+		}
+	}
+
+	prompt := fmt.Sprintf(prompts.StockOverviewPrompt, ragContext, userContext)
 	prompt_msg := Message{
 		Role:    System,
 		Content: prompt,
 	}
-
+	fmt.Printf("\n\n%s\n\n", prompt)
 	// Add the prompt as the first message in the existing conversation
 	conversation_with_prompt := append([]Message{prompt_msg}, conversation...)
 

@@ -59,7 +59,7 @@ func main() {
 	sectorRag, _ := services.NewSectorRag(llm, dataService)
 	educationRag, _ := services.NewEducationRag(llm, userContextService)
 	industryRag, _ := services.NewIndustryRag(llm, dataService)
-	stockOverviewRag, _ := services.NewStockOverviewRag(llm, dataService)
+	stockOverviewRag, _ := services.NewStockOverviewRag(llm, dataService, userContextService)
 	stockFinancialsRag, _ := services.NewStockFinancialsRag(llm, dataService)
 	etfRag, _ := services.NewEtfRag(llm, dataService)
 	newsRag, _ := services.NewMarketNewsRag(llm, dataService)
