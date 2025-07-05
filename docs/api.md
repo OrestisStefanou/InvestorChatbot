@@ -72,6 +72,7 @@ Generates a streaming chat response based on the user's question, topic, session
 | `income_statement` | boolean | No       | Whether to include income statement context.                             |
 | `cash_flow`        | boolean | No       | Whether to include cash flow context.                                    |
 | `etf_symbol`       | string  | No       | ETF symbol if the question is related to an ETF.                          |
+| `user_id`       | string  | No       | ID of user asking the question.(look at user context section below)                          |
 
 ### Example Request Body
 ```json
@@ -260,6 +261,279 @@ Content-Type: application/json
 ```
 
 This request would result in a response identifying the topic as "stock\_performance" and extracting the relevant stock symbols and financial context.
+
+---
+
+# User Context API
+
+## Endpoints
+
+### POST `/user_context`
+
+Creates a new user context, including user profile information and portfolio holdings. This can be useful to personalize the responses that the chatbot will give by passing the `user_id` in the tags of `POST /chat` endpoint.
+
+## Request Body
+
+| Field            | Type              | Required | Description                                                    |
+| ---------------- | ----------------- | -------- | -------------------------------------------------------------- |
+| `user_id`        | string            | Yes      | Unique identifier for the user.                                |
+| `user_profile`   | object            | Yes      | Arbitrary key-value pairs containing user profile information. |
+| `user_portfolio` | array of holdings | Yes      | List of portfolio holdings for the user.                       |
+
+### User Portfolio Holding (Item in `user_portfolio`)
+
+| Field                  | Type   | Required | Description                                                  |
+| ---------------------- | ------ | -------- | ------------------------------------------------------------ |
+| `asset_class`          | string | Yes      | Asset class, must be one of: `"stock"`, `"etf"`, `"crypto"`. |
+| `symbol`               | string | No       | Ticker symbol of the asset.                                  |
+| `name`                 | string | No       | Name of the asset.                                           |
+| `quantity`             | number | Yes      | Number of units held.                                        |
+| `portfolio_percentage` | number | Yes      | Percentage of the asset in the total portfolio.              |
+
+> At least one of `symbol` or `name` is required for each holding.
+
+> `user_profile` is a dynamic key value field that you can pass any information that the llm could find useful to give a more personalized response to the user. Whatever is passed in the user_profile will be given as is in the prompt that will be used to generate the response for the user.
+
+### Example Request Body
+
+```json
+{
+  "user_id": "user_123",
+  "user_profile": {
+    "risk_tolerance": "moderate",
+    "age": 35
+  },
+  "user_portfolio": [
+    {
+      "asset_class": "stock",
+      "symbol": "AAPL",
+      "quantity": 10,
+      "portfolio_percentage": 50
+    },
+    {
+      "asset_class": "crypto",
+      "name": "Bitcoin",
+      "quantity": 0.5,
+      "portfolio_percentage": 50
+    }
+  ]
+}
+```
+
+## Response
+
+### Success Response (201 Created)
+
+Returns the created user context.
+
+```json
+{
+  "user_id": "user_123",
+  "user_profile": {
+    "risk_tolerance": "moderate",
+    "age": 35
+  },
+  "user_portfolio": [
+    {
+      "asset_class": "stock",
+      "symbol": "AAPL",
+      "name": "",
+      "quantity": 10,
+      "portfolio_percentage": 50
+    },
+    {
+      "asset_class": "crypto",
+      "symbol": "",
+      "name": "Bitcoin",
+      "quantity": 0.5,
+      "portfolio_percentage": 50
+    }
+  ]
+}
+```
+
+### Error Responses
+
+#### 400 Bad Request
+
+```json
+{
+  "error": "user_id is required"
+}
+```
+
+```json
+{
+  "error": "user context for user_123 already exists"
+}
+```
+
+#### 500 Internal Server Error
+
+```json
+{
+  "error": "internal server error"
+}
+```
+
+---
+
+### PUT `/user_context`
+
+Updates an existing user context.
+
+## Request Body
+
+Same as `POST /user_context`.
+
+### Example Request Body
+
+```json
+{
+  "user_id": "user_123",
+  "user_profile": {
+    "risk_tolerance": "aggressive"
+  },
+  "user_portfolio": [
+    {
+      "asset_class": "stock",
+      "symbol": "TSLA",
+      "quantity": 5,
+      "portfolio_percentage": 60
+    },
+    {
+      "asset_class": "etf",
+      "name": "S&P 500 ETF",
+      "quantity": 3,
+      "portfolio_percentage": 40
+    }
+  ]
+}
+```
+
+## Response
+
+### Success Response (200 OK)
+
+Returns the updated user context.
+
+```json
+{
+  "user_id": "user_123",
+  "user_profile": {
+    "risk_tolerance": "aggressive"
+  },
+  "user_portfolio": [
+    {
+      "asset_class": "stock",
+      "symbol": "TSLA",
+      "name": "",
+      "quantity": 5,
+      "portfolio_percentage": 60
+    },
+    {
+      "asset_class": "etf",
+      "symbol": "",
+      "name": "S&P 500 ETF",
+      "quantity": 3,
+      "portfolio_percentage": 40
+    }
+  ]
+}
+```
+
+### Error Responses
+
+#### 400 Bad Request
+
+```json
+{
+  "error": "user_id is required"
+}
+```
+
+```json
+{
+  "error": "user context for user_123 not found"
+}
+```
+
+#### 500 Internal Server Error
+
+```json
+{
+  "error": "internal server error"
+}
+```
+
+---
+
+### GET `/user_context/:user_id`
+
+Retrieves an existing user context by user ID.
+
+## Path Parameter
+
+| Parameter | Type   | Required | Description                     |
+| --------- | ------ | -------- | ------------------------------- |
+| `user_id` | string | Yes      | Unique identifier for the user. |
+
+## Response
+
+### Success Response (200 OK)
+
+```json
+{
+  "user_id": "user_123",
+  "user_profile": {
+    "risk_tolerance": "moderate",
+    "age": 35
+  },
+  "user_portfolio": [
+    {
+      "asset_class": "stock",
+      "symbol": "AAPL",
+      "name": "",
+      "quantity": 10,
+      "portfolio_percentage": 50
+    },
+    {
+      "asset_class": "crypto",
+      "symbol": "",
+      "name": "Bitcoin",
+      "quantity": 0.5,
+      "portfolio_percentage": 50
+    }
+  ]
+}
+```
+
+### Error Responses
+
+#### 400 Bad Request
+
+```json
+{
+  "error": "user context for user_123 not found"
+}
+```
+
+#### 500 Internal Server Error
+
+```json
+{
+  "error": "internal server error"
+}
+```
+
+---
+
+## Notes
+
+* `user_id` is required in all requests.
+* Each portfolio holding requires at least one of `symbol` or `name`.
+* The `asset_class` field must be one of `"stock"`, `"etf"`, or `"crypto"`.
+* Returns clear error messages when user context already exists, is not found, or input validation fails.
 
 ---
 
