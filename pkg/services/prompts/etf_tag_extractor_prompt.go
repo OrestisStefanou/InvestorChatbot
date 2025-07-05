@@ -6,6 +6,10 @@ Given a conversation about etfs your mission is to understand for which etf symb
 ## Etf names and symbols
 %+v
 
+Some context of the user asking the question is given below. You should take this into consideration.
+## User context
+%+v
+
 ## Response instructions
 - Your response MUST BE a json parsable string with a key named 'etf_symbol' and value the string that will contain
 the etf symbol the conversation is about. In case the question is generic and not for a specific etf then return an empty 

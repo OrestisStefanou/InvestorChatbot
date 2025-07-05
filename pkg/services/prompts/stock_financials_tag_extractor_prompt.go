@@ -10,6 +10,10 @@ Given a conversation about stocks financials your mission is to to extract the f
 ## Stock names and symbols
 %+v
 
+Some context of the user asking the question is given below. You should take this into consideration.
+## User context
+%+v
+
 ## Response instructions
 Your response MUST BE a json parsable string with the following keys:
 - stock_symbols: A list of strings that will contain the symbols of the stocks that the conversation is about.

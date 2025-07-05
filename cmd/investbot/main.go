@@ -76,8 +76,8 @@ func main() {
 	}
 
 	sessionService, _ := services.NewInMemorySession(conf.ConvMsgLimit)
-	topicExtractorService, _ := services.NewTopicExtractor(llm)
-	tagExtractorService, _ := services.NewTagExtractor(llm, dataService)
+	topicExtractorService, _ := services.NewTopicExtractor(llm, userContextService)
+	tagExtractorService, _ := services.NewTagExtractor(llm, dataService, userContextService)
 	chatService, _ := services.NewChatService(topicToRagMap, sessionService, topicExtractorService, tagExtractorService)
 	followUpQuestionsService, _ := services.NewFollowUpQuestionsService(sessionService, followUpQuestionsRag)
 	faqService, _ := services.NewFaqService(conf.FaqLimit)

@@ -2,19 +2,29 @@ package services
 
 import (
 	"fmt"
+	"investbot/pkg/domain"
 	"investbot/pkg/services/prompts"
 )
 
 type TopicExtractor struct {
-	llm Llm
+	llm                Llm
+	userContextService UserContextDataService
 }
 
-func NewTopicExtractor(llm Llm) (*TopicExtractor, error) {
-	return &TopicExtractor{llm: llm}, nil
+func NewTopicExtractor(llm Llm, userContextService UserContextDataService) (*TopicExtractor, error) {
+	return &TopicExtractor{llm: llm, userContextService: userContextService}, nil
 }
 
-func (te TopicExtractor) ExtractTopic(conversation []Message) (Topic, error) {
-	prompt := fmt.Sprintf(prompts.TopicExtractorPrompt, conversation)
+func (te TopicExtractor) ExtractTopic(conversation []Message, userID string) (Topic, error) {
+	var userContext domain.UserContext
+	var err error
+	if userID != "" {
+		userContext, err = te.userContextService.GetUserContext(userID)
+		if err != nil {
+			return "", err
+		}
+	}
+	prompt := fmt.Sprintf(prompts.TopicExtractorPrompt, userContext, conversation)
 
 	promptMsg := Message{
 		Role:    User,
