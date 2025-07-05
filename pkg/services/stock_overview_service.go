@@ -91,7 +91,7 @@ func (rag StockOverviewRag) GenerateRagResponse(conversation []Message, tags Tag
 		Role:    System,
 		Content: prompt,
 	}
-	fmt.Printf("\n\n%s\n\n", prompt)
+
 	// Add the prompt as the first message in the existing conversation
 	conversation_with_prompt := append([]Message{prompt_msg}, conversation...)
 
