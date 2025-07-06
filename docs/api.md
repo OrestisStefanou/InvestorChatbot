@@ -166,13 +166,16 @@ the scenes.
 | ------------ | ------ | -------- | --------------------------------------------------------- |
 | `question`   | string | Yes      | The user's question from which to extract topic and tags. |
 | `session_id` | string | Yes      | A valid session ID created via the `/session` endpoint.   |
+| `user_id`    | string | No       | ID of the user asking the question.                       |
+
 
 ### Example Request Body
 
 ```json
 {
   "question": "Tell me about the performance of Apple and Microsoft in the tech sector.",
-  "session_id": "abc123xyz"
+  "session_id": "abc123xyz",
+  "user_id": "some_user_id"
 }
 ```
 
@@ -198,18 +201,19 @@ Returns the inferred topic and relevant financial tags extracted from the questi
 | `income_statement` | boolean   | Whether the question involves income statement data. |
 | `cash_flow`        | boolean   | Whether the question involves cash flow data.        |
 | `etf_symbol`       | string    | ETF symbol mentioned, if any.                        |
+| `user_id`          | string    | user_id given in the request                         |
 
 ### Example Success Response
 
 ```json
 {
-  "topic": "stock_performance",
+  "topic": "stock_overview",
   "topic_tags": {
-    "sector_name": "Technology",
-    "industry_name": "Consumer Electronics",
+    "sector_name": "",
+    "industry_name": "",
     "stock_symbols": ["AAPL", "MSFT"],
     "balance_sheet": false,
-    "income_statement": true,
+    "income_statement": false,
     "cash_flow": false,
     "etf_symbol": ""
   }
