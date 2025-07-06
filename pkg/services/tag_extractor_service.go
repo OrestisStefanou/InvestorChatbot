@@ -14,8 +14,9 @@ type MarketDataService interface {
 }
 
 type TagExtractor struct {
-	llm               Llm
-	marketDataService MarketDataService
+	llm                Llm
+	marketDataService  MarketDataService
+	userContextService UserContextDataService
 }
 
 type llmTagExtractorResponse struct {
@@ -27,29 +28,44 @@ type llmTagExtractorResponse struct {
 	EtfSymbol       string   `json:"etf_symbol"`
 }
 
-func NewTagExtractor(llm Llm, marketDataService MarketDataService) (*TagExtractor, error) {
-	return &TagExtractor{llm: llm, marketDataService: marketDataService}, nil
+func NewTagExtractor(
+	llm Llm,
+	marketDataService MarketDataService,
+	userContextService UserContextDataService,
+) (*TagExtractor, error) {
+	return &TagExtractor{
+		llm:                llm,
+		marketDataService:  marketDataService,
+		userContextService: userContextService,
+	}, nil
 }
 
-func (te TagExtractor) ExtractTags(topic Topic, conversation []Message) (Tags, error) {
+func (te TagExtractor) ExtractTags(topic Topic, conversation []Message, userID string) (Tags, error) {
 	var tags Tags
 	var err error
+	var userContext domain.UserContext
+	if userID != "" {
+		userContext, err = te.userContextService.GetUserContext(userID)
+		if err != nil {
+			return Tags{}, err
+		}
+	}
 	switch topic {
 	case SECTORS:
-		tags, err = te.extractSectorTags(conversation)
+		tags, err = te.extractSectorTags(conversation, userContext)
 	case STOCK_OVERVIEW:
-		tags, err = te.extractStockOverviewTags(conversation)
+		tags, err = te.extractStockOverviewTags(conversation, userContext)
 	case STOCK_FINANCIALS:
-		tags, err = te.extractStockFinancialsTags(conversation)
+		tags, err = te.extractStockFinancialsTags(conversation, userContext)
 	case ETFS:
-		tags, err = te.extractEtfTags(conversation)
+		tags, err = te.extractEtfTags(conversation, userContext)
 	case NEWS:
-		tags, err = te.extractMarketNewsTags(conversation)
+		tags, err = te.extractMarketNewsTags(conversation, userContext)
 	}
 	return tags, err
 }
 
-func (te TagExtractor) extractSectorTags(conversation []Message) (Tags, error) {
+func (te TagExtractor) extractSectorTags(conversation []Message, userContext domain.UserContext) (Tags, error) {
 	sectors, err := te.marketDataService.GetSectors()
 	if err != nil {
 		return Tags{}, err
@@ -60,7 +76,7 @@ func (te TagExtractor) extractSectorTags(conversation []Message) (Tags, error) {
 		sectorsPlaceholderString += fmt.Sprintf("%s\n", s.UrlName)
 	}
 
-	prompt := fmt.Sprintf(prompts.SectorTagExtractorPrompt, sectorsPlaceholderString, conversation)
+	prompt := fmt.Sprintf(prompts.SectorTagExtractorPrompt, sectorsPlaceholderString, userContext, conversation)
 	llmResponse, err := te.getLlmResponse(prompt)
 
 	var result llmTagExtractorResponse
@@ -72,13 +88,13 @@ func (te TagExtractor) extractSectorTags(conversation []Message) (Tags, error) {
 	return Tags{SectorName: result.Sector}, nil
 }
 
-func (te TagExtractor) extractStockOverviewTags(conversation []Message) (Tags, error) {
+func (te TagExtractor) extractStockOverviewTags(conversation []Message, userContext domain.UserContext) (Tags, error) {
 	stockSymbols, err := te.marketDataService.GetTickers()
 	if err != nil {
 		return Tags{}, err
 	}
 
-	prompt := fmt.Sprintf(prompts.StockOverviewTagExtractorPrompt, stockSymbols, conversation)
+	prompt := fmt.Sprintf(prompts.StockOverviewTagExtractorPrompt, stockSymbols, userContext, conversation)
 	llmResponse, err := te.getLlmResponse(prompt)
 
 	var result llmTagExtractorResponse
@@ -90,13 +106,13 @@ func (te TagExtractor) extractStockOverviewTags(conversation []Message) (Tags, e
 	return Tags{StockSymbols: result.StockSymbols}, nil
 }
 
-func (te TagExtractor) extractStockFinancialsTags(conversation []Message) (Tags, error) {
+func (te TagExtractor) extractStockFinancialsTags(conversation []Message, userContext domain.UserContext) (Tags, error) {
 	stockSymbols, err := te.marketDataService.GetTickers()
 	if err != nil {
 		return Tags{}, err
 	}
 
-	prompt := fmt.Sprintf(prompts.StockFinancialsTagExtractorPrompt, stockSymbols, conversation)
+	prompt := fmt.Sprintf(prompts.StockFinancialsTagExtractorPrompt, stockSymbols, userContext, conversation)
 	llmResponse, err := te.getLlmResponse(prompt)
 
 	var result llmTagExtractorResponse
@@ -113,7 +129,7 @@ func (te TagExtractor) extractStockFinancialsTags(conversation []Message) (Tags,
 	}, nil
 }
 
-func (te TagExtractor) extractEtfTags(conversation []Message) (Tags, error) {
+func (te TagExtractor) extractEtfTags(conversation []Message, userContext domain.UserContext) (Tags, error) {
 	etfs, err := te.marketDataService.GetEtfs()
 	if err != nil {
 		return Tags{}, err
@@ -129,7 +145,7 @@ func (te TagExtractor) extractEtfTags(conversation []Message) (Tags, error) {
 		etfSymbols = append(etfSymbols, etfTicker{etfName: e.Name, etfSymbol: e.Symbol})
 	}
 
-	prompt := fmt.Sprintf(prompts.EtfTagExtractorPrompt, etfSymbols, conversation)
+	prompt := fmt.Sprintf(prompts.EtfTagExtractorPrompt, etfSymbols, userContext, conversation)
 	llmResponse, err := te.getLlmResponse(prompt)
 
 	var result llmTagExtractorResponse
@@ -141,13 +157,13 @@ func (te TagExtractor) extractEtfTags(conversation []Message) (Tags, error) {
 	return Tags{EtfSymbol: result.EtfSymbol}, nil
 }
 
-func (te TagExtractor) extractMarketNewsTags(conversation []Message) (Tags, error) {
+func (te TagExtractor) extractMarketNewsTags(conversation []Message, userContext domain.UserContext) (Tags, error) {
 	stockSymbols, err := te.marketDataService.GetTickers()
 	if err != nil {
 		return Tags{}, err
 	}
 
-	prompt := fmt.Sprintf(prompts.NewsTagExtractorPrompt, stockSymbols, conversation)
+	prompt := fmt.Sprintf(prompts.NewsTagExtractorPrompt, stockSymbols, userContext, conversation)
 	llmResponse, err := te.getLlmResponse(prompt)
 
 	var result llmTagExtractorResponse

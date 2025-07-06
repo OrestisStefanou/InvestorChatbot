@@ -13,6 +13,7 @@ type Tags struct {
 	IncomeStatement bool
 	CashFlow        bool
 	EtfSymbol       string
+	UserID          string
 }
 
 type Rag interface {
@@ -20,11 +21,11 @@ type Rag interface {
 }
 
 type TopicExtractorService interface {
-	ExtractTopic(conversation []Message) (Topic, error)
+	ExtractTopic(conversation []Message, userID string) (Topic, error)
 }
 
 type TagExtractorService interface {
-	ExtractTags(topic Topic, conversation []Message) (Tags, error)
+	ExtractTags(topic Topic, conversation []Message, userID string) (Tags, error)
 }
 
 type Topic string
@@ -122,7 +123,7 @@ func (s *ChatService) GenerateResponse(
 	return nil
 }
 
-func (s *ChatService) ExtractTopicAndTags(question string, sessionId string) (Topic, Tags, error) {
+func (s *ChatService) ExtractTopicAndTags(question string, sessionId string, userID string) (Topic, Tags, error) {
 	conversation, err := s.sessionService.GetConversationBySessionId(sessionId)
 	if err != nil {
 		return "", Tags{}, &errors.SessionNotFoundError{
@@ -135,12 +136,12 @@ func (s *ChatService) ExtractTopicAndTags(question string, sessionId string) (To
 	}
 	conversation = append(conversation, questionMessage)
 
-	topic, err := s.topicExtractorService.ExtractTopic(conversation)
+	topic, err := s.topicExtractorService.ExtractTopic(conversation, userID)
 	if err != nil {
 		return "", Tags{}, err
 	}
 
-	tags, err := s.tagExtractorService.ExtractTags(topic, conversation)
+	tags, err := s.tagExtractorService.ExtractTags(topic, conversation, userID)
 	if err != nil {
 		return "", Tags{}, err
 	}

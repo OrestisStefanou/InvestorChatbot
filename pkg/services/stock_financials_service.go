@@ -22,12 +22,21 @@ type stockFinancialsContext struct {
 }
 
 type StockFinancialsRag struct {
-	dataService StockFinancialsDataService
-	llm         Llm
+	dataService        StockFinancialsDataService
+	llm                Llm
+	userContextService UserContextDataService
 }
 
-func NewStockFinancialsRag(llm Llm, stockFinancialsDataService StockFinancialsDataService) (*StockFinancialsRag, error) {
-	return &StockFinancialsRag{dataService: stockFinancialsDataService, llm: llm}, nil
+func NewStockFinancialsRag(
+	llm Llm,
+	stockFinancialsDataService StockFinancialsDataService,
+	userContextService UserContextDataService,
+) (*StockFinancialsRag, error) {
+	return &StockFinancialsRag{
+		dataService:        stockFinancialsDataService,
+		llm:                llm,
+		userContextService: userContextService,
+	}, nil
 }
 
 func (rag StockFinancialsRag) createRagContext(tags Tags) (string, error) {
@@ -75,7 +84,15 @@ func (rag StockFinancialsRag) GenerateRagResponse(conversation []Message, tags T
 		return err
 	}
 
-	prompt := fmt.Sprintf(prompts.StockFinancialsPrompt, ragContext)
+	var userContext domain.UserContext
+	if tags.UserID != "" {
+		userContext, err = rag.userContextService.GetUserContext(tags.UserID)
+		if err != nil {
+			return err
+		}
+	}
+
+	prompt := fmt.Sprintf(prompts.StockFinancialsPrompt, ragContext, userContext)
 	prompt_msg := Message{
 		Role:    System,
 		Content: prompt,

@@ -72,6 +72,7 @@ Generates a streaming chat response based on the user's question, topic, session
 | `income_statement` | boolean | No       | Whether to include income statement context.                             |
 | `cash_flow`        | boolean | No       | Whether to include cash flow context.                                    |
 | `etf_symbol`       | string  | No       | ETF symbol if the question is related to an ETF.                          |
+| `user_id`       | string  | No       | ID of user asking the question.(look at user context section below)                          |
 
 ### Example Request Body
 ```json
@@ -165,13 +166,16 @@ the scenes.
 | ------------ | ------ | -------- | --------------------------------------------------------- |
 | `question`   | string | Yes      | The user's question from which to extract topic and tags. |
 | `session_id` | string | Yes      | A valid session ID created via the `/session` endpoint.   |
+| `user_id`    | string | No       | ID of the user asking the question.                       |
+
 
 ### Example Request Body
 
 ```json
 {
   "question": "Tell me about the performance of Apple and Microsoft in the tech sector.",
-  "session_id": "abc123xyz"
+  "session_id": "abc123xyz",
+  "user_id": "some_user_id"
 }
 ```
 
@@ -197,18 +201,19 @@ Returns the inferred topic and relevant financial tags extracted from the questi
 | `income_statement` | boolean   | Whether the question involves income statement data. |
 | `cash_flow`        | boolean   | Whether the question involves cash flow data.        |
 | `etf_symbol`       | string    | ETF symbol mentioned, if any.                        |
+| `user_id`          | string    | user_id given in the request                         |
 
 ### Example Success Response
 
 ```json
 {
-  "topic": "stock_performance",
+  "topic": "stock_overview",
   "topic_tags": {
-    "sector_name": "Technology",
-    "industry_name": "Consumer Electronics",
+    "sector_name": "",
+    "industry_name": "",
     "stock_symbols": ["AAPL", "MSFT"],
     "balance_sheet": false,
-    "income_statement": true,
+    "income_statement": false,
     "cash_flow": false,
     "etf_symbol": ""
   }
@@ -260,6 +265,279 @@ Content-Type: application/json
 ```
 
 This request would result in a response identifying the topic as "stock\_performance" and extracting the relevant stock symbols and financial context.
+
+---
+
+# User Context API
+
+## Endpoints
+
+### POST `/user_context`
+
+Creates a new user context, including user profile information and portfolio holdings. This can be useful to personalize the responses that the chatbot will give by passing the `user_id` in the tags of `POST /chat` endpoint.
+
+## Request Body
+
+| Field            | Type              | Required | Description                                                    |
+| ---------------- | ----------------- | -------- | -------------------------------------------------------------- |
+| `user_id`        | string            | Yes      | Unique identifier for the user.                                |
+| `user_profile`   | object            | Yes      | Arbitrary key-value pairs containing user profile information. |
+| `user_portfolio` | array of holdings | Yes      | List of portfolio holdings for the user.                       |
+
+### User Portfolio Holding (Item in `user_portfolio`)
+
+| Field                  | Type   | Required | Description                                                  |
+| ---------------------- | ------ | -------- | ------------------------------------------------------------ |
+| `asset_class`          | string | Yes      | Asset class, must be one of: `"stock"`, `"etf"`, `"crypto"`. |
+| `symbol`               | string | No       | Ticker symbol of the asset.                                  |
+| `name`                 | string | No       | Name of the asset.                                           |
+| `quantity`             | number | Yes      | Number of units held.                                        |
+| `portfolio_percentage` | number | Yes      | Percentage of the asset in the total portfolio.              |
+
+> At least one of `symbol` or `name` is required for each holding.
+
+> `user_profile` is a dynamic key value field that you can pass any information that the llm could find useful to give a more personalized response to the user. Whatever is passed in the user_profile will be given as is in the prompt that will be used to generate the response for the user.
+
+### Example Request Body
+
+```json
+{
+  "user_id": "user_123",
+  "user_profile": {
+    "risk_tolerance": "moderate",
+    "age": 35
+  },
+  "user_portfolio": [
+    {
+      "asset_class": "stock",
+      "symbol": "AAPL",
+      "quantity": 10,
+      "portfolio_percentage": 50
+    },
+    {
+      "asset_class": "crypto",
+      "name": "Bitcoin",
+      "quantity": 0.5,
+      "portfolio_percentage": 50
+    }
+  ]
+}
+```
+
+## Response
+
+### Success Response (201 Created)
+
+Returns the created user context.
+
+```json
+{
+  "user_id": "user_123",
+  "user_profile": {
+    "risk_tolerance": "moderate",
+    "age": 35
+  },
+  "user_portfolio": [
+    {
+      "asset_class": "stock",
+      "symbol": "AAPL",
+      "name": "",
+      "quantity": 10,
+      "portfolio_percentage": 50
+    },
+    {
+      "asset_class": "crypto",
+      "symbol": "",
+      "name": "Bitcoin",
+      "quantity": 0.5,
+      "portfolio_percentage": 50
+    }
+  ]
+}
+```
+
+### Error Responses
+
+#### 400 Bad Request
+
+```json
+{
+  "error": "user_id is required"
+}
+```
+
+```json
+{
+  "error": "user context for user_123 already exists"
+}
+```
+
+#### 500 Internal Server Error
+
+```json
+{
+  "error": "internal server error"
+}
+```
+
+---
+
+### PUT `/user_context`
+
+Updates an existing user context.
+
+## Request Body
+
+Same as `POST /user_context`.
+
+### Example Request Body
+
+```json
+{
+  "user_id": "user_123",
+  "user_profile": {
+    "risk_tolerance": "aggressive"
+  },
+  "user_portfolio": [
+    {
+      "asset_class": "stock",
+      "symbol": "TSLA",
+      "quantity": 5,
+      "portfolio_percentage": 60
+    },
+    {
+      "asset_class": "etf",
+      "name": "S&P 500 ETF",
+      "quantity": 3,
+      "portfolio_percentage": 40
+    }
+  ]
+}
+```
+
+## Response
+
+### Success Response (200 OK)
+
+Returns the updated user context.
+
+```json
+{
+  "user_id": "user_123",
+  "user_profile": {
+    "risk_tolerance": "aggressive"
+  },
+  "user_portfolio": [
+    {
+      "asset_class": "stock",
+      "symbol": "TSLA",
+      "name": "",
+      "quantity": 5,
+      "portfolio_percentage": 60
+    },
+    {
+      "asset_class": "etf",
+      "symbol": "",
+      "name": "S&P 500 ETF",
+      "quantity": 3,
+      "portfolio_percentage": 40
+    }
+  ]
+}
+```
+
+### Error Responses
+
+#### 400 Bad Request
+
+```json
+{
+  "error": "user_id is required"
+}
+```
+
+```json
+{
+  "error": "user context for user_123 not found"
+}
+```
+
+#### 500 Internal Server Error
+
+```json
+{
+  "error": "internal server error"
+}
+```
+
+---
+
+### GET `/user_context/:user_id`
+
+Retrieves an existing user context by user ID.
+
+## Path Parameter
+
+| Parameter | Type   | Required | Description                     |
+| --------- | ------ | -------- | ------------------------------- |
+| `user_id` | string | Yes      | Unique identifier for the user. |
+
+## Response
+
+### Success Response (200 OK)
+
+```json
+{
+  "user_id": "user_123",
+  "user_profile": {
+    "risk_tolerance": "moderate",
+    "age": 35
+  },
+  "user_portfolio": [
+    {
+      "asset_class": "stock",
+      "symbol": "AAPL",
+      "name": "",
+      "quantity": 10,
+      "portfolio_percentage": 50
+    },
+    {
+      "asset_class": "crypto",
+      "symbol": "",
+      "name": "Bitcoin",
+      "quantity": 0.5,
+      "portfolio_percentage": 50
+    }
+  ]
+}
+```
+
+### Error Responses
+
+#### 400 Bad Request
+
+```json
+{
+  "error": "user context for user_123 not found"
+}
+```
+
+#### 500 Internal Server Error
+
+```json
+{
+  "error": "internal server error"
+}
+```
+
+---
+
+## Notes
+
+* `user_id` is required in all requests.
+* Each portfolio holding requires at least one of `symbol` or `name`.
+* The `asset_class` field must be one of `"stock"`, `"etf"`, or `"crypto"`.
+* Returns clear error messages when user context already exists, is not found, or input validation fails.
 
 ---
 
@@ -760,241 +1038,3 @@ This request would return a list of all valid FAQ topic identifiers.
 
 ---
 
-# Create Portfolio API
-
-## Endpoint
-
-### POST `/portfolio`
-
-Creates a new portfolio with a specified ID, name, risk level, and list of holdings.
-
-## Request Parameters
-
-### Request Body (JSON)
-
-```json
-{
-  "portfolio_id": "portfolio123",
-  "name": "Retirement Fund",
-  "risk_level": "medium",
-  "holdings": [
-    {
-      "asset_class": "stock",
-      "symbol": "AAPL",
-      "quantity": 50
-    },
-    {
-      "asset_class": "crypto",
-      "symbol": "BTC",
-      "quantity": 1.2
-    }
-  ]
-}
-```
-
-### Validation Rules
-
-* `portfolio_id`: required.
-* `risk_level`: optional; if provided, must be one of: `"low"`, `"medium"`, `"high"`.
-* `holdings`: must be an array of valid holdings.
-
-  * `asset_class`: required; must be `"stock"`, `"etf"`, or `"crypto"`.
-  * `symbol`: required.
-
-## Response
-
-### Success Response (201 Created)
-
-```json
-{
-  "Message": "Portfolio created"
-}
-```
-
-### Error Response (400 Bad Request)
-
-```json
-{
-  "error": "portfolio_id is required"
-}
-```
-
-### Error Response (500 Internal Server Error)
-
-```json
-{
-  "error": "failed to create portfolio"
-}
-```
-
-## Notes
-
-* Use this endpoint to create a new portfolio with initial holdings.
-* Input validation will reject missing or invalid `asset_class`, `symbol`, or `risk_level`.
-
-## Example Request
-
-```sh
-POST /portfolio
-Content-Type: application/json
-
-{
-  "portfolio_id": "retirement2025",
-  "name": "Retirement Portfolio",
-  "risk_level": "low",
-  "holdings": [
-    {
-      "asset_class": "etf",
-      "symbol": "VOO",
-      "quantity": 100
-    }
-  ]
-}
-```
-
----
-
-# Get Portfolio By ID API
-
-## Endpoint
-
-### GET `/portfolio/:portfolio_id`
-
-Fetches portfolio details by portfolio ID.
-
-## Request Parameters
-
-### Path Parameters
-
-* `portfolio_id` (string): The ID of the portfolio to retrieve.
-
-## Response
-
-### Success Response (200 OK)
-
-```json
-{
-  "name": "Retirement Fund",
-  "risk_level": "medium",
-  "holdings": [
-    {
-      "asset_class": "stock",
-      "symbol": "AAPL",
-      "quantity": 50
-    }
-  ],
-  "created_at": "2025-05-24T12:00:00Z",
-  "updated_at": "2025-05-24T12:00:00Z"
-}
-```
-
-### Error Response (400 Bad Request)
-
-```json
-{
-  "error": "portfolio with ID 'abc123' not found"
-}
-```
-
-### Error Response (500 Internal Server Error)
-
-```json
-{
-  "error": "unexpected server error"
-}
-```
-
-## Notes
-
-* Use this endpoint to retrieve portfolio information using a known `portfolio_id`.
-* Returns `400` if the portfolio is not found.
-
-## Example Request
-
-```sh
-GET /portfolio/retirement2025
-```
-
----
-
-# Update Portfolio API
-
-## Endpoint
-
-### PUT `/portfolio/:portfolio_id`
-
-Updates an existing portfolio's name, risk level, and holdings.
-
-## Request Parameters
-
-### Path Parameters
-
-* `portfolio_id` (string): The ID of the portfolio to update.
-
-### Request Body (JSON)
-
-```json
-{
-  "name": "Growth Fund",
-  "risk_level": "high",
-  "holdings": [
-    {
-      "asset_class": "stock",
-      "symbol": "GOOGL",
-      "quantity": 30
-    }
-  ]
-}
-```
-
-## Response
-
-### Success Response (200 OK)
-
-```json
-{
-  "Message": "Portfolio updated"
-}
-```
-
-### Error Response (400 Bad Request)
-
-```json
-{
-  "error": "portfolio with ID 'abc123' not found"
-}
-```
-
-### Error Response (500 Internal Server Error)
-
-```json
-{
-  "error": "failed to update portfolio"
-}
-```
-
-## Notes
-
-* The entire portfolio (name, risk level, and holdings) is overwritten.
-* Returns `400` if the specified portfolio is not found.
-
-## Example Request
-
-```sh
-PUT /portfolio/retirement2025
-Content-Type: application/json
-
-{
-  "name": "Updated Growth Fund",
-  "risk_level": "high",
-  "holdings": [
-    {
-      "asset_class": "etf",
-      "symbol": "QQQ",
-      "quantity": 75
-    }
-  ]
-}
-```
-
----

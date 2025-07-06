@@ -64,11 +64,18 @@ func scrapeSectorStocks(sector string) ([]domain.SectorStock, error) {
 		stockData := data[stockDataIndex].(map[string]interface{})
 		stockSymbolIndex := int(stockData["s"].(float64))
 		stockCompanyNameIndex := int(stockData["n"].(float64))
-		stockMarketCapIndex := int(stockData["marketCap"].(float64))
+
+		var marketCap float32
+		stockMarketCapIndex, ok := stockData["marketCap"].(float64)
+		if !ok {
+			// Do nothing in this case since there are times that this fied doesn't exist
+		} else {
+			marketCap = float32(data[int(stockMarketCapIndex)].(float64))
+		}
 		stock := domain.SectorStock{
 			Symbol:      data[stockSymbolIndex].(string),
 			CompanyName: data[stockCompanyNameIndex].(string),
-			MarketCap:   float32(data[stockMarketCapIndex].(float64)),
+			MarketCap:   marketCap,
 		}
 		stocks = append(stocks, stock)
 	}

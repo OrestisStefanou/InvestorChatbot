@@ -17,12 +17,21 @@ type sectorContext struct {
 }
 
 type SectorRag struct {
-	dataService SectorDataService
-	llm         Llm
+	dataService        SectorDataService
+	llm                Llm
+	userContextService UserContextDataService
 }
 
-func NewSectorRag(llm Llm, sectorDataService SectorDataService) (*SectorRag, error) {
-	return &SectorRag{llm: llm, dataService: sectorDataService}, nil
+func NewSectorRag(
+	llm Llm,
+	sectorDataService SectorDataService,
+	userContextService UserContextDataService,
+) (*SectorRag, error) {
+	return &SectorRag{
+		llm:                llm,
+		dataService:        sectorDataService,
+		userContextService: userContextService,
+	}, nil
 }
 
 func (rag SectorRag) createRagContext(sectorName string) (string, error) {
@@ -65,7 +74,16 @@ func (rag SectorRag) GenerateRagResponse(conversation []Message, tags Tags, resp
 	if err != nil {
 		return err
 	}
-	prompt := fmt.Sprintf(prompts.SectorsPrompt, ragContext)
+
+	var userContext domain.UserContext
+	if tags.UserID != "" {
+		userContext, err = rag.userContextService.GetUserContext(tags.UserID)
+		if err != nil {
+			return err
+		}
+	}
+
+	prompt := fmt.Sprintf(prompts.SectorsPrompt, ragContext, userContext)
 	prompt_msg := Message{
 		Role:    System,
 		Content: prompt,

@@ -48,19 +48,20 @@ func main() {
 		log.Fatal(err)
 	}
 
-	portfolioRepository, err := repositories.NewPortfolioRepository(db)
+	userContextRepository, err := repositories.NewUserContextRepository(db)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	cache, _ := services.NewBadgerCacheService()
 	dataService := marketDataScraper.NewMarketDataScraperWithCache(cache, conf)
-	sectorRag, _ := services.NewSectorRag(llm, dataService)
-	educationRag, _ := services.NewEducationRag(llm)
+	userContextService, _ := services.NewUserContextService(userContextRepository)
+	sectorRag, _ := services.NewSectorRag(llm, dataService, userContextService)
+	educationRag, _ := services.NewEducationRag(llm, userContextService)
 	industryRag, _ := services.NewIndustryRag(llm, dataService)
-	stockOverviewRag, _ := services.NewStockOverviewRag(llm, dataService)
-	stockFinancialsRag, _ := services.NewStockFinancialsRag(llm, dataService)
-	etfRag, _ := services.NewEtfRag(llm, dataService)
+	stockOverviewRag, _ := services.NewStockOverviewRag(llm, dataService, userContextService)
+	stockFinancialsRag, _ := services.NewStockFinancialsRag(llm, dataService, userContextService)
+	etfRag, _ := services.NewEtfRag(llm, dataService, userContextService)
 	newsRag, _ := services.NewMarketNewsRag(llm, dataService)
 	followUpQuestionsRag, _ := services.NewFollowUpQuestionsRag(llm)
 
@@ -75,15 +76,14 @@ func main() {
 	}
 
 	sessionService, _ := services.NewInMemorySession(conf.ConvMsgLimit)
-	topicExtractorService, _ := services.NewTopicExtractor(llm)
-	tagExtractorService, _ := services.NewTagExtractor(llm, dataService)
+	topicExtractorService, _ := services.NewTopicExtractor(llm, userContextService)
+	tagExtractorService, _ := services.NewTagExtractor(llm, dataService, userContextService)
 	chatService, _ := services.NewChatService(topicToRagMap, sessionService, topicExtractorService, tagExtractorService)
 	followUpQuestionsService, _ := services.NewFollowUpQuestionsService(sessionService, followUpQuestionsRag)
 	faqService, _ := services.NewFaqService(conf.FaqLimit)
 	tickerService, _ := services.NewTickerService(dataService)
 	etfService, _ := services.NewEtfService(dataService)
 	superInvestorService, _ := services.NewSuperInvestorService(dataService)
-	portfolioService, _ := services.NewPortfolioService(portfolioRepository)
 
 	chatHandler, _ := handlers.NewChatHandler(chatService)
 	sessionHandler, _ := handlers.NewSessionHandler(sessionService)
@@ -94,7 +94,7 @@ func main() {
 	superInvestorHandler, _ := handlers.NewSuperInvestorHandler(superInvestorService)
 	sectorHandler, _ := handlers.NewSectorHandler(dataService)
 	topicHandler, _ := handlers.NewTopicHandler()
-	portfolioHandler, _ := handlers.NewPortfolioHandler(portfolioService)
+	userContextHandler, _ := handlers.NewUserContextHandler(userContextService)
 
 	e.POST("/chat", chatHandler.ChatCompletion)
 	e.POST("/chat/extract_topic_and_tags", chatHandler.ExtractTopicAndTags)
@@ -108,8 +108,8 @@ func main() {
 	e.GET("/sectors", sectorHandler.GetSectors)
 	e.GET("/sectors/stocks/:sector", sectorHandler.GetSectorStocks)
 	e.GET("/topics", topicHandler.GetTopics)
-	e.POST("/portfolio", portfolioHandler.CreatePortfolio)
-	e.PUT("/portfolio/:portfolio_id", portfolioHandler.UpdatePortfolio)
-	e.GET("/portfolio/:portfolio_id", portfolioHandler.GetPortfolioById)
+	e.POST("/user_context", userContextHandler.CreateUserContext)
+	e.PUT("/user_context", userContextHandler.UpdateUserContext)
+	e.GET("/user_context/:user_id", userContextHandler.GetUserContext)
 	e.Logger.Fatal(e.Start(":1323"))
 }

@@ -7,6 +7,10 @@ Given a conversation about stock sectors your mission is to understand which sec
 ## Sectors
 %s
 
+Some context of the user asking the question is given below. You should take this into consideration.
+## User context
+%+v
+
 ## Response instructions
 - Focus on the last question of the conversation, for example in the first messages are about the technology sector 
 but the last question is about the energy sector then in your response you should have the energy sector.

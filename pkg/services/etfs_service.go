@@ -21,12 +21,21 @@ type etfOverviewContext struct {
 }
 
 type EtfRag struct {
-	dataService EtfDataService
-	llm         Llm
+	dataService        EtfDataService
+	llm                Llm
+	userContextService UserContextDataService
 }
 
-func NewEtfRag(llm Llm, etfDataService EtfDataService) (*EtfRag, error) {
-	return &EtfRag{llm: llm, dataService: etfDataService}, nil
+func NewEtfRag(
+	llm Llm,
+	etfDataService EtfDataService,
+	userContextService UserContextDataService,
+) (*EtfRag, error) {
+	return &EtfRag{
+		llm:                llm,
+		dataService:        etfDataService,
+		userContextService: userContextService,
+	}, nil
 }
 
 func (rag EtfRag) createRagContext(etfSymbol string) (string, error) {
@@ -65,7 +74,16 @@ func (rag EtfRag) GenerateRagResponse(conversation []Message, tags Tags, respons
 	if err != nil {
 		return err
 	}
-	prompt := fmt.Sprintf(prompts.EtfsPrompt, ragContext)
+
+	var userContext domain.UserContext
+	if tags.UserID != "" {
+		userContext, err = rag.userContextService.GetUserContext(tags.UserID)
+		if err != nil {
+			return err
+		}
+	}
+
+	prompt := fmt.Sprintf(prompts.EtfsPrompt, ragContext, userContext)
 	prompt_msg := Message{
 		Role:    System,
 		Content: prompt,

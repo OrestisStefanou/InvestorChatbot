@@ -12,7 +12,7 @@ import (
 
 type ChatService interface {
 	GenerateResponse(topic services.Topic, tags services.Tags, sessionId string, question string, responseChannel chan<- string) error
-	ExtractTopicAndTags(question string, sessionId string) (services.Topic, services.Tags, error)
+	ExtractTopicAndTags(question string, sessionId string, userID string) (services.Topic, services.Tags, error)
 }
 
 type ChatHandler struct {
@@ -31,6 +31,7 @@ type TopicTags struct {
 	IncomeStatement bool     `json:"income_statement"`
 	CashFlow        bool     `json:"cash_flow"`
 	EtfSymbol       string   `json:"etf_symbol"`
+	UserID          string   `json:"user_id"`
 }
 
 type ChatRequest struct {
@@ -78,6 +79,7 @@ func (h *ChatHandler) ChatCompletion(c echo.Context) error {
 		IncomeStatement: chatRequest.Tags.IncomeStatement,
 		CashFlow:        chatRequest.Tags.CashFlow,
 		EtfSymbol:       chatRequest.Tags.EtfSymbol,
+		UserID:          chatRequest.Tags.UserID,
 	}
 
 	enc := json.NewEncoder(c.Response())
@@ -126,6 +128,7 @@ func (h *ChatHandler) ChatCompletion(c echo.Context) error {
 type ExtractTopicAndTagsRequest struct {
 	Question  string `json:"question"`
 	SessionID string `json:"session_id"`
+	UserID    string `json:"user_id"`
 }
 
 func (r ExtractTopicAndTagsRequest) validate() error {
@@ -156,7 +159,11 @@ func (h *ChatHandler) ExtractTopicAndTags(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 
-	topic, tags, err := h.chatService.ExtractTopicAndTags(extractTopicAndTagsRequest.Question, extractTopicAndTagsRequest.SessionID)
+	topic, tags, err := h.chatService.ExtractTopicAndTags(
+		extractTopicAndTagsRequest.Question,
+		extractTopicAndTagsRequest.SessionID,
+		extractTopicAndTagsRequest.UserID,
+	)
 	if err != nil {
 		switch e := err.(type) {
 		case *investbotErr.SessionNotFoundError:
@@ -176,6 +183,7 @@ func (h *ChatHandler) ExtractTopicAndTags(c echo.Context) error {
 			IncomeStatement: tags.IncomeStatement,
 			CashFlow:        tags.CashFlow,
 			EtfSymbol:       tags.EtfSymbol,
+			UserID:          extractTopicAndTagsRequest.UserID,
 		},
 	}
 
