@@ -2,6 +2,7 @@ package services
 
 import (
 	"fmt"
+	"investbot/pkg/errors"
 	"sync"
 
 	"github.com/google/uuid"
@@ -44,7 +45,7 @@ func (s *InMemorySession) GetConversationBySessionId(sessionId string) ([]Messag
 	defer s.rwMutex.RUnlock()
 	conversation, ok := s.sessions[sessionId]
 	if !ok {
-		return nil, fmt.Errorf("Conversation with sessionID: %s not found", sessionId)
+		return nil, errors.SessionNotFoundError{Message: fmt.Sprintf("sessionID: %s not found", sessionId)}
 	}
 
 	limit := s.convMsgLimit
@@ -67,7 +68,7 @@ func (s *InMemorySession) AddMessage(sessionId string, msg Message) error {
 
 	conversation, ok := s.sessions[sessionId]
 	if !ok {
-		return fmt.Errorf("Conversation with sessionID: %s not found", sessionId)
+		return errors.SessionNotFoundError{Message: fmt.Sprintf("sessionID: %s not found", sessionId)}
 	}
 
 	conversation = append(conversation, msg)
