@@ -1,4 +1,4 @@
-# Create New Session API
+# Session API
 
 ## Endpoint
 
@@ -43,6 +43,64 @@ POST /session
 This request would create a new session and return the newly generated session ID.
 
 --- 
+
+### GET `/session/:session_id`
+
+Retrieves the conversation history for a given session ID.
+
+## Path Parameter
+
+| Parameter    | Type   | Required | Description                        |
+| ------------ | ------ | -------- | ---------------------------------- |
+| `session_id` | string | Yes      | Unique identifier for the session. |
+
+## Response
+
+### Success Response (200 OK)
+
+```json
+{
+  "conversation": [
+    {
+      "actor": "user",
+      "message": "Hi, I need help with my portfolio."
+    },
+    {
+      "actor": "assistant",
+      "message": "Sure! Can you tell me more about your goals?"
+    }
+  ]
+}
+```
+
+#### Response Fields
+
+| Field          | Type   | Description                                                      |
+| -------------- | ------ | ---------------------------------------------------------------- |
+| `conversation` | array  | Array of message objects in the session.                         |
+| `actor`        | string | Sender of the message. Possible values: `"user"`, `"assistant"`. |
+| `message`      | string | Text content of the message.                                     |
+
+### Error Responses
+
+#### 400 Bad Request
+
+```json
+{
+  "error": "session with id abc123 not found"
+}
+```
+
+#### 500 Internal Server Error
+
+```json
+{
+  "error": "internal server error"
+}
+```
+
+---
+
 
 # Chat Completion API
 

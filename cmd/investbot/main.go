@@ -99,6 +99,7 @@ func main() {
 	e.POST("/chat", chatHandler.ChatCompletion)
 	e.POST("/chat/extract_topic_and_tags", chatHandler.ExtractTopicAndTags)
 	e.POST("/session", sessionHandler.CreateNewSession)
+	e.GET("/session/:session_id", sessionHandler.GetSession)
 	e.POST("/follow_up_questions", followUpQuestionsHandler.GenerateFollowUpQuestions)
 	e.GET("/faq", faqHandler.GetFaq)
 	e.GET("/tickers", tickerHandler.GetTickers)
