@@ -11,14 +11,21 @@ type StockOverviewDataService interface {
 	GetStockProfile(symbol string) (domain.StockProfile, error)
 	GetFinancialRatios(symbol string) ([]domain.FinancialRatios, error)
 	GetStockForecast(symbol string) (domain.StockForecast, error)
+	GetHistoricalPrices(ticker string, assetClass domain.AssetClass, period domain.Period) (domain.HistoricalPrices, error)
+}
+
+type stockHistoricalPerformance struct {
+	period           domain.Period
+	percentageChange float64
 }
 
 type stockOverviewContext struct {
-	currentDate          string
-	symbol               string
-	stockProfile         domain.StockProfile
-	stockFinancialRatios []domain.FinancialRatios
-	stockForecast        domain.StockForecast
+	currentDate           string
+	symbol                string
+	stockProfile          domain.StockProfile
+	stockFinancialRatios  []domain.FinancialRatios
+	stockForecast         domain.StockForecast
+	historicalPerformance []stockHistoricalPerformance
 }
 
 type StockOverviewRag struct {
@@ -64,6 +71,67 @@ func (rag StockOverviewRag) createRagContext(symbols []string) (string, error) {
 			return "", &DataServiceError{Message: fmt.Sprintf("GetStockForecast failed: %s", err)}
 		}
 		context.stockForecast = stockForecast
+
+		context.historicalPerformance = make([]stockHistoricalPerformance, 0, 5)
+		performance5D, err := rag.dataService.GetHistoricalPrices(symbol, domain.Stock, domain.Period5D)
+		if err != nil {
+			return "", &DataServiceError{Message: fmt.Sprintf("GetHistoricalPrices for 5D failed: %s", err)}
+		}
+		context.historicalPerformance = append(
+			context.historicalPerformance,
+			stockHistoricalPerformance{
+				period:           performance5D.Period,
+				percentageChange: performance5D.PercentageChange,
+			},
+		)
+
+		performance1M, err := rag.dataService.GetHistoricalPrices(symbol, domain.Stock, domain.Period1M)
+		if err != nil {
+			return "", &DataServiceError{Message: fmt.Sprintf("GetHistoricalPrices for 1M failed: %s", err)}
+		}
+		context.historicalPerformance = append(
+			context.historicalPerformance,
+			stockHistoricalPerformance{
+				period:           performance1M.Period,
+				percentageChange: performance1M.PercentageChange,
+			},
+		)
+
+		performance6M, err := rag.dataService.GetHistoricalPrices(symbol, domain.Stock, domain.Period6M)
+		if err != nil {
+			return "", &DataServiceError{Message: fmt.Sprintf("GetHistoricalPrices for 6M failed: %s", err)}
+		}
+		context.historicalPerformance = append(
+			context.historicalPerformance,
+			stockHistoricalPerformance{
+				period:           performance6M.Period,
+				percentageChange: performance6M.PercentageChange,
+			},
+		)
+
+		performance1Y, err := rag.dataService.GetHistoricalPrices(symbol, domain.Stock, domain.Period1Y)
+		if err != nil {
+			return "", &DataServiceError{Message: fmt.Sprintf("GetHistoricalPrices for 1Y failed: %s", err)}
+		}
+		context.historicalPerformance = append(
+			context.historicalPerformance,
+			stockHistoricalPerformance{
+				period:           performance1Y.Period,
+				percentageChange: performance1Y.PercentageChange,
+			},
+		)
+
+		performance5Y, err := rag.dataService.GetHistoricalPrices(symbol, domain.Stock, domain.Period5Y)
+		if err != nil {
+			return "", &DataServiceError{Message: fmt.Sprintf("GetHistoricalPrices for 5y failed: %s", err)}
+		}
+		context.historicalPerformance = append(
+			context.historicalPerformance,
+			stockHistoricalPerformance{
+				period:           performance5Y.Period,
+				percentageChange: performance5Y.PercentageChange,
+			},
+		)
 
 		ragContext = append(ragContext, context)
 	}

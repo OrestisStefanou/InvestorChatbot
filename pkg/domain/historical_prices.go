@@ -8,7 +8,6 @@ const (
 	Period1D Period = "1d"
 	Period5D Period = "5d"
 	Period1M Period = "1m"
-	Period3M Period = "3m"
 	Period6M Period = "6m"
 	Period1Y Period = "1y"
 	Period5Y Period = "5y"

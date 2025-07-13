@@ -26,6 +26,8 @@ func scrapeHistoricalPrices(ticker string, assetClass domain.AssetClass, period 
 		periodPrefix = "5D"
 	case domain.Period1M:
 		periodPrefix = "1M"
+	case domain.Period6M:
+		periodPrefix = "6M"
 	case domain.Period1Y:
 		periodPrefix = "1Y"
 	case domain.Period5Y:
