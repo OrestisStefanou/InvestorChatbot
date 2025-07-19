@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"investbot/pkg/domain"
 	"investbot/pkg/services/prompts"
+	"sync"
 	"time"
 )
 
@@ -11,14 +12,21 @@ type StockOverviewDataService interface {
 	GetStockProfile(symbol string) (domain.StockProfile, error)
 	GetFinancialRatios(symbol string) ([]domain.FinancialRatios, error)
 	GetStockForecast(symbol string) (domain.StockForecast, error)
+	GetHistoricalPrices(ticker string, assetClass domain.AssetClass, period domain.Period) (domain.HistoricalPrices, error)
+}
+
+type stockHistoricalPerformance struct {
+	period           domain.Period
+	percentageChange float64
 }
 
 type stockOverviewContext struct {
-	currentDate          string
-	symbol               string
-	stockProfile         domain.StockProfile
-	stockFinancialRatios []domain.FinancialRatios
-	stockForecast        domain.StockForecast
+	currentDate           string
+	symbol                string
+	stockProfile          domain.StockProfile
+	stockFinancialRatios  []domain.FinancialRatios
+	stockForecast         domain.StockForecast
+	historicalPerformance []stockHistoricalPerformance
 }
 
 type StockOverviewRag struct {
@@ -43,28 +51,95 @@ func (rag StockOverviewRag) createRagContext(symbols []string) (string, error) {
 	ragContext := make([]stockOverviewContext, 0, len(symbols))
 
 	for _, symbol := range symbols {
-		context := stockOverviewContext{}
-		context.symbol = symbol
-		context.currentDate = time.Now().Format("2006-01-02")
-
-		stockProfile, err := rag.dataService.GetStockProfile(symbol)
-		if err != nil {
-			return "", &DataServiceError{Message: fmt.Sprintf("GetStockProfile failed: %s", err)}
+		context := stockOverviewContext{
+			symbol:      symbol,
+			currentDate: time.Now().Format("2006-01-02"),
 		}
-		context.stockProfile = stockProfile
 
-		stockFinancialRatios, err := rag.dataService.GetFinancialRatios(symbol)
-		if err != nil {
-			return "", &DataServiceError{Message: fmt.Sprintf("GetFinancialRatios failed: %s", err)}
+		var wg sync.WaitGroup
+		var mu sync.Mutex
+		var fetchErr error
+
+		wg.Add(8) // 3 main + 5 historical
+
+		// Fetch stock profile
+		go func() {
+			defer wg.Done()
+			stockProfile, err := rag.dataService.GetStockProfile(symbol)
+			if err != nil {
+				mu.Lock()
+				fetchErr = &DataServiceError{Message: fmt.Sprintf("GetStockProfile failed: %s", err)}
+				mu.Unlock()
+				return
+			}
+			mu.Lock()
+			context.stockProfile = stockProfile
+			mu.Unlock()
+		}()
+
+		// Fetch financial ratios
+		go func() {
+			defer wg.Done()
+			stockFinancialRatios, err := rag.dataService.GetFinancialRatios(symbol)
+			if err != nil {
+				mu.Lock()
+				fetchErr = &DataServiceError{Message: fmt.Sprintf("GetFinancialRatios failed: %s", err)}
+				mu.Unlock()
+				return
+			}
+			mu.Lock()
+			context.stockFinancialRatios = stockFinancialRatios
+			mu.Unlock()
+		}()
+
+		// Fetch forecast
+		go func() {
+			defer wg.Done()
+			stockForecast, err := rag.dataService.GetStockForecast(symbol)
+			if err != nil {
+				mu.Lock()
+				fetchErr = &DataServiceError{Message: fmt.Sprintf("GetStockForecast failed: %s", err)}
+				mu.Unlock()
+				return
+			}
+			mu.Lock()
+			context.stockForecast = stockForecast
+			mu.Unlock()
+		}()
+
+		// Fetch historical performance
+		periods := []domain.Period{domain.Period5D, domain.Period1M, domain.Period6M, domain.Period1Y, domain.Period5Y}
+		performanceList := make([]stockHistoricalPerformance, 5)
+
+		for i, period := range periods {
+			index, perfomancePeriod := i, period // capture loop variables for go routines
+			go func() {
+				defer wg.Done()
+				perf, err := rag.dataService.GetHistoricalPrices(symbol, domain.Stock, perfomancePeriod)
+				if err != nil {
+					mu.Lock()
+					fetchErr = &DataServiceError{Message: fmt.Sprintf("GetHistoricalPrices for %s failed: %s", period, err)}
+					mu.Unlock()
+					return
+				}
+				entry := stockHistoricalPerformance{
+					period:           perf.Period,
+					percentageChange: perf.PercentageChange,
+				}
+				mu.Lock()
+				performanceList[index] = entry
+				mu.Unlock()
+			}()
 		}
-		context.stockFinancialRatios = stockFinancialRatios
 
-		stockForecast, err := rag.dataService.GetStockForecast(symbol)
-		if err != nil {
-			return "", &DataServiceError{Message: fmt.Sprintf("GetStockForecast failed: %s", err)}
+		wg.Wait()
+
+		// Check if any fetch failed
+		if fetchErr != nil {
+			return "", fetchErr
 		}
-		context.stockForecast = stockForecast
 
+		context.historicalPerformance = performanceList
 		ragContext = append(ragContext, context)
 	}
 
