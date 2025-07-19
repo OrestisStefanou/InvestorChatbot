@@ -1,6 +1,4 @@
 import streamlit as st
-import random
-import time
 import requests
 import json
 
@@ -28,6 +26,14 @@ def extract_topic_and_tags(session_id: str, question: str) -> dict:
         raise Exception("Failed to extract topic and tags")
     
     return response.json()
+
+def fetch_follow_ups(session_id, number_of_questions=5):
+    try:
+        payload = {"session_id": session_id, "number_of_questions": number_of_questions}
+        response = requests.post(f"{BASE_URL}/follow_up_questions", json=payload)
+        return response.json().get("follow_up_questions", [])
+    except Exception as e:
+        return [f"Error fetching follow-up questions: {str(e)}"]
 
 def stream_chat_response(
     question: str,
@@ -97,19 +103,15 @@ for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-# Accept user input
-if prompt := st.chat_input("What is up?"):
+
+# Get user input or use follow-up as prompt
+prompt = st.chat_input("What is up?")
+
+if prompt:
     # Add user message to chat history
     st.session_state.messages.append({"role": "user", "content": prompt})
-    # Display user message in chat message container
     with st.chat_message("user"):
         st.markdown(prompt)
-
-    # # Display assistant response in chat message container
-    # with st.chat_message("assistant"):
-    #     response = st.write_stream(response_generator(session_id=st.session_state.session_id, question=prompt))
-    # # Add assistant response to chat history
-    # st.session_state.messages.append({"role": "assistant", "content": response})
 
     # Display assistant response in chat message container
     with st.chat_message("assistant"):
@@ -122,4 +124,12 @@ if prompt := st.chat_input("What is up?"):
             full_response += chunk
             response_placeholder.markdown(full_response)
 
+    # Add assistant's reply to history
     st.session_state.messages.append({"role": "assistant", "content": full_response})
+
+    # Show follow-up questions
+    follow_ups = fetch_follow_ups(st.session_state.session_id)
+    if follow_ups:
+        st.markdown("#### Follow-up Questions")
+        for i, follow_up in enumerate(follow_ups):
+            st.markdown(f"- {follow_up}")
