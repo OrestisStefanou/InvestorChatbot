@@ -59,10 +59,13 @@ func (llm GeminiLLM) GenerateResponse(conversation []services.Message, responseC
 		return err
 	}
 
-	chat, _ := client.Chats.Create(ctx, string(llm.config.ModelName), generateContentConfig, messages)
+	chat, err := client.Chats.Create(ctx, string(llm.config.ModelName), generateContentConfig, messages)
+	if err != nil {
+		return nil
+	}
+
 	lastMessage := conversation[conversationLen-1].Content
 	stream := chat.SendMessageStream(ctx, genai.Part{Text: lastMessage})
-
 	for chunk, _ := range stream {
 		part := chunk.Candidates[0].Content.Parts[0]
 		responseChannel <- part.Text
