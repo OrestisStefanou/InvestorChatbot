@@ -62,7 +62,7 @@ func main() {
 	stockOverviewRag, _ := services.NewStockOverviewRag(llm, dataService, userContextService)
 	stockFinancialsRag, _ := services.NewStockFinancialsRag(llm, dataService, userContextService)
 	etfRag, _ := services.NewEtfRag(llm, dataService, userContextService)
-	newsRag, _ := services.NewMarketNewsRag(llm, dataService)
+	newsRag, _ := services.NewMarketNewsRag(llm, dataService, userContextService)
 	followUpQuestionsRag, _ := services.NewFollowUpQuestionsRag(llm)
 
 	topicToRagMap := map[services.Topic]services.Rag{

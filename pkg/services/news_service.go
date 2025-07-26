@@ -13,8 +13,9 @@ type NewsDataService interface {
 }
 
 type MarketNewsRag struct {
-	dataService NewsDataService
-	llm         Llm
+	dataService        NewsDataService
+	llm                Llm
+	userContextService UserContextDataService
 }
 
 type ragNewsContext struct {
@@ -22,8 +23,16 @@ type ragNewsContext struct {
 	news        []domain.NewsArticle
 }
 
-func NewMarketNewsRag(llm Llm, newsDataService NewsDataService) (*MarketNewsRag, error) {
-	return &MarketNewsRag{llm: llm, dataService: newsDataService}, nil
+func NewMarketNewsRag(
+	llm Llm,
+	newsDataService NewsDataService,
+	userContextService UserContextDataService,
+) (*MarketNewsRag, error) {
+	return &MarketNewsRag{
+		llm:                llm,
+		dataService:        newsDataService,
+		userContextService: userContextService,
+	}, nil
 }
 
 func (rag MarketNewsRag) createRagContext(stockSymbols []string) (string, error) {
@@ -71,7 +80,16 @@ func (rag MarketNewsRag) GenerateRagResponse(conversation []Message, tags Tags, 
 	if err != nil {
 		return err
 	}
-	prompt := fmt.Sprintf(prompts.NewsPrompt, ragContext)
+
+	var userContext domain.UserContext
+	if tags.UserID != "" {
+		userContext, err = rag.userContextService.GetUserContext(tags.UserID)
+		if err != nil {
+			return err
+		}
+	}
+
+	prompt := fmt.Sprintf(prompts.NewsPrompt, ragContext, userContext)
 	prompt_msg := Message{
 		Role:    System,
 		Content: prompt,

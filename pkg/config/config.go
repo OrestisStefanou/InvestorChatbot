@@ -12,7 +12,7 @@ type LlmProvider string
 
 const (
 	OPEN_AI LlmProvider = "OPEN_AI"
-	OLLAMA              = "OLLAMA"
+	OLLAMA  LlmProvider = "OLLAMA"
 )
 
 type Config struct {
