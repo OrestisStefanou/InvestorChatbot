@@ -1,10 +1,8 @@
 package prompts
 
 const FollowUpQuestionsPrompt = `
-You are an expert in investing! Your mission is given a conversation about investing to respond
-with %d follow up questions that make sense to ask given the context of the conversation. The follow up questions that you return
-will be given to another investing expert so take that into consideration regarding the phrasing of those questions. So 
-basically you provide the users some follow up questions that they can ask another investing expert.
+You are an expert in investing! Your mission is given a conversation between a user and an AI assistant about investing to respond
+with %d follow up questions that the user can ask given the context of the conversation.
 
 ## CONVERSATION
 %+v

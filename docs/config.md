@@ -4,10 +4,11 @@ This document explains how to configure and use environment-based settings for t
 
 ## 🧠 Supported LLM Providers
 
-The app supports two large language model (LLM) providers:
+The app supports three large language model (LLM) providers:
 
 - **OpenAI**
 - **Ollama**
+- **Gemini**
 
 The provider is selected via the `LLM_PROVIDER` environment variable.
 
@@ -17,7 +18,7 @@ The provider is selected via the `LLM_PROVIDER` environment variable.
 
 ```env
 # LLM Provider
-LLM_PROVIDER=OPEN_AI  # or OLLAMA
+LLM_PROVIDER=OPEN_AI  # or OLLAMA or GEMINI
 
 # OpenAI Config
 OPEN_AI_API_KEY=your-openai-key
@@ -27,6 +28,10 @@ OPEN_AI_MODEL_NAME=gpt-4o-mini
 # Ollama Config
 OLLAMA_BASE_URL=http://localhost:11434
 OLLAMA_MODEL_NAME=llama3.2
+
+# Gemini Config
+GEMINI_API_KEY = your-gemini-api-key
+GEMINI_MODEL_NAME = "gemini-2.0-flash"
 
 # Application Settings
 FAQ_LIMIT=5
@@ -41,10 +46,12 @@ FOLLOW_UP_QUESTIONS_NUM=5
 
 | Variable Name               | Description                                                               | Type     | Default                     |
 |----------------------------|---------------------------------------------------------------------------|----------|-----------------------------|
-| `LLM_PROVIDER`             | Determines which LLM to use: `OPEN_AI` or `OLLAMA`                        | `string` | `OPEN_AI`                   |
+| `LLM_PROVIDER`             | Determines which LLM to use: `OPEN_AI` or `OLLAMA` or `GEMINI`            | `string` | `OPEN_AI`                   |
 | `OPEN_AI_API_KEY`          | API key for OpenAI                                                        | `string` | `""` (empty)                |
 | `OPENAI_BASE_URL`          | Base URL for OpenAI API                                                   | `string` | `https://api.openai.com/v1` |
 | `OPEN_AI_MODEL_NAME`       | Model name used with OpenAI                                               | `string` | `gpt-4o-mini`               |
+| `GEMINI_API_KEY`          | API key for Gemini                                                         | `string` | `""` (empty)                |
+| `GEMINI_MODEL_NAME`       | Model name used with Gemini                                                | `string` | `gemini-2.0-flash`               |
 | `OLLAMA_BASE_URL`          | Base URL for Ollama server                                                | `string` | `http://localhost:11434`    |
 | `OLLAMA_MODEL_NAME`        | Model name used with Ollama                                               | `string` | `llama3.2`                  |
 | `FAQ_LIMIT`                | Number of FAQ items returned by the FAQ endpoint                          | `int`    | `5`                         |

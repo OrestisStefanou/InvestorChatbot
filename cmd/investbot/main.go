@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"investbot/pkg/config"
+	"investbot/pkg/gemini"
 	"investbot/pkg/handlers"
 	"investbot/pkg/llama"
 	"investbot/pkg/marketDataScraper"
@@ -25,6 +26,13 @@ func getLlm(conf config.Config) (services.Llm, error) {
 	case config.OLLAMA:
 		llamaClient, _ := llama.NewOllamaClient(conf.OllamaBaseUrl)
 		llm, err = llama.NewLlamaLLM(llama.ModelName(conf.OllamaModelName), llamaClient, conf.BaseLlmTemperature)
+	case config.GEMINI:
+		llmConfig := gemini.GeminiLlmConfig{
+			ModelName:   conf.GeminiModelName,
+			Temperature: conf.BaseLlmTemperature,
+			ApiKey:      conf.GeminiKey,
+		}
+		llm, err = gemini.NewGeminiLLM(llmConfig)
 	default:
 		err = fmt.Errorf("No valid llm provider found")
 	}

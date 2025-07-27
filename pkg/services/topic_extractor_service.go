@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"investbot/pkg/domain"
 	"investbot/pkg/services/prompts"
+	"strings"
 )
 
 type TopicExtractor struct {
@@ -59,10 +60,12 @@ func (te TopicExtractor) ExtractTopic(conversation []Message, userID string) (To
 	}
 	topics := map[Topic]any{EDUCATION: nil, SECTORS: nil, STOCK_OVERVIEW: nil, STOCK_FINANCIALS: nil, ETFS: nil, NEWS: nil}
 
-	_, found := topics[Topic(responseMessage)]
+	cleanedResponse := strings.ReplaceAll(responseMessage, "\n", "")
+
+	_, found := topics[Topic(cleanedResponse)]
 	if !found {
-		return "", fmt.Errorf("%s is not a valid topic", responseMessage)
+		return "", fmt.Errorf("%s is not a valid topic", cleanedResponse)
 	}
 
-	return Topic(responseMessage), nil
+	return Topic(cleanedResponse), nil
 }

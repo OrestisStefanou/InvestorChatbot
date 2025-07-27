@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"investbot/pkg/domain"
 	"investbot/pkg/services/prompts"
+	"strings"
 )
 
 type MarketDataService interface {
@@ -208,5 +209,8 @@ func (te TagExtractor) getLlmResponse(prompt string) (string, error) {
 		}
 	}
 
-	return responseMessage, nil
+	stripped := strings.TrimPrefix(responseMessage, "```json\n")
+	stripped = strings.TrimSuffix(stripped, "\n```")
+
+	return stripped, nil
 }

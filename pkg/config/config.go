@@ -1,6 +1,7 @@
 package config
 
 import (
+	"investbot/pkg/gemini"
 	"investbot/pkg/openAI"
 	"os"
 	"strconv"
@@ -13,6 +14,7 @@ type LlmProvider string
 const (
 	OPEN_AI LlmProvider = "OPEN_AI"
 	OLLAMA  LlmProvider = "OLLAMA"
+	GEMINI  LlmProvider = "GEMINI"
 )
 
 type Config struct {
@@ -24,6 +26,10 @@ type Config struct {
 	// Ollama configs
 	OllamaBaseUrl   string
 	OllamaModelName string
+
+	// Gemini configs
+	GeminiKey       string
+	GeminiModelName gemini.ModelName
 
 	// App configs
 	LlmProvider          LlmProvider // Valid values are: "OPEN_AI", "OLLAMA"
@@ -69,14 +75,18 @@ func LoadConfig() (Config, error) {
 
 	ollamaModelName := getEnv("OLLAMA_MODEL_NAME", "llama3.2")
 
+	geminiModelName := getEnv("GEMINI_MODEL_NAME", "gemini-2.0-flash")
+
 	return Config{
 		OpenAiKey:            getEnv("OPEN_AI_API_KEY", ""),
 		OpenAiBaseUrl:        getEnv("OPENAI_BASE_URL", "https://api.openai.com/v1"),
 		OllamaBaseUrl:        getEnv("OLLAMA_BASE_URL", "http://localhost:11434"),
+		GeminiKey:            getEnv("GEMINI_API_KEY", ""),
 		FaqLimit:             faqLimit,
 		ConvMsgLimit:         convMsgLimit,
 		LlmProvider:          LlmProvider(llmProvider),
 		OpenAiModelName:      openAI.ModelName(openAiModelName),
+		GeminiModelName:      gemini.ModelName(geminiModelName),
 		OllamaModelName:      ollamaModelName,
 		BaseLlmTemperature:   getEnvFloat32("BASE_LLM_TEMPERATURE", 0.2),
 		FollowUpQuestionsNum: followUpQuestionsNum,
