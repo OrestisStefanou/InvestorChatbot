@@ -1,7 +1,7 @@
 import streamlit as st
 import requests
 import json
-
+import random
 
 BASE_URL = "http://localhost:1323"
 USER_ID = "orestis_user_id"
@@ -27,6 +27,7 @@ def extract_topic_and_tags(session_id: str, question: str) -> dict:
     
     return response.json()
 
+
 def fetch_follow_ups(session_id, number_of_questions=5):
     try:
         payload = {"session_id": session_id, "number_of_questions": number_of_questions}
@@ -34,6 +35,53 @@ def fetch_follow_ups(session_id, number_of_questions=5):
         return response.json().get("follow_up_questions", [])
     except Exception as e:
         return [f"Error fetching follow-up questions: {str(e)}"]
+
+
+def fetch_faqs(topic: str, topic_tags: dict) -> list[str]:
+    topic_to_faq_topic = {
+        "education": "education",
+        "sectors": "sectors",
+        "stock_overview": "stock_overview",
+        "etfs": "etfs",
+        "stock_financials": "stock_overview",
+    }
+    
+    faq_topic = topic_to_faq_topic.get(topic)
+
+    if topic == "stock_financials":
+        if topic_tags["balance_sheet"]:
+            faq_topic = "balance_sheet"
+        if topic_tags["income_statement"]:
+            faq_topic = "income_statement"
+        if topic_tags["cash_flow"]:
+            faq_topic = "cash_flow"
+
+    if not faq_topic:
+        return []
+
+    try:
+        response = requests.get(f"{BASE_URL}/faq", params={"faq_topic": faq_topic})
+        return response.json().get("faq", [])
+    except Exception as e:
+        return [f"Error fetching FAQs: {str(e)}"]
+
+
+def get_prompt_placeholder() -> str:
+    last_topic = "education"    # Default value in case this is the very first message
+    if "last_topic" in st.session_state:
+        last_topic = st.session_state["last_topic"]
+    
+    last_topic_tags = {}
+    if "last_topic_tags" in st.session_state:
+        last_topic_tags = st.session_state["last_topic_tags"]
+    
+    faqs = fetch_faqs(last_topic, last_topic_tags)
+    if not faqs:
+        return ""
+    
+    # Return a random question from the faqs
+    return random.choice(faqs) 
+
 
 def stream_chat_response(
     question: str,
@@ -87,6 +135,13 @@ def response_generator(session_id: str, question: str):
             print(f"Chunk parse error: {e} | raw: {repr(chunk)}")
             continue
 
+    st.session_state.last_topic = topic_and_tags["topic"]
+    st.session_state.last_topic_tags = topic_and_tags["topic_tags"]
+
+    # Update prompt placeholder based on the latest topic and tags
+    st.session_state.prompt_placeholder = get_prompt_placeholder()
+
+
 
 st.title("Investor Assistant chatbot")
 
@@ -104,8 +159,13 @@ for message in st.session_state.messages:
         st.markdown(message["content"])
 
 
+# Set the prompt placeholder once per session
+if "prompt_placeholder" not in st.session_state:
+    st.session_state.prompt_placeholder = get_prompt_placeholder()
+
+
 # Get user input or use follow-up as prompt
-prompt = st.chat_input("What is up?")
+prompt = st.chat_input()
 
 if prompt:
     # Add user message to chat history
