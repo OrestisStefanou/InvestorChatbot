@@ -33,7 +33,7 @@ func main() {
 	cache, _ := services.NewBadgerCacheService()
 	dataService := marketDataScraper.NewMarketDataScraperWithCache(cache, conf)
 
-	historicalPrices, err := dataService.GetHistoricalPrices("AAPL", domain.Stock, domain.Period6M)
+	historicalPrices, err := dataService.GetHistoricalPrices("VOO", domain.ETF, domain.Period6M)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -42,5 +42,5 @@ func main() {
 	// if err != nil {
 	// 	log.Fatal(err)
 	// }
-	fmt.Printf("\n\n%+v\n\n", historicalPrices.PercentageChange)
+	fmt.Printf("\n\n%+v\n\n", historicalPrices)
 }
