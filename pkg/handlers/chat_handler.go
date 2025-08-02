@@ -30,7 +30,7 @@ type TopicTags struct {
 	BalanceSheet    bool     `json:"balance_sheet"`
 	IncomeStatement bool     `json:"income_statement"`
 	CashFlow        bool     `json:"cash_flow"`
-	EtfSymbol       string   `json:"etf_symbol"`
+	EtfSymbols      []string `json:"etf_symbols"`
 	UserID          string   `json:"user_id"`
 }
 
@@ -78,7 +78,7 @@ func (h *ChatHandler) ChatCompletion(c echo.Context) error {
 		BalanceSheet:    chatRequest.Tags.BalanceSheet,
 		IncomeStatement: chatRequest.Tags.IncomeStatement,
 		CashFlow:        chatRequest.Tags.CashFlow,
-		EtfSymbol:       chatRequest.Tags.EtfSymbol,
+		EtfSymbols:      chatRequest.Tags.EtfSymbols,
 		UserID:          chatRequest.Tags.UserID,
 	}
 
@@ -182,7 +182,7 @@ func (h *ChatHandler) ExtractTopicAndTags(c echo.Context) error {
 			BalanceSheet:    tags.BalanceSheet,
 			IncomeStatement: tags.IncomeStatement,
 			CashFlow:        tags.CashFlow,
-			EtfSymbol:       tags.EtfSymbol,
+			EtfSymbols:      tags.EtfSymbols,
 			UserID:          extractTopicAndTagsRequest.UserID,
 		},
 	}

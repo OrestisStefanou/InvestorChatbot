@@ -26,7 +26,7 @@ type llmTagExtractorResponse struct {
 	BalanceSheet    bool     `json:"balance_sheet"`
 	IncomeStatement bool     `json:"income_statement"`
 	CashFlow        bool     `json:"cash_flow"`
-	EtfSymbol       string   `json:"etf_symbol"`
+	EtfSymbols      []string `json:"etf_symbols"`
 }
 
 func NewTagExtractor(
@@ -79,6 +79,9 @@ func (te TagExtractor) extractSectorTags(conversation []Message, userContext dom
 
 	prompt := fmt.Sprintf(prompts.SectorTagExtractorPrompt, sectorsPlaceholderString, userContext, conversation)
 	llmResponse, err := te.getLlmResponse(prompt)
+	if err != nil {
+		return Tags{}, err
+	}
 
 	var result llmTagExtractorResponse
 	err = json.Unmarshal([]byte(llmResponse), &result)
@@ -97,6 +100,9 @@ func (te TagExtractor) extractStockOverviewTags(conversation []Message, userCont
 
 	prompt := fmt.Sprintf(prompts.StockOverviewTagExtractorPrompt, stockSymbols, userContext, conversation)
 	llmResponse, err := te.getLlmResponse(prompt)
+	if err != nil {
+		return Tags{}, err
+	}
 
 	var result llmTagExtractorResponse
 	err = json.Unmarshal([]byte(llmResponse), &result)
@@ -115,6 +121,9 @@ func (te TagExtractor) extractStockFinancialsTags(conversation []Message, userCo
 
 	prompt := fmt.Sprintf(prompts.StockFinancialsTagExtractorPrompt, stockSymbols, userContext, conversation)
 	llmResponse, err := te.getLlmResponse(prompt)
+	if err != nil {
+		return Tags{}, err
+	}
 
 	var result llmTagExtractorResponse
 	err = json.Unmarshal([]byte(llmResponse), &result)
@@ -148,6 +157,9 @@ func (te TagExtractor) extractEtfTags(conversation []Message, userContext domain
 
 	prompt := fmt.Sprintf(prompts.EtfTagExtractorPrompt, etfSymbols, userContext, conversation)
 	llmResponse, err := te.getLlmResponse(prompt)
+	if err != nil {
+		return Tags{}, err
+	}
 
 	var result llmTagExtractorResponse
 	err = json.Unmarshal([]byte(llmResponse), &result)
@@ -155,7 +167,7 @@ func (te TagExtractor) extractEtfTags(conversation []Message, userContext domain
 		return Tags{}, err
 	}
 
-	return Tags{EtfSymbol: result.EtfSymbol}, nil
+	return Tags{EtfSymbols: result.EtfSymbols}, nil
 }
 
 func (te TagExtractor) extractMarketNewsTags(conversation []Message, userContext domain.UserContext) (Tags, error) {
@@ -166,6 +178,9 @@ func (te TagExtractor) extractMarketNewsTags(conversation []Message, userContext
 
 	prompt := fmt.Sprintf(prompts.NewsTagExtractorPrompt, stockSymbols, userContext, conversation)
 	llmResponse, err := te.getLlmResponse(prompt)
+	if err != nil {
+		return Tags{}, err
+	}
 
 	var result llmTagExtractorResponse
 	err = json.Unmarshal([]byte(llmResponse), &result)

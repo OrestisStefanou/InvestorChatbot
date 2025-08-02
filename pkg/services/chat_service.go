@@ -12,7 +12,7 @@ type Tags struct {
 	BalanceSheet    bool
 	IncomeStatement bool
 	CashFlow        bool
-	EtfSymbol       string
+	EtfSymbols      []string
 	UserID          string
 }
 

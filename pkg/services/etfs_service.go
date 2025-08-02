@@ -38,16 +38,19 @@ func NewEtfRag(
 	}, nil
 }
 
-func (rag EtfRag) createRagContext(etfSymbol string) (string, error) {
+func (rag EtfRag) createRagContext(etfSymbols []string) (string, error) {
 	var ragContext string
 
-	if etfSymbol != "" {
-		etfOverview, err := rag.dataService.GetEtfOverview(etfSymbol)
-		if err != nil {
-			return ragContext, &DataServiceError{Message: fmt.Sprintf("GetEtfOverview failed: %s", err)}
+	if len(etfSymbols) > 0 {
+		for _, etfSymbol := range etfSymbols {
+			etfOverview, err := rag.dataService.GetEtfOverview(etfSymbol)
+			if err != nil {
+				return ragContext, &DataServiceError{Message: fmt.Sprintf("GetEtfOverview failed: %s", err)}
+			}
+			context := etfOverviewContext{etfOverview: etfOverview}
+			ragContext += fmt.Sprintf("%+v\n", context)
 		}
-		context := etfOverviewContext{etfOverview: etfOverview}
-		return fmt.Sprintf("%+v\n", context), nil
+		return ragContext, nil
 	}
 
 	etfs, err := rag.dataService.GetEtfs()
@@ -58,8 +61,8 @@ func (rag EtfRag) createRagContext(etfSymbol string) (string, error) {
 	var context etfContext
 	for _, etf := range etfs {
 		// Because of the huge number of ETFs we keep only the ones
-		// with aum higher than 500M
-		if etf.Aum > 500000000 {
+		// with aum higher than 2.5B
+		if etf.Aum > 2500000000 {
 			context.etf = etf
 			ragContext += fmt.Sprintf("%+v\n", context)
 		}
@@ -70,7 +73,7 @@ func (rag EtfRag) createRagContext(etfSymbol string) (string, error) {
 
 func (rag EtfRag) GenerateRagResponse(conversation []Message, tags Tags, responseChannel chan<- string) error {
 	// Format the prompt to contain the neccessary context
-	ragContext, err := rag.createRagContext(tags.EtfSymbol)
+	ragContext, err := rag.createRagContext(tags.EtfSymbols)
 	if err != nil {
 		return err
 	}
