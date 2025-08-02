@@ -44,6 +44,14 @@ func scrapeEtfOverview(symbol string) (domain.EtfOverview, error) {
 					As string `json:"as"`
 				} `json:"holdings"`
 			} `json:"holdingsTable"`
+			Performance struct {
+				Tr1m    float64 `json:"tr1m"`
+				TrYTD   float64 `json:"trYTD"`
+				Tr1y    float64 `json:"tr1y"`
+				Cagr5y  float64 `json:"cagr5y"`
+				Cagr10y float64 `json:"cagr10y"`
+				CagrMAX float64 `json:"cagrMAX"`
+			} `json:"performance"`
 		} `json:"data"`
 	}
 
@@ -62,7 +70,12 @@ func scrapeEtfOverview(symbol string) (domain.EtfOverview, error) {
 		Dps:              apiResponse.Data.Dps,
 		DividendYield:    apiResponse.Data.DividendYield,
 		PayoutRatio:      apiResponse.Data.PayoutRatio,
-		OneYearReturn:    apiResponse.Data.Ch1y,
+		OneMonthReturn:   apiResponse.Data.Performance.Tr1m,
+		OneYearReturn:    apiResponse.Data.Performance.Tr1y,
+		YearToDateReturn: apiResponse.Data.Performance.TrYTD,
+		FiveYearReturn:   apiResponse.Data.Performance.Cagr5y,
+		TenYearReturn:    apiResponse.Data.Performance.Cagr10y,
+		InceptionReturn:  apiResponse.Data.Performance.CagrMAX,
 		Beta:             apiResponse.Data.Beta,
 		NumberOfHoldings: apiResponse.Data.Holdings,
 		Website:          apiResponse.Data.EtfWebsite,

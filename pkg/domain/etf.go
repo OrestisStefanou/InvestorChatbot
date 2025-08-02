@@ -25,7 +25,12 @@ type EtfOverview struct {
 	Dps              string
 	DividendYield    string
 	PayoutRatio      string
-	OneYearReturn    string
+	OneMonthReturn   float64
+	OneYearReturn    float64
+	YearToDateReturn float64
+	FiveYearReturn   float64
+	TenYearReturn    float64
+	InceptionReturn  float64
 	Beta             string
 	NumberOfHoldings int32
 	Website          string
