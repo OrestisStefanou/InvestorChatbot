@@ -17,6 +17,19 @@ const (
 	GEMINI  LlmProvider = "GEMINI"
 )
 
+type DatabaseProvider string
+
+const (
+	MongoDB  DatabaseProvider = "MONGO_DB"
+	BadgerDB DatabaseProvider = "BADGER_DB"
+)
+
+type MongoDBConfig struct {
+	Uri                   string
+	DBName                string
+	SessionCollectionName string
+}
+
 type Config struct {
 	// OpenAI configs
 	OpenAiKey       string
@@ -38,13 +51,17 @@ type Config struct {
 	BaseLlmTemperature   float32     // The temperature to use for the base llm(currently there is only one llm that is used in all the rags)
 	FollowUpQuestionsNum int         // The number of follow-up questions that the GET /follow_up_questions will return
 	CacheTtl             int         // The ttl for the cache in seconds
+	DatabaseProvider     DatabaseProvider
 
 	// Badger configs
 	BadgerDbPath string
+
+	// MongoDB configs
+	MongoDBConf MongoDBConfig
 }
 
 func LoadConfig() (Config, error) {
-	err := godotenv.Load() // Load .env file, ignore errors if not found
+	err := godotenv.Load()
 	if err != nil {
 		return Config{}, err
 	}
@@ -77,6 +94,8 @@ func LoadConfig() (Config, error) {
 
 	geminiModelName := getEnv("GEMINI_MODEL_NAME", "gemini-2.0-flash")
 
+	databaseProvider := getEnv("DATABASE_PROVIDER", "BADGER_DB")
+
 	return Config{
 		OpenAiKey:            getEnv("OPEN_AI_API_KEY", ""),
 		OpenAiBaseUrl:        getEnv("OPENAI_BASE_URL", "https://api.openai.com/v1"),
@@ -92,6 +111,12 @@ func LoadConfig() (Config, error) {
 		FollowUpQuestionsNum: followUpQuestionsNum,
 		CacheTtl:             cacheTtl,
 		BadgerDbPath:         getEnv("BADGER_DB_PATH", "badger.db"),
+		MongoDBConf: MongoDBConfig{
+			Uri:                   getEnv("MONGO_DB_URI", ""),
+			DBName:                getEnv("MONGO_DB_NAME", ""),
+			SessionCollectionName: getEnv("MONGO_DB_SESSION_COLLECTION_NAME", "sessions"),
+		},
+		DatabaseProvider: DatabaseProvider(databaseProvider),
 	}, nil
 }
 

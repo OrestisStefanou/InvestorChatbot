@@ -6,27 +6,13 @@ import (
 	"sync"
 
 	"github.com/google/uuid"
+	"go.mongodb.org/mongo-driver/v2/mongo"
 )
 
 type SessionService interface {
 	GetConversationBySessionId(sessionId string) ([]Message, error)
-	SetConversationForSessionId(conversation []Message, sessionId string) error
 	CreateNewSession() (sessionId string, err error)
 	AddMessage(sessionId string, msg Message) error
-}
-
-type MockSessionService struct{}
-
-func (sv MockSessionService) GetConversationBySessionId(sessionId string) ([]Message, error) {
-	return []Message{}, nil
-}
-
-func (sv MockSessionService) SetConversationForSessionId(conversation []Message, sessionId string) error {
-	return nil
-}
-
-func (sv MockSessionService) CreateNewSession() (sessionId string, err error) {
-	return "mock_session_id", nil
 }
 
 type InMemorySession struct {
@@ -77,13 +63,6 @@ func (s *InMemorySession) AddMessage(sessionId string, msg Message) error {
 	return nil
 }
 
-func (s *InMemorySession) SetConversationForSessionId(conversation []Message, sessionId string) error {
-	s.rwMutex.Lock()
-	defer s.rwMutex.Unlock()
-	s.sessions[sessionId] = conversation
-	return nil
-}
-
 func (s *InMemorySession) CreateNewSession() (sessionId string, err error) {
 	s.rwMutex.Lock()
 	defer s.rwMutex.Unlock()
@@ -91,4 +70,35 @@ func (s *InMemorySession) CreateNewSession() (sessionId string, err error) {
 	sessionId = uuid.NewString()
 	s.sessions[sessionId] = []Message{}
 	return
+}
+
+type MongoDBSession struct {
+	client         *mongo.Client
+	uri            string
+	dbName         string
+	collectionName string
+}
+
+func NewMongoDBSession(client *mongo.Client, uri, dbName, collectionName string) (*MongoDBSession, error) {
+	return &MongoDBSession{
+		client:         client,
+		uri:            uri,
+		dbName:         dbName,
+		collectionName: collectionName,
+	}, nil
+}
+
+func (s *MongoDBSession) GetConversationBySessionId(sessionId string) ([]Message, error) {
+	// todo
+	return nil, nil
+}
+
+func (s *MongoDBSession) CreateNewSession() (sessionId string, err error) {
+	// todo
+	return "", nil
+}
+
+func (s *MongoDBSession) AddMessage(sessionId string, msg Message) error {
+	// todo
+	return nil
 }
