@@ -12,8 +12,9 @@ type OpenAiClientInterface interface {
 type ModelName string
 
 const (
-	GPT3      ModelName = "gpt-3"
-	GPT4_MINI ModelName = "gpt-4o-mini"
+	GPT4_MINI   ModelName = "gpt-4o-mini"
+	GPT4_1_MINI ModelName = "gpt-4.1-mini"
+	GPT4_1_NANO ModelName = "gpt-4.1-nano"
 )
 
 type OpenAiLLM struct {
@@ -24,7 +25,7 @@ type OpenAiLLM struct {
 
 func NewOpenAiLLM(modelName ModelName, client OpenAiClientInterface, temperature float64) (*OpenAiLLM, error) {
 	switch modelName {
-	case GPT3, GPT4_MINI:
+	case GPT4_MINI, GPT4_1_MINI, GPT4_1_NANO:
 	default:
 		return nil, fmt.Errorf("invalid model name: %s", modelName)
 	}

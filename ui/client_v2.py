@@ -143,7 +143,7 @@ def response_generator(session_id: str, question: str):
 
 
 
-st.title("Investor Assistant chatbot")
+st.title("Stock Analysis chatbot")
 
 # Initialize chat history
 if "messages" not in st.session_state:

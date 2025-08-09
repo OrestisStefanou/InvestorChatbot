@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"investbot/pkg/repositories"
 
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
@@ -28,4 +29,30 @@ func main() {
 		panic(err)
 	}
 	fmt.Println("Pinged your deployment. You successfully connected to MongoDB!")
+
+	userContextRepo, _ := repositories.NewUserContextMongoRepo(client, "investor_chatbot", "user_context")
+	// userContext := domain.UserContext{
+	// 	UserID: "kostis_pou_ta_kazia",
+	// 	UserProfile: map[string]any{
+	// 		"name": "Kostis",
+	// 		"age":  300,
+	// 	},
+	// 	UserPortfolio: []domain.UserPortfolioHolding{
+	// 		domain.UserPortfolioHolding{
+	// 			AssetClass:          domain.Stock,
+	// 			Symbol:              "MSFT",
+	// 			Quantity:            10,
+	// 			PortfolioPercentage: 1,
+	// 		},
+	// 	},
+	// }
+	// err = userContextRepo.UpdateUserContext(userContext)
+	// if err != nil {
+	// 	panic(err)
+	// }
+	user, err := userContextRepo.GetUserContext("kostis_pou_ta_kaziaa")
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("USER: %+v\n", user)
 }
