@@ -64,9 +64,10 @@ func main() {
 	}
 
 	var (
-		userContextRepository services.UserContextRepository
-		sessionService        services.SessionService
-		mongoClient           *mongo.Client
+		userContextRepository  services.UserContextRepository
+		topicAndTagsRepository services.TopicAndTagsRepository
+		sessionService         services.SessionService
+		mongoClient            *mongo.Client
 	)
 
 	// Create Mongo client only once if needed
@@ -90,12 +91,28 @@ func main() {
 			log.Fatal(err)
 		}
 		defer db.Close()
+
 		userContextRepository, err = repositories.NewUserContextRepository(db)
 		if err != nil {
 			log.Fatal(err)
 		}
+
+		topicAndTagsRepository, err = repositories.NewTopicAndTagsBagderRepo(db)
+		if err != nil {
+			log.Fatal(err)
+		}
+
 	case config.MONGO_DB:
 		userContextRepository, err = repositories.NewUserContextMongoRepo(
+			mongoClient,
+			conf.MongoDBConf.DBName,
+			conf.MongoDBConf.UserContextColletionName,
+		)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		topicAndTagsRepository, err = repositories.NewTopicAndTagsMongoRepo(
 			mongoClient,
 			conf.MongoDBConf.DBName,
 			conf.MongoDBConf.UserContextColletionName,
@@ -151,7 +168,13 @@ func main() {
 	// Set up core services
 	topicExtractorService, _ := services.NewTopicExtractor(llm, userContextService)
 	tagExtractorService, _ := services.NewTagExtractor(llm, dataService, userContextService)
-	chatService, _ := services.NewChatService(topicToRagMap, sessionService, topicExtractorService, tagExtractorService)
+	chatService, _ := services.NewChatService(
+		topicToRagMap,
+		sessionService,
+		topicExtractorService,
+		tagExtractorService,
+		topicAndTagsRepository,
+	)
 	followUpQuestionsService, _ := services.NewFollowUpQuestionsService(sessionService, followUpQuestionsRag)
 	faqService, _ := services.NewFaqService(conf.FaqLimit)
 	tickerService, _ := services.NewTickerService(dataService)

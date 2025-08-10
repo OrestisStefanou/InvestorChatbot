@@ -32,10 +32,11 @@ const (
 )
 
 type MongoDBConfig struct {
-	Uri                      string
-	DBName                   string
-	SessionCollectionName    string
-	UserContextColletionName string
+	Uri                        string
+	DBName                     string
+	SessionCollectionName      string
+	UserContextColletionName   string
+	TopicAndTagsCollectionName string
 }
 
 type Config struct {
@@ -123,10 +124,11 @@ func LoadConfig() (Config, error) {
 		CacheTtl:             cacheTtl,
 		BadgerDbPath:         getEnv("BADGER_DB_PATH", "badger.db"),
 		MongoDBConf: MongoDBConfig{
-			Uri:                      getEnv("MONGO_DB_URI", ""),
-			DBName:                   getEnv("MONGO_DB_NAME", ""),
-			SessionCollectionName:    getEnv("MONGO_DB_SESSION_COLLECTION_NAME", "session"),
-			UserContextColletionName: getEnv("MONGO_DB_USER_CONTEXT_COLLECTION_NAME", "user_context"),
+			Uri:                        getEnv("MONGO_DB_URI", ""),
+			DBName:                     getEnv("MONGO_DB_NAME", ""),
+			SessionCollectionName:      getEnv("MONGO_DB_SESSION_COLLECTION_NAME", "session"),
+			UserContextColletionName:   getEnv("MONGO_DB_USER_CONTEXT_COLLECTION_NAME", "user_context"),
+			TopicAndTagsCollectionName: getEnv("MONGO_DB_TOPIC_AND_TAGS_COLLECTION_NAME", "topic_and_tags"),
 		},
 		DatabaseProvider:       DatabaseProvider(dbProvider),
 		SessionStorageProvider: SessionStorageProvider(sessionStorage),

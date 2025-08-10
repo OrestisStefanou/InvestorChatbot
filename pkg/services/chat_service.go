@@ -3,6 +3,7 @@ package services
 import (
 	"fmt"
 	"investbot/pkg/errors"
+	"log"
 )
 
 type Tags struct {
@@ -28,6 +29,10 @@ type TagExtractorService interface {
 	ExtractTags(topic Topic, conversation []Message, userID string) (Tags, error)
 }
 
+type TopicAndTagsRepository interface {
+	StoreTopicAndTags(topic Topic, tags Tags, question string, sessionID string, userID string) error
+}
+
 type Topic string
 
 const (
@@ -45,6 +50,7 @@ type ChatService struct {
 	sessionService        SessionService
 	topicExtractorService TopicExtractorService
 	tagExtractorService   TagExtractorService
+	topicAndTagsRepo      TopicAndTagsRepository
 }
 
 func NewChatService(
@@ -52,12 +58,14 @@ func NewChatService(
 	sessionService SessionService,
 	topicExtractorService TopicExtractorService,
 	tagExtractorService TagExtractorService,
+	topicAndTagsRepo TopicAndTagsRepository,
 ) (*ChatService, error) {
 	return &ChatService{
 		topicToRagMap:         topicToRagMap,
 		sessionService:        sessionService,
 		topicExtractorService: topicExtractorService,
 		tagExtractorService:   tagExtractorService,
+		topicAndTagsRepo:      topicAndTagsRepo,
 	}, nil
 }
 
@@ -145,6 +153,20 @@ func (s *ChatService) ExtractTopicAndTags(question string, sessionId string, use
 	if err != nil {
 		return "", Tags{}, err
 	}
+
+	// start go routine to store the results
+	go func() {
+		err = s.topicAndTagsRepo.StoreTopicAndTags(
+			topic,
+			tags,
+			question,
+			sessionId,
+			userID,
+		)
+		if err != nil {
+			log.Printf("StoreTopicAndTags failed with err: %s", err.Error())
+		}
+	}()
 
 	return topic, tags, nil
 }
