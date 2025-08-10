@@ -1,32 +1,21 @@
 package services
 
 import (
+	"context"
 	"fmt"
 	"investbot/pkg/errors"
 	"sync"
 
 	"github.com/google/uuid"
+	"go.mongodb.org/mongo-driver/v2/bson"
+	"go.mongodb.org/mongo-driver/v2/mongo"
+	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
 type SessionService interface {
 	GetConversationBySessionId(sessionId string) ([]Message, error)
-	SetConversationForSessionId(conversation []Message, sessionId string) error
 	CreateNewSession() (sessionId string, err error)
 	AddMessage(sessionId string, msg Message) error
-}
-
-type MockSessionService struct{}
-
-func (sv MockSessionService) GetConversationBySessionId(sessionId string) ([]Message, error) {
-	return []Message{}, nil
-}
-
-func (sv MockSessionService) SetConversationForSessionId(conversation []Message, sessionId string) error {
-	return nil
-}
-
-func (sv MockSessionService) CreateNewSession() (sessionId string, err error) {
-	return "mock_session_id", nil
 }
 
 type InMemorySession struct {
@@ -77,13 +66,6 @@ func (s *InMemorySession) AddMessage(sessionId string, msg Message) error {
 	return nil
 }
 
-func (s *InMemorySession) SetConversationForSessionId(conversation []Message, sessionId string) error {
-	s.rwMutex.Lock()
-	defer s.rwMutex.Unlock()
-	s.sessions[sessionId] = conversation
-	return nil
-}
-
 func (s *InMemorySession) CreateNewSession() (sessionId string, err error) {
 	s.rwMutex.Lock()
 	defer s.rwMutex.Unlock()
@@ -91,4 +73,80 @@ func (s *InMemorySession) CreateNewSession() (sessionId string, err error) {
 	sessionId = uuid.NewString()
 	s.sessions[sessionId] = []Message{}
 	return
+}
+
+type MongoDBSessionServiceConf struct {
+	DBName         string
+	CollectionName string
+	ConvMsgLimit   int
+}
+
+type MongoDBSessionService struct {
+	client *mongo.Client
+	conf   MongoDBSessionServiceConf
+}
+
+type mongoSessionDocument struct {
+	SessionID string    `bson:"sessionID"`
+	Messages  []Message `bson:"messages"`
+}
+
+func NewMongoDBSession(client *mongo.Client, conf MongoDBSessionServiceConf) (*MongoDBSessionService, error) {
+	return &MongoDBSessionService{
+		client: client,
+		conf:   conf,
+	}, nil
+}
+
+func (s *MongoDBSessionService) GetConversationBySessionId(sessionId string) ([]Message, error) {
+	collection := s.client.Database(s.conf.DBName).Collection(s.conf.CollectionName)
+
+	var doc mongoSessionDocument
+	err := collection.FindOne(context.TODO(), bson.M{"sessionID": sessionId}).Decode(&doc)
+	if err != nil {
+		return nil, errors.SessionNotFoundError{Message: fmt.Sprintf("sessionID: %s not found", sessionId)}
+	}
+
+	// Apply convMsgLimit if set (>0)
+	if s.conf.ConvMsgLimit > 0 && len(doc.Messages) > s.conf.ConvMsgLimit {
+		start := len(doc.Messages) - s.conf.ConvMsgLimit
+		return doc.Messages[start:], nil
+	}
+
+	return doc.Messages, nil
+}
+
+func (s *MongoDBSessionService) CreateNewSession() (string, error) {
+	sessionId := uuid.NewString()
+	document := mongoSessionDocument{
+		SessionID: sessionId,
+		Messages:  make([]Message, 0),
+	}
+
+	collection := s.client.Database(s.conf.DBName).Collection(s.conf.CollectionName)
+	_, err := collection.InsertOne(context.TODO(), document)
+	if err != nil {
+		return "", err
+	}
+
+	return sessionId, nil
+}
+
+func (s *MongoDBSessionService) AddMessage(sessionId string, msg Message) error {
+	collection := s.client.Database(s.conf.DBName).Collection(s.conf.CollectionName)
+
+	update := bson.M{
+		"$push": bson.M{"messages": msg},
+	}
+	opts := options.UpdateOne().SetUpsert(false) // we don't create a new session here
+
+	res, err := collection.UpdateOne(context.TODO(), bson.M{"sessionID": sessionId}, update, opts)
+	if err != nil {
+		return err
+	}
+	if res.MatchedCount == 0 {
+		return errors.SessionNotFoundError{Message: fmt.Sprintf("sessionID: %s not found", sessionId)}
+	}
+
+	return nil
 }
