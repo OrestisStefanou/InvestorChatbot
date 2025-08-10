@@ -17,10 +17,25 @@ const (
 	GEMINI  LlmProvider = "GEMINI"
 )
 
+type DatabaseProvider string
+
+const (
+	MONGO_DB  DatabaseProvider = "MONGO_DB"
+	BADGER_DB DatabaseProvider = "BADGER"
+)
+
+type SessionStorageProvider string
+
+const (
+	MONGO_DB_STORAGE  SessionStorageProvider = "MONGO_DB"
+	IN_MEMORY_STORAGE SessionStorageProvider = "MEMORY"
+)
+
 type MongoDBConfig struct {
-	Uri                   string
-	DBName                string
-	SessionCollectionName string
+	Uri                      string
+	DBName                   string
+	SessionCollectionName    string
+	UserContextColletionName string
 }
 
 type Config struct {
@@ -38,12 +53,14 @@ type Config struct {
 	GeminiModelName gemini.ModelName
 
 	// App configs
-	LlmProvider          LlmProvider // Valid values are: "OPEN_AI", "OLLAMA"
-	FaqLimit             int         // Number of faq to return in through the endpoint
-	ConvMsgLimit         int         // The number of most recent messages to get from a session
-	BaseLlmTemperature   float32     // The temperature to use for the base llm(currently there is only one llm that is used in all the rags)
-	FollowUpQuestionsNum int         // The number of follow-up questions that the GET /follow_up_questions will return
-	CacheTtl             int         // The ttl for the cache in seconds
+	LlmProvider            LlmProvider // Valid values are: "OPEN_AI", "OLLAMA"
+	FaqLimit               int         // Number of faq to return in through the endpoint
+	ConvMsgLimit           int         // The number of most recent messages to get from a session
+	BaseLlmTemperature     float32     // The temperature to use for the base llm(currently there is only one llm that is used in all the rags)
+	FollowUpQuestionsNum   int         // The number of follow-up questions that the GET /follow_up_questions will return
+	CacheTtl               int         // The ttl for the cache in seconds
+	DatabaseProvider       DatabaseProvider
+	SessionStorageProvider SessionStorageProvider
 
 	// Badger configs
 	BadgerDbPath string
@@ -78,6 +95,10 @@ func LoadConfig() (Config, error) {
 		cacheTtl = 3600
 	}
 
+	dbProvider := getEnv("DATABASE_PROVIDER", "BADGER_DB")
+
+	sessionStorage := getEnv("SESSION_STORAGE_PROVIDER", "MEMORY")
+
 	llmProvider := getEnv("LLM_PROVIDER", "OPEN_AI")
 
 	openAiModelName := getEnv("OPEN_AI_MODEL_NAME", "gpt-4o-mini")
@@ -102,10 +123,13 @@ func LoadConfig() (Config, error) {
 		CacheTtl:             cacheTtl,
 		BadgerDbPath:         getEnv("BADGER_DB_PATH", "badger.db"),
 		MongoDBConf: MongoDBConfig{
-			Uri:                   getEnv("MONGO_DB_URI", ""),
-			DBName:                getEnv("MONGO_DB_NAME", ""),
-			SessionCollectionName: getEnv("MONGO_DB_SESSION_COLLECTION_NAME", "session"),
+			Uri:                      getEnv("MONGO_DB_URI", ""),
+			DBName:                   getEnv("MONGO_DB_NAME", ""),
+			SessionCollectionName:    getEnv("MONGO_DB_SESSION_COLLECTION_NAME", "session"),
+			UserContextColletionName: getEnv("MONGO_DB_USER_CONTEXT_COLLECTION_NAME", "user_context"),
 		},
+		DatabaseProvider:       DatabaseProvider(dbProvider),
+		SessionStorageProvider: SessionStorageProvider(sessionStorage),
 	}, nil
 }
 

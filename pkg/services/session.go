@@ -75,15 +75,15 @@ func (s *InMemorySession) CreateNewSession() (sessionId string, err error) {
 	return
 }
 
-type MongoDBSessionConf struct {
+type MongoDBSessionServiceConf struct {
 	DBName         string
 	CollectionName string
 	ConvMsgLimit   int
 }
 
-type MongoDBSession struct {
+type MongoDBSessionService struct {
 	client *mongo.Client
-	conf   MongoDBSessionConf
+	conf   MongoDBSessionServiceConf
 }
 
 type mongoSessionDocument struct {
@@ -91,14 +91,14 @@ type mongoSessionDocument struct {
 	Messages  []Message `bson:"messages"`
 }
 
-func NewMongoDBSession(client *mongo.Client, conf MongoDBSessionConf) (*MongoDBSession, error) {
-	return &MongoDBSession{
+func NewMongoDBSession(client *mongo.Client, conf MongoDBSessionServiceConf) (*MongoDBSessionService, error) {
+	return &MongoDBSessionService{
 		client: client,
 		conf:   conf,
 	}, nil
 }
 
-func (s *MongoDBSession) GetConversationBySessionId(sessionId string) ([]Message, error) {
+func (s *MongoDBSessionService) GetConversationBySessionId(sessionId string) ([]Message, error) {
 	collection := s.client.Database(s.conf.DBName).Collection(s.conf.CollectionName)
 
 	var doc mongoSessionDocument
@@ -116,7 +116,7 @@ func (s *MongoDBSession) GetConversationBySessionId(sessionId string) ([]Message
 	return doc.Messages, nil
 }
 
-func (s *MongoDBSession) CreateNewSession() (string, error) {
+func (s *MongoDBSessionService) CreateNewSession() (string, error) {
 	sessionId := uuid.NewString()
 	document := mongoSessionDocument{
 		SessionID: sessionId,
@@ -132,7 +132,7 @@ func (s *MongoDBSession) CreateNewSession() (string, error) {
 	return sessionId, nil
 }
 
-func (s *MongoDBSession) AddMessage(sessionId string, msg Message) error {
+func (s *MongoDBSessionService) AddMessage(sessionId string, msg Message) error {
 	collection := s.client.Database(s.conf.DBName).Collection(s.conf.CollectionName)
 
 	update := bson.M{

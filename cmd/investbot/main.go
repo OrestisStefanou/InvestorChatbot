@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"investbot/pkg/config"
 	"investbot/pkg/gemini"
@@ -14,6 +15,8 @@ import (
 
 	badger "github.com/dgraph-io/badger/v4"
 	"github.com/labstack/echo/v4"
+	"go.mongodb.org/mongo-driver/v2/mongo"
+	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
 func getLlm(conf config.Config) (services.Llm, error) {
@@ -34,7 +37,7 @@ func getLlm(conf config.Config) (services.Llm, error) {
 		}
 		llm, err = gemini.NewGeminiLLM(llmConfig)
 	default:
-		err = fmt.Errorf("No valid llm provider found")
+		err = fmt.Errorf("no valid llm provider found")
 	}
 
 	return llm, err
@@ -45,20 +48,45 @@ func main() {
 
 	conf, _ := config.LoadConfig()
 
-	db, err := badger.Open(badger.DefaultOptions(conf.BadgerDbPath))
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer db.Close()
-
 	llm, err := getLlm(conf)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	userContextRepository, err := repositories.NewUserContextRepository(db)
-	if err != nil {
-		log.Fatal(err)
+	var userContextRepository services.UserContextRepository
+	switch conf.DatabaseProvider {
+	case config.BADGER_DB:
+		db, err := badger.Open(badger.DefaultOptions(conf.BadgerDbPath))
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer db.Close()
+		userContextRepository, err = repositories.NewUserContextRepository(db)
+		if err != nil {
+			log.Fatal(err)
+		}
+	case config.MONGO_DB:
+		serverAPI := options.ServerAPI(options.ServerAPIVersion1)
+		opts := options.Client().ApplyURI(conf.MongoDBConf.Uri).SetServerAPIOptions(serverAPI)
+		// Create a new mongo client and connect to the server
+		mongoClient, err := mongo.Connect(opts)
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer func() {
+			if err = mongoClient.Disconnect(context.TODO()); err != nil {
+				log.Fatal(err)
+			}
+		}()
+
+		userContextRepository, err = repositories.NewUserContextMongoRepo(
+			mongoClient,
+			conf.MongoDBConf.DBName,
+			conf.MongoDBConf.UserContextColletionName,
+		)
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 
 	cache, _ := services.NewBadgerCacheService()
@@ -83,7 +111,36 @@ func main() {
 		services.NEWS:             newsRag,
 	}
 
-	sessionService, _ := services.NewInMemorySession(conf.ConvMsgLimit)
+	var sessionService services.SessionService
+	switch conf.SessionStorageProvider {
+	case config.IN_MEMORY_STORAGE:
+		sessionService, _ = services.NewInMemorySession(conf.ConvMsgLimit)
+	case config.MONGO_DB_STORAGE:
+		serverAPI := options.ServerAPI(options.ServerAPIVersion1)
+		opts := options.Client().ApplyURI(conf.MongoDBConf.Uri).SetServerAPIOptions(serverAPI)
+		// Create a new mongo client and connect to the server
+		mongoClient, err := mongo.Connect(opts)
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer func() {
+			if err = mongoClient.Disconnect(context.TODO()); err != nil {
+				log.Fatal(err)
+			}
+		}()
+		sessionService, err = services.NewMongoDBSession(
+			mongoClient,
+			services.MongoDBSessionServiceConf{
+				DBName:         conf.MongoDBConf.DBName,
+				CollectionName: conf.MongoDBConf.SessionCollectionName,
+				ConvMsgLimit:   conf.ConvMsgLimit,
+			},
+		)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+	}
 	topicExtractorService, _ := services.NewTopicExtractor(llm, userContextService)
 	tagExtractorService, _ := services.NewTagExtractor(llm, dataService, userContextService)
 	chatService, _ := services.NewChatService(topicToRagMap, sessionService, topicExtractorService, tagExtractorService)
