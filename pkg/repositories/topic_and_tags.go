@@ -16,6 +16,7 @@ type topicAndTagsDocument struct {
 	Question  string
 	SessionID string
 	UserID    string
+	CreatedAt time.Time
 }
 
 type TopicAndTagsBagderRepo struct {
@@ -39,6 +40,7 @@ func (r *TopicAndTagsBagderRepo) StoreTopicAndTags(
 		Question:  question,
 		SessionID: sessionID,
 		UserID:    userID,
+		CreatedAt: time.Now(),
 	}
 
 	err := r.db.Update(func(txn *badger.Txn) error {

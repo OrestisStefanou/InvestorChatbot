@@ -156,15 +156,15 @@ func (s *ChatService) ExtractTopicAndTags(question string, sessionId string, use
 
 	// start go routine to store the results
 	go func() {
-		err = s.topicAndTagsRepo.StoreTopicAndTags(
+		storeErr := s.topicAndTagsRepo.StoreTopicAndTags(
 			topic,
 			tags,
 			question,
 			sessionId,
 			userID,
 		)
-		if err != nil {
-			log.Printf("StoreTopicAndTags failed with err: %s", err.Error())
+		if storeErr != nil {
+			log.Printf("StoreTopicAndTags failed with err: %s", storeErr.Error())
 		}
 	}()
 

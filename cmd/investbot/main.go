@@ -115,7 +115,7 @@ func main() {
 		topicAndTagsRepository, err = repositories.NewTopicAndTagsMongoRepo(
 			mongoClient,
 			conf.MongoDBConf.DBName,
-			conf.MongoDBConf.UserContextColletionName,
+			conf.MongoDBConf.TopicAndTagsCollectionName,
 		)
 		if err != nil {
 			log.Fatal(err)
