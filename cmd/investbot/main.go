@@ -168,7 +168,7 @@ func main() {
 	stockFinancialsRag, _ := services.NewStockFinancialsRag(llm, dataService, userContextService, ragResponsesRepository)
 	etfRag, _ := services.NewEtfRag(llm, dataService, userContextService, ragResponsesRepository)
 	newsRag, _ := services.NewMarketNewsRag(llm, dataService, userContextService, ragResponsesRepository)
-	followUpQuestionsRag, _ := services.NewFollowUpQuestionsRag(llm)
+	followUpQuestionsRag, _ := services.NewFollowUpQuestionsRag(llm, ragResponsesRepository)
 
 	topicToRagMap := map[services.Topic]services.Rag{
 		services.SECTORS:          sectorRag,
@@ -181,8 +181,8 @@ func main() {
 	}
 
 	// Set up core services
-	topicExtractorService, _ := services.NewTopicExtractor(llm, userContextService)
-	tagExtractorService, _ := services.NewTagExtractor(llm, dataService, userContextService)
+	topicExtractorService, _ := services.NewTopicExtractor(llm, userContextService, ragResponsesRepository)
+	tagExtractorService, _ := services.NewTagExtractor(llm, dataService, userContextService, ragResponsesRepository)
 	chatService, _ := services.NewChatService(
 		topicToRagMap,
 		sessionService,

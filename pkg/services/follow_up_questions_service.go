@@ -5,6 +5,8 @@ import (
 	"investbot/pkg/errors"
 	"investbot/pkg/services/prompts"
 	"strings"
+
+	"github.com/labstack/gommon/log"
 )
 
 type FollowUpQuestionsRag interface {
@@ -12,11 +14,12 @@ type FollowUpQuestionsRag interface {
 }
 
 type FollowUpQuestionsRagImpl struct {
-	llm Llm
+	llm           Llm
+	responseStore RagResponsesRepository
 }
 
-func NewFollowUpQuestionsRag(llm Llm) (*FollowUpQuestionsRagImpl, error) {
-	return &FollowUpQuestionsRagImpl{llm: llm}, nil
+func NewFollowUpQuestionsRag(llm Llm, responsesStore RagResponsesRepository) (*FollowUpQuestionsRagImpl, error) {
+	return &FollowUpQuestionsRagImpl{llm: llm, responseStore: responsesStore}, nil
 }
 
 func (rag FollowUpQuestionsRagImpl) GenerateFollowUpQuestions(
@@ -43,6 +46,17 @@ func (rag FollowUpQuestionsRagImpl) GenerateFollowUpQuestions(
 	if err != nil {
 		return followUpQuestions, err
 	}
+
+	go func() {
+		storeErr := rag.responseStore.StoreRagResponse(
+			"FollowUpQuestions",
+			conversationWithPrompt,
+			responseMessage,
+		)
+		if storeErr != nil {
+			log.Errorf("Failed to store follow up questions rag response: %s", storeErr.Error())
+		}
+	}()
 
 	return strings.Split(responseMessage, "\n"), nil
 }
