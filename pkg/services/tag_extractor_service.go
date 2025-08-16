@@ -5,9 +5,8 @@ import (
 	"fmt"
 	"investbot/pkg/domain"
 	"investbot/pkg/services/prompts"
+	"log"
 	"strings"
-
-	"github.com/labstack/gommon/log"
 )
 
 type MarketDataService interface {
@@ -202,7 +201,6 @@ func (te TagExtractor) getLlmResponse(prompt string) (string, error) {
 		Content: prompt,
 	}
 
-	// Reuse the shared helper to accumulate the LLM response
 	responseMessage, err := streamChunks(
 		func(chunkChan chan<- string) error {
 			return te.llm.GenerateResponse([]Message{promptMsg}, chunkChan)
@@ -220,11 +218,11 @@ func (te TagExtractor) getLlmResponse(prompt string) (string, error) {
 			responseMessage,
 		)
 		if storeErr != nil {
-			log.Errorf("Failed to store tag extraction rag response: %s", storeErr.Error())
+			log.Printf("Failed to store tag extraction rag response: %s", storeErr.Error())
 		}
 	}()
 
-	// Strip formatting artifacts (common for JSON outputs)
+	// Strip formatting artifacts
 	stripped := strings.TrimPrefix(responseMessage, "```json\n")
 	stripped = strings.TrimSuffix(stripped, "\n```")
 

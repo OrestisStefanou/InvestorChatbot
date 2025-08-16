@@ -97,7 +97,7 @@ func LoadConfig() (Config, error) {
 		cacheTtl = 3600
 	}
 
-	dbProvider := getEnv("DATABASE_PROVIDER", "BADGER_DB")
+	dbProvider := getEnv("DATABASE_PROVIDER", "BADGER")
 
 	sessionStorage := getEnv("SESSION_STORAGE_PROVIDER", "MEMORY")
 

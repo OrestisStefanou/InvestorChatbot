@@ -4,9 +4,8 @@ import (
 	"fmt"
 	"investbot/pkg/domain"
 	"investbot/pkg/services/prompts"
+	"log"
 	"strings"
-
-	"github.com/labstack/gommon/log"
 )
 
 type TopicExtractor struct {
@@ -75,7 +74,7 @@ func (te TopicExtractor) ExtractTopic(conversation []Message, userID string) (To
 			responseMessage,
 		)
 		if storeErr != nil {
-			log.Errorf("Failed to store topic extraction rag response: %s", storeErr.Error())
+			log.Printf("Failed to store topic extraction rag response: %s", storeErr.Error())
 		}
 	}()
 

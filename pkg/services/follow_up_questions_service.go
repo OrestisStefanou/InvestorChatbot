@@ -4,9 +4,8 @@ import (
 	"fmt"
 	"investbot/pkg/errors"
 	"investbot/pkg/services/prompts"
+	"log"
 	"strings"
-
-	"github.com/labstack/gommon/log"
 )
 
 type FollowUpQuestionsRag interface {
@@ -54,7 +53,7 @@ func (rag FollowUpQuestionsRagImpl) GenerateFollowUpQuestions(
 			responseMessage,
 		)
 		if storeErr != nil {
-			log.Errorf("Failed to store follow up questions rag response: %s", storeErr.Error())
+			log.Printf("Failed to store follow up questions rag response: %s", storeErr.Error())
 		}
 	}()
 
