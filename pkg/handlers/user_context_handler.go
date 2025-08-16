@@ -61,7 +61,10 @@ func (r UserContext) validate() error {
 	}
 
 	for _, h := range r.UserPortfolio {
-		h.validate()
+		err := h.validate()
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil

@@ -17,8 +17,8 @@ type sectorContext struct {
 }
 
 type SectorRag struct {
+	BaseRag
 	dataService        SectorDataService
-	llm                Llm
 	userContextService UserContextDataService
 }
 
@@ -26,12 +26,17 @@ func NewSectorRag(
 	llm Llm,
 	sectorDataService SectorDataService,
 	userContextService UserContextDataService,
+	responsesStore RagResponsesRepository,
 ) (*SectorRag, error) {
-	return &SectorRag{
-		llm:                llm,
+	rag := SectorRag{
 		dataService:        sectorDataService,
 		userContextService: userContextService,
-	}, nil
+	}
+	rag.llm = llm
+	rag.topic = SECTORS
+	rag.responseStore = responsesStore
+
+	return &rag, nil
 }
 
 func (rag SectorRag) createRagContext(sectorName string) (string, error) {
@@ -84,17 +89,6 @@ func (rag SectorRag) GenerateRagResponse(conversation []Message, tags Tags, resp
 	}
 
 	prompt := fmt.Sprintf(prompts.SectorsPrompt, ragContext, userContext)
-	prompt_msg := Message{
-		Role:    System,
-		Content: prompt,
-	}
 
-	// Add the prompt as the first message in the existing conversation
-	conversation_with_prompt := append([]Message{prompt_msg}, conversation...)
-
-	if err := rag.llm.GenerateResponse(conversation_with_prompt, responseChannel); err != nil {
-		return &RagError{Message: fmt.Sprintf("GenerateResponse failed: %s", err)}
-	}
-
-	return nil
+	return rag.GenerateLllmResponse(prompt, conversation, responseChannel)
 }

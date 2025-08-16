@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"investbot/pkg/errors"
 	"sync"
+	"time"
 
 	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/v2/bson"
@@ -89,6 +90,7 @@ type MongoDBSessionService struct {
 type mongoSessionDocument struct {
 	SessionID string    `bson:"sessionID"`
 	Messages  []Message `bson:"messages"`
+	CreatedAt time.Time
 }
 
 func NewMongoDBSession(client *mongo.Client, conf MongoDBSessionServiceConf) (*MongoDBSessionService, error) {
@@ -121,6 +123,7 @@ func (s *MongoDBSessionService) CreateNewSession() (string, error) {
 	document := mongoSessionDocument{
 		SessionID: sessionId,
 		Messages:  make([]Message, 0),
+		CreatedAt: time.Now(),
 	}
 
 	collection := s.client.Database(s.conf.DBName).Collection(s.conf.CollectionName)

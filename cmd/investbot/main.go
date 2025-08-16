@@ -64,9 +64,11 @@ func main() {
 	}
 
 	var (
-		userContextRepository services.UserContextRepository
-		sessionService        services.SessionService
-		mongoClient           *mongo.Client
+		userContextRepository  services.UserContextRepository
+		topicAndTagsRepository services.TopicAndTagsRepository
+		ragResponsesRepository services.RagResponsesRepository
+		sessionService         services.SessionService
+		mongoClient            *mongo.Client
 	)
 
 	// Create Mongo client only once if needed
@@ -90,15 +92,45 @@ func main() {
 			log.Fatal(err)
 		}
 		defer db.Close()
+
 		userContextRepository, err = repositories.NewUserContextRepository(db)
 		if err != nil {
 			log.Fatal(err)
 		}
+
+		topicAndTagsRepository, err = repositories.NewTopicAndTagsBagderRepo(db)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		ragResponsesRepository, err = repositories.NewRagResponsesBadgerRepo(db)
+		if err != nil {
+			log.Fatal(err)
+		}
+
 	case config.MONGO_DB:
 		userContextRepository, err = repositories.NewUserContextMongoRepo(
 			mongoClient,
 			conf.MongoDBConf.DBName,
 			conf.MongoDBConf.UserContextColletionName,
+		)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		topicAndTagsRepository, err = repositories.NewTopicAndTagsMongoRepo(
+			mongoClient,
+			conf.MongoDBConf.DBName,
+			conf.MongoDBConf.TopicAndTagsCollectionName,
+		)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		ragResponsesRepository, err = repositories.NewRagResponsesMongoRepo(
+			mongoClient,
+			conf.MongoDBConf.DBName,
+			conf.MongoDBConf.RagResponsesCollectionName,
 		)
 		if err != nil {
 			log.Fatal(err)
@@ -129,14 +161,14 @@ func main() {
 	userContextService, _ := services.NewUserContextService(userContextRepository)
 
 	// Set up rags
-	sectorRag, _ := services.NewSectorRag(llm, dataService, userContextService)
-	educationRag, _ := services.NewEducationRag(llm, userContextService)
+	sectorRag, _ := services.NewSectorRag(llm, dataService, userContextService, ragResponsesRepository)
+	educationRag, _ := services.NewEducationRag(llm, userContextService, ragResponsesRepository)
 	industryRag, _ := services.NewIndustryRag(llm, dataService)
-	stockOverviewRag, _ := services.NewStockOverviewRag(llm, dataService, userContextService)
-	stockFinancialsRag, _ := services.NewStockFinancialsRag(llm, dataService, userContextService)
-	etfRag, _ := services.NewEtfRag(llm, dataService, userContextService)
-	newsRag, _ := services.NewMarketNewsRag(llm, dataService, userContextService)
-	followUpQuestionsRag, _ := services.NewFollowUpQuestionsRag(llm)
+	stockOverviewRag, _ := services.NewStockOverviewRag(llm, dataService, userContextService, ragResponsesRepository)
+	stockFinancialsRag, _ := services.NewStockFinancialsRag(llm, dataService, userContextService, ragResponsesRepository)
+	etfRag, _ := services.NewEtfRag(llm, dataService, userContextService, ragResponsesRepository)
+	newsRag, _ := services.NewMarketNewsRag(llm, dataService, userContextService, ragResponsesRepository)
+	followUpQuestionsRag, _ := services.NewFollowUpQuestionsRag(llm, ragResponsesRepository)
 
 	topicToRagMap := map[services.Topic]services.Rag{
 		services.SECTORS:          sectorRag,
@@ -149,9 +181,15 @@ func main() {
 	}
 
 	// Set up core services
-	topicExtractorService, _ := services.NewTopicExtractor(llm, userContextService)
-	tagExtractorService, _ := services.NewTagExtractor(llm, dataService, userContextService)
-	chatService, _ := services.NewChatService(topicToRagMap, sessionService, topicExtractorService, tagExtractorService)
+	topicExtractorService, _ := services.NewTopicExtractor(llm, userContextService, ragResponsesRepository)
+	tagExtractorService, _ := services.NewTagExtractor(llm, dataService, userContextService, ragResponsesRepository)
+	chatService, _ := services.NewChatService(
+		topicToRagMap,
+		sessionService,
+		topicExtractorService,
+		tagExtractorService,
+		topicAndTagsRepository,
+	)
 	followUpQuestionsService, _ := services.NewFollowUpQuestionsService(sessionService, followUpQuestionsRag)
 	faqService, _ := services.NewFaqService(conf.FaqLimit)
 	tickerService, _ := services.NewTickerService(dataService)

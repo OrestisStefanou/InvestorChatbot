@@ -7,12 +7,21 @@ import (
 )
 
 type EducationRag struct {
-	llm                Llm
+	BaseRag
 	userContextService UserContextDataService
 }
 
-func NewEducationRag(llm Llm, userContextService UserContextDataService) (*EducationRag, error) {
-	return &EducationRag{llm: llm, userContextService: userContextService}, nil
+func NewEducationRag(
+	llm Llm,
+	userContextService UserContextDataService,
+	responsesStore RagResponsesRepository,
+) (*EducationRag, error) {
+	rag := EducationRag{userContextService: userContextService}
+	rag.llm = llm
+	rag.topic = EDUCATION
+	rag.responseStore = responsesStore
+
+	return &rag, nil
 }
 
 func (rag EducationRag) GenerateRagResponse(conversation []Message, tags Tags, responseChannel chan<- string) error {
@@ -28,17 +37,6 @@ func (rag EducationRag) GenerateRagResponse(conversation []Message, tags Tags, r
 	}
 
 	prompt = fmt.Sprintf(prompts.EducationPrompt, userContext)
-	prompt_msg := Message{
-		Role:    System,
-		Content: prompt,
-	}
 
-	// Add the prompt as the first message in the existing conversation
-	conversation_with_prompt := append([]Message{prompt_msg}, conversation...)
-
-	if err := rag.llm.GenerateResponse(conversation_with_prompt, responseChannel); err != nil {
-		return &RagError{Message: fmt.Sprintf("GenerateResponse failed: %s", err)}
-	}
-
-	return nil
+	return rag.GenerateLllmResponse(prompt, conversation, responseChannel)
 }

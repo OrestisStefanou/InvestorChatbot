@@ -32,10 +32,12 @@ const (
 )
 
 type MongoDBConfig struct {
-	Uri                      string
-	DBName                   string
-	SessionCollectionName    string
-	UserContextColletionName string
+	Uri                        string
+	DBName                     string
+	SessionCollectionName      string
+	UserContextColletionName   string
+	TopicAndTagsCollectionName string
+	RagResponsesCollectionName string
 }
 
 type Config struct {
@@ -95,7 +97,7 @@ func LoadConfig() (Config, error) {
 		cacheTtl = 3600
 	}
 
-	dbProvider := getEnv("DATABASE_PROVIDER", "BADGER_DB")
+	dbProvider := getEnv("DATABASE_PROVIDER", "BADGER")
 
 	sessionStorage := getEnv("SESSION_STORAGE_PROVIDER", "MEMORY")
 
@@ -123,10 +125,12 @@ func LoadConfig() (Config, error) {
 		CacheTtl:             cacheTtl,
 		BadgerDbPath:         getEnv("BADGER_DB_PATH", "badger.db"),
 		MongoDBConf: MongoDBConfig{
-			Uri:                      getEnv("MONGO_DB_URI", ""),
-			DBName:                   getEnv("MONGO_DB_NAME", ""),
-			SessionCollectionName:    getEnv("MONGO_DB_SESSION_COLLECTION_NAME", "session"),
-			UserContextColletionName: getEnv("MONGO_DB_USER_CONTEXT_COLLECTION_NAME", "user_context"),
+			Uri:                        getEnv("MONGO_DB_URI", ""),
+			DBName:                     getEnv("MONGO_DB_NAME", ""),
+			SessionCollectionName:      getEnv("MONGO_DB_SESSION_COLLECTION_NAME", "session"),
+			UserContextColletionName:   getEnv("MONGO_DB_USER_CONTEXT_COLLECTION_NAME", "user_context"),
+			TopicAndTagsCollectionName: getEnv("MONGO_DB_TOPIC_AND_TAGS_COLLECTION_NAME", "topic_and_tags"),
+			RagResponsesCollectionName: getEnv("MONGO_DB_RAG_RESPONSES_COLLECTION_NAME", "rag_responses"),
 		},
 		DatabaseProvider:       DatabaseProvider(dbProvider),
 		SessionStorageProvider: SessionStorageProvider(sessionStorage),

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"investbot/pkg/domain"
 	"investbot/pkg/services/prompts"
+	"log"
 	"strings"
 )
 
@@ -18,6 +19,7 @@ type TagExtractor struct {
 	llm                Llm
 	marketDataService  MarketDataService
 	userContextService UserContextDataService
+	responseStore      RagResponsesRepository
 }
 
 type llmTagExtractorResponse struct {
@@ -33,11 +35,13 @@ func NewTagExtractor(
 	llm Llm,
 	marketDataService MarketDataService,
 	userContextService UserContextDataService,
+	responseStore RagResponsesRepository,
 ) (*TagExtractor, error) {
 	return &TagExtractor{
 		llm:                llm,
 		marketDataService:  marketDataService,
 		userContextService: userContextService,
+		responseStore:      responseStore,
 	}, nil
 }
 
@@ -192,38 +196,33 @@ func (te TagExtractor) extractMarketNewsTags(conversation []Message, userContext
 }
 
 func (te TagExtractor) getLlmResponse(prompt string) (string, error) {
-	var responseMessage string
-	chunkChannel := make(chan string)
-	errorChannel := make(chan error, 1)
-
 	promptMsg := Message{
 		Role:    User,
 		Content: prompt,
 	}
 
-	go func() {
-		if err := te.llm.GenerateResponse([]Message{promptMsg}, chunkChannel); err != nil {
-			errorChannel <- err
-		}
-		close(errorChannel)
-	}()
-
-	shouldExit := false
-	for !shouldExit {
-		select {
-		case chunk, isOpen := <-chunkChannel:
-			if !isOpen {
-				shouldExit = true
-				continue
-			}
-			responseMessage += chunk
-		case err := <-errorChannel:
-			if err != nil {
-				return "", err
-			}
-		}
+	responseMessage, err := streamChunks(
+		func(chunkChan chan<- string) error {
+			return te.llm.GenerateResponse([]Message{promptMsg}, chunkChan)
+		},
+		nil, // no need to stream out chunks
+	)
+	if err != nil {
+		return "", err
 	}
 
+	go func() {
+		storeErr := te.responseStore.StoreRagResponse(
+			"ExtractTags",
+			[]Message{promptMsg},
+			responseMessage,
+		)
+		if storeErr != nil {
+			log.Printf("Failed to store tag extraction rag response: %s", storeErr.Error())
+		}
+	}()
+
+	// Strip formatting artifacts
 	stripped := strings.TrimPrefix(responseMessage, "```json\n")
 	stripped = strings.TrimSuffix(stripped, "\n```")
 

@@ -4,16 +4,26 @@ import (
 	"fmt"
 	"investbot/pkg/domain"
 	"investbot/pkg/services/prompts"
+	"log"
 	"strings"
 )
 
 type TopicExtractor struct {
 	llm                Llm
 	userContextService UserContextDataService
+	responseStore      RagResponsesRepository
 }
 
-func NewTopicExtractor(llm Llm, userContextService UserContextDataService) (*TopicExtractor, error) {
-	return &TopicExtractor{llm: llm, userContextService: userContextService}, nil
+func NewTopicExtractor(
+	llm Llm,
+	userContextService UserContextDataService,
+	responsesStore RagResponsesRepository,
+) (*TopicExtractor, error) {
+	return &TopicExtractor{
+		llm:                llm,
+		userContextService: userContextService,
+		responseStore:      responsesStore,
+	}, nil
 }
 
 func (te TopicExtractor) ExtractTopic(conversation []Message, userID string) (Topic, error) {
@@ -25,47 +35,48 @@ func (te TopicExtractor) ExtractTopic(conversation []Message, userID string) (To
 			return "", err
 		}
 	}
-	prompt := fmt.Sprintf(prompts.TopicExtractorPrompt, userContext, conversation)
 
+	prompt := fmt.Sprintf(prompts.TopicExtractorPrompt, userContext, conversation)
 	promptMsg := Message{
 		Role:    User,
 		Content: prompt,
 	}
 
-	var responseMessage string
-	chunkChannel := make(chan string)
-	errorChannel := make(chan error, 1)
-
-	go func() {
-		if err := te.llm.GenerateResponse([]Message{promptMsg}, chunkChannel); err != nil {
-			errorChannel <- err
-		}
-		close(errorChannel)
-	}()
-
-	shouldExit := false
-	for !shouldExit {
-		select {
-		case chunk, isOpen := <-chunkChannel:
-			if !isOpen {
-				shouldExit = true
-				continue
-			}
-			responseMessage += chunk
-		case err := <-errorChannel:
-			if err != nil {
-				return "", err
-			}
-		}
+	responseMessage, err := streamChunks(
+		func(chunkChan chan<- string) error {
+			return te.llm.GenerateResponse([]Message{promptMsg}, chunkChan)
+		},
+		nil, // we don't need to stream this response
+	)
+	if err != nil {
+		return "", err
 	}
-	topics := map[Topic]any{EDUCATION: nil, SECTORS: nil, STOCK_OVERVIEW: nil, STOCK_FINANCIALS: nil, ETFS: nil, NEWS: nil}
+
+	// Validate the response against known topics
+	topics := map[Topic]any{
+		EDUCATION:        nil,
+		SECTORS:          nil,
+		STOCK_OVERVIEW:   nil,
+		STOCK_FINANCIALS: nil,
+		ETFS:             nil,
+		NEWS:             nil,
+	}
 
 	cleanedResponse := strings.ReplaceAll(responseMessage, "\n", "")
-
-	_, found := topics[Topic(cleanedResponse)]
-	if !found {
+	if _, found := topics[Topic(cleanedResponse)]; !found {
 		return "", fmt.Errorf("%s is not a valid topic", cleanedResponse)
 	}
+
+	go func() {
+		storeErr := te.responseStore.StoreRagResponse(
+			"ExtractTopic",
+			[]Message{promptMsg},
+			responseMessage,
+		)
+		if storeErr != nil {
+			log.Printf("Failed to store topic extraction rag response: %s", storeErr.Error())
+		}
+	}()
 
 	return Topic(cleanedResponse), nil
 }

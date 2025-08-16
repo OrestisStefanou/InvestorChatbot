@@ -3,6 +3,7 @@ package services
 import (
 	"fmt"
 	"investbot/pkg/errors"
+	"log"
 )
 
 type Tags struct {
@@ -28,6 +29,10 @@ type TagExtractorService interface {
 	ExtractTags(topic Topic, conversation []Message, userID string) (Tags, error)
 }
 
+type TopicAndTagsRepository interface {
+	StoreTopicAndTags(topic Topic, tags Tags, question string, sessionID string, userID string) error
+}
+
 type Topic string
 
 const (
@@ -45,6 +50,7 @@ type ChatService struct {
 	sessionService        SessionService
 	topicExtractorService TopicExtractorService
 	tagExtractorService   TagExtractorService
+	topicAndTagsRepo      TopicAndTagsRepository
 }
 
 func NewChatService(
@@ -52,12 +58,14 @@ func NewChatService(
 	sessionService SessionService,
 	topicExtractorService TopicExtractorService,
 	tagExtractorService TagExtractorService,
+	topicAndTagsRepo TopicAndTagsRepository,
 ) (*ChatService, error) {
 	return &ChatService{
 		topicToRagMap:         topicToRagMap,
 		sessionService:        sessionService,
 		topicExtractorService: topicExtractorService,
 		tagExtractorService:   tagExtractorService,
+		topicAndTagsRepo:      topicAndTagsRepo,
 	}, nil
 }
 
@@ -88,34 +96,14 @@ func (s *ChatService) GenerateResponse(
 	s.sessionService.AddMessage(sessionId, questionMessage)
 	conversation = append(conversation, questionMessage)
 
-	var responseMessage string
-	chunkChannel := make(chan string)
-	errorChannel := make(chan error, 1)
-
-	go func() {
-		if err := rag.GenerateRagResponse(conversation, tags, chunkChannel); err != nil {
-			errorChannel <- err
-		}
-		close(errorChannel)
-	}()
-
-	shouldExit := false
-	for !shouldExit {
-		select {
-		case chunk, isOpen := <-chunkChannel:
-			if !isOpen {
-				fmt.Printf("\n\nFINAL RESPONSE\n %s", responseMessage)
-				shouldExit = true
-				close(responseChannel)
-				continue
-			}
-			responseMessage += chunk
-			responseChannel <- chunk
-		case err := <-errorChannel:
-			if err != nil {
-				return err
-			}
-		}
+	responseMessage, err := streamChunks(
+		func(chunkChan chan<- string) error {
+			return rag.GenerateRagResponse(conversation, tags, chunkChan)
+		},
+		responseChannel,
+	)
+	if err != nil {
+		return err
 	}
 
 	s.sessionService.AddMessage(sessionId, Message{Role: Assistant, Content: responseMessage})
@@ -145,6 +133,20 @@ func (s *ChatService) ExtractTopicAndTags(question string, sessionId string, use
 	if err != nil {
 		return "", Tags{}, err
 	}
+
+	// start go routine to store the results
+	go func() {
+		storeErr := s.topicAndTagsRepo.StoreTopicAndTags(
+			topic,
+			tags,
+			question,
+			sessionId,
+			userID,
+		)
+		if storeErr != nil {
+			log.Printf("StoreTopicAndTags failed with err: %s", storeErr.Error())
+		}
+	}()
 
 	return topic, tags, nil
 }
