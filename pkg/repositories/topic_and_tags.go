@@ -85,6 +85,7 @@ func (r *TopicAndTagsMongoRepo) StoreTopicAndTags(
 		Question:  question,
 		SessionID: sessionID,
 		UserID:    userID,
+		CreatedAt: time.Now(),
 	}
 
 	collection := r.client.Database(r.dbName).Collection(r.collectionName)

@@ -19,7 +19,10 @@ func NewFollowUpQuestionsRag(llm Llm) (*FollowUpQuestionsRagImpl, error) {
 	return &FollowUpQuestionsRagImpl{llm: llm}, nil
 }
 
-func (rag FollowUpQuestionsRagImpl) GenerateFollowUpQuestions(conversation []Message, followUpQuestionsNum int) ([]string, error) {
+func (rag FollowUpQuestionsRagImpl) GenerateFollowUpQuestions(
+	conversation []Message,
+	followUpQuestionsNum int,
+) ([]string, error) {
 	followUpQuestions := make([]string, 0, followUpQuestionsNum)
 
 	prompt := fmt.Sprintf(prompts.FollowUpQuestionsPrompt, followUpQuestionsNum, conversation)
@@ -29,33 +32,16 @@ func (rag FollowUpQuestionsRagImpl) GenerateFollowUpQuestions(conversation []Mes
 	}
 
 	// Add the prompt as the first message in the existing conversation
-	conversation_with_prompt := append([]Message{promptMsg}, conversation...)
+	conversationWithPrompt := append([]Message{promptMsg}, conversation...)
 
-	var responseMessage string
-	chunkChannel := make(chan string)
-	errorChannel := make(chan error, 1)
-
-	go func() {
-		if err := rag.llm.GenerateResponse(conversation_with_prompt, chunkChannel); err != nil {
-			errorChannel <- err
-		}
-		close(errorChannel)
-	}()
-
-	shouldExit := false
-	for !shouldExit {
-		select {
-		case chunk, isOpen := <-chunkChannel:
-			if !isOpen {
-				shouldExit = true
-				continue
-			}
-			responseMessage += chunk
-		case err := <-errorChannel:
-			if err != nil {
-				return followUpQuestions, err
-			}
-		}
+	responseMessage, err := streamChunks(
+		func(chunkChan chan<- string) error {
+			return rag.llm.GenerateResponse(conversationWithPrompt, chunkChan)
+		},
+		nil, // no need to stream follow-up questions
+	)
+	if err != nil {
+		return followUpQuestions, err
 	}
 
 	return strings.Split(responseMessage, "\n"), nil

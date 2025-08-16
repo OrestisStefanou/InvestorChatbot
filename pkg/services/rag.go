@@ -1,9 +1,8 @@
 package services
 
-type RagResponsesStore interface {
+type RagResponsesRepository interface {
 	StoreRagResponse(
 		ragTopic Topic,
-		prompt string,
 		conversation []Message,
 		response string,
 	) error
@@ -12,7 +11,7 @@ type RagResponsesStore interface {
 type BaseRag struct {
 	topic         Topic
 	llm           Llm
-	responseStore RagResponsesStore
+	responseStore RagResponsesRepository
 }
 
 // GenerateLllmResponse streams an LLM-generated response for the given prompt and conversation.
@@ -45,38 +44,18 @@ func (r *BaseRag) GenerateLllmResponse(
 ) error {
 	conversation = append([]Message{{Content: prompt, Role: User}}, conversation...)
 
-	var responseMessage string
-	chunkChannel := make(chan string)
-	errorChannel := make(chan error, 1)
-
-	go func() {
-		if err := r.llm.GenerateResponse(conversation, chunkChannel); err != nil {
-			errorChannel <- err
-		}
-		close(errorChannel)
-	}()
-
-	shouldExit := false
-	for !shouldExit {
-		select {
-		case chunk, isOpen := <-chunkChannel:
-			if !isOpen {
-				shouldExit = true
-				close(responseChannel)
-				continue
-			}
-			responseMessage += chunk
-			responseChannel <- chunk
-		case err := <-errorChannel:
-			if err != nil {
-				return err
-			}
-		}
+	responseMessage, err := streamChunks(
+		func(chunkChan chan<- string) error {
+			return r.llm.GenerateResponse(conversation, chunkChan)
+		},
+		responseChannel,
+	)
+	if err != nil {
+		return err
 	}
 
 	return r.responseStore.StoreRagResponse(
 		r.topic,
-		prompt,
 		conversation,
 		responseMessage,
 	)
@@ -87,32 +66,21 @@ func (r *BaseRag) GenerateLllmResponse(
 //
 //  1. Creating the chunk and error channels.
 //  2. Running the provided generate() function in a goroutine.
-//  3. Forwarding each chunk to the given responseChannel.
+//  3. Forwarding each chunk to the given responseChannel (if not nil).
 //  4. Accumulating all chunks into a single final string.
 //  5. Returning the final accumulated string or an error.
 //
+// If responseChannel is nil, chunks will not be forwarded.
+//
 // Parameters:
 //   - generate: A function that accepts a `chan<- string` and sends output chunks to it.
-//     It should close the provided channel when finished. If it returns an error,
-//     the streaming process will stop and the error will be returned.
+//     It should close the provided channel when finished.
 //   - responseChannel: A channel where streamed chunks will be sent for immediate consumption.
+//     Pass nil if you don’t need streaming.
 //
 // Returns:
 //   - A string containing the concatenated result of all chunks.
 //   - An error if one occurred during generation.
-//
-// Usage example:
-//
-//	finalMessage, err := streamChunks(
-//	    func(ch chan<- string) error {
-//	        return llm.GenerateResponse(conversation, ch)
-//	    },
-//	    responseChannel,
-//	)
-//
-// Notes:
-//   - responseChannel is closed when the stream ends.
-//   - generate() is responsible for closing its own output channel.
 func streamChunks(
 	generate func(chan<- string) error,
 	responseChannel chan<- string,
@@ -135,11 +103,15 @@ func streamChunks(
 		case chunk, isOpen := <-chunkChannel:
 			if !isOpen {
 				shouldExit = true
-				close(responseChannel)
+				if responseChannel != nil {
+					close(responseChannel)
+				}
 				continue
 			}
 			responseMessage += chunk
-			responseChannel <- chunk
+			if responseChannel != nil {
+				responseChannel <- chunk
+			}
 		case err := <-errorChannel:
 			if err != nil {
 				return "", err

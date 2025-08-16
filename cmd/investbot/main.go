@@ -66,6 +66,7 @@ func main() {
 	var (
 		userContextRepository  services.UserContextRepository
 		topicAndTagsRepository services.TopicAndTagsRepository
+		ragResponsesRepository services.RagResponsesRepository
 		sessionService         services.SessionService
 		mongoClient            *mongo.Client
 	)
@@ -102,6 +103,11 @@ func main() {
 			log.Fatal(err)
 		}
 
+		ragResponsesRepository, err = repositories.NewRagResponsesBadgerRepo(db)
+		if err != nil {
+			log.Fatal(err)
+		}
+
 	case config.MONGO_DB:
 		userContextRepository, err = repositories.NewUserContextMongoRepo(
 			mongoClient,
@@ -116,6 +122,15 @@ func main() {
 			mongoClient,
 			conf.MongoDBConf.DBName,
 			conf.MongoDBConf.TopicAndTagsCollectionName,
+		)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		ragResponsesRepository, err = repositories.NewRagResponsesMongoRepo(
+			mongoClient,
+			conf.MongoDBConf.DBName,
+			conf.MongoDBConf.RagResponsesCollectionName,
 		)
 		if err != nil {
 			log.Fatal(err)
@@ -146,13 +161,13 @@ func main() {
 	userContextService, _ := services.NewUserContextService(userContextRepository)
 
 	// Set up rags
-	sectorRag, _ := services.NewSectorRag(llm, dataService, userContextService)
-	educationRag, _ := services.NewEducationRag(llm, userContextService)
+	sectorRag, _ := services.NewSectorRag(llm, dataService, userContextService, ragResponsesRepository)
+	educationRag, _ := services.NewEducationRag(llm, userContextService, ragResponsesRepository)
 	industryRag, _ := services.NewIndustryRag(llm, dataService)
-	stockOverviewRag, _ := services.NewStockOverviewRag(llm, dataService, userContextService)
-	stockFinancialsRag, _ := services.NewStockFinancialsRag(llm, dataService, userContextService)
-	etfRag, _ := services.NewEtfRag(llm, dataService, userContextService)
-	newsRag, _ := services.NewMarketNewsRag(llm, dataService, userContextService)
+	stockOverviewRag, _ := services.NewStockOverviewRag(llm, dataService, userContextService, ragResponsesRepository)
+	stockFinancialsRag, _ := services.NewStockFinancialsRag(llm, dataService, userContextService, ragResponsesRepository)
+	etfRag, _ := services.NewEtfRag(llm, dataService, userContextService, ragResponsesRepository)
+	newsRag, _ := services.NewMarketNewsRag(llm, dataService, userContextService, ragResponsesRepository)
 	followUpQuestionsRag, _ := services.NewFollowUpQuestionsRag(llm)
 
 	topicToRagMap := map[services.Topic]services.Rag{

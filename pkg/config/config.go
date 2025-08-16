@@ -37,6 +37,7 @@ type MongoDBConfig struct {
 	SessionCollectionName      string
 	UserContextColletionName   string
 	TopicAndTagsCollectionName string
+	RagResponsesCollectionName string
 }
 
 type Config struct {
@@ -129,6 +130,7 @@ func LoadConfig() (Config, error) {
 			SessionCollectionName:      getEnv("MONGO_DB_SESSION_COLLECTION_NAME", "session"),
 			UserContextColletionName:   getEnv("MONGO_DB_USER_CONTEXT_COLLECTION_NAME", "user_context"),
 			TopicAndTagsCollectionName: getEnv("MONGO_DB_TOPIC_AND_TAGS_COLLECTION_NAME", "topic_and_tags"),
+			RagResponsesCollectionName: getEnv("MONGO_DB_RAG_RESPONSES_COLLECTION_NAME", "rag_responses"),
 		},
 		DatabaseProvider:       DatabaseProvider(dbProvider),
 		SessionStorageProvider: SessionStorageProvider(sessionStorage),

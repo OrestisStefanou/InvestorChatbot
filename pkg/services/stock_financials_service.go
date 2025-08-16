@@ -22,8 +22,8 @@ type stockFinancialsContext struct {
 }
 
 type StockFinancialsRag struct {
+	BaseRag
 	dataService        StockFinancialsDataService
-	llm                Llm
 	userContextService UserContextDataService
 }
 
@@ -31,12 +31,17 @@ func NewStockFinancialsRag(
 	llm Llm,
 	stockFinancialsDataService StockFinancialsDataService,
 	userContextService UserContextDataService,
+	responsesStore RagResponsesRepository,
 ) (*StockFinancialsRag, error) {
-	return &StockFinancialsRag{
+	rag := StockFinancialsRag{
 		dataService:        stockFinancialsDataService,
-		llm:                llm,
 		userContextService: userContextService,
-	}, nil
+	}
+	rag.llm = llm
+	rag.topic = STOCK_FINANCIALS
+	rag.responseStore = responsesStore
+
+	return &rag, nil
 }
 
 func (rag StockFinancialsRag) createRagContext(tags Tags) (string, error) {
@@ -93,17 +98,6 @@ func (rag StockFinancialsRag) GenerateRagResponse(conversation []Message, tags T
 	}
 
 	prompt := fmt.Sprintf(prompts.StockFinancialsPrompt, ragContext, userContext)
-	prompt_msg := Message{
-		Role:    System,
-		Content: prompt,
-	}
 
-	// Add the prompt as the first message in the existing conversation
-	conversation_with_prompt := append([]Message{prompt_msg}, conversation...)
-
-	if err := rag.llm.GenerateResponse(conversation_with_prompt, responseChannel); err != nil {
-		return &RagError{Message: fmt.Sprintf("GenerateResponse failed: %s", err)}
-	}
-
-	return nil
+	return rag.GenerateLllmResponse(prompt, conversation, responseChannel)
 }

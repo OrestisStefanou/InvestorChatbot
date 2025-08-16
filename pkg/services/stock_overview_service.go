@@ -30,8 +30,8 @@ type stockOverviewContext struct {
 }
 
 type StockOverviewRag struct {
+	BaseRag
 	dataService        StockOverviewDataService
-	llm                Llm
 	userContextService UserContextDataService
 }
 
@@ -39,12 +39,17 @@ func NewStockOverviewRag(
 	llm Llm,
 	stockOverviewDataService StockOverviewDataService,
 	userContextService UserContextDataService,
+	responsesStore RagResponsesRepository,
 ) (*StockOverviewRag, error) {
-	return &StockOverviewRag{
-		llm:                llm,
+	rag := StockOverviewRag{
 		dataService:        stockOverviewDataService,
 		userContextService: userContextService,
-	}, nil
+	}
+	rag.llm = llm
+	rag.topic = STOCK_OVERVIEW
+	rag.responseStore = responsesStore
+
+	return &rag, nil
 }
 
 func (rag StockOverviewRag) createRagContext(symbols []string) (string, error) {
@@ -162,17 +167,6 @@ func (rag StockOverviewRag) GenerateRagResponse(conversation []Message, tags Tag
 	}
 
 	prompt := fmt.Sprintf(prompts.StockOverviewPrompt, ragContext, userContext)
-	prompt_msg := Message{
-		Role:    System,
-		Content: prompt,
-	}
 
-	// Add the prompt as the first message in the existing conversation
-	conversation_with_prompt := append([]Message{prompt_msg}, conversation...)
-
-	if err := rag.llm.GenerateResponse(conversation_with_prompt, responseChannel); err != nil {
-		return &RagError{Message: fmt.Sprintf("GenerateResponse failed: %s", err)}
-	}
-
-	return nil
+	return rag.GenerateLllmResponse(prompt, conversation, responseChannel)
 }

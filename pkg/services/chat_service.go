@@ -96,34 +96,14 @@ func (s *ChatService) GenerateResponse(
 	s.sessionService.AddMessage(sessionId, questionMessage)
 	conversation = append(conversation, questionMessage)
 
-	var responseMessage string
-	chunkChannel := make(chan string)
-	errorChannel := make(chan error, 1)
-
-	go func() {
-		if err := rag.GenerateRagResponse(conversation, tags, chunkChannel); err != nil {
-			errorChannel <- err
-		}
-		close(errorChannel)
-	}()
-
-	shouldExit := false
-	for !shouldExit {
-		select {
-		case chunk, isOpen := <-chunkChannel:
-			if !isOpen {
-				fmt.Printf("\n\nFINAL RESPONSE\n %s", responseMessage)
-				shouldExit = true
-				close(responseChannel)
-				continue
-			}
-			responseMessage += chunk
-			responseChannel <- chunk
-		case err := <-errorChannel:
-			if err != nil {
-				return err
-			}
-		}
+	responseMessage, err := streamChunks(
+		func(chunkChan chan<- string) error {
+			return rag.GenerateRagResponse(conversation, tags, chunkChan)
+		},
+		responseChannel,
+	)
+	if err != nil {
+		return err
 	}
 
 	s.sessionService.AddMessage(sessionId, Message{Role: Assistant, Content: responseMessage})
