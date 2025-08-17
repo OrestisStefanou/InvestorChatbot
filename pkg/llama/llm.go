@@ -49,3 +49,7 @@ func (llm LllamaLLM) GenerateResponse(conversation []services.Message, responseC
 	}
 	return nil
 }
+
+func (llm LllamaLLM) GetLlmName() string {
+	return string(llm.modelName)
+}

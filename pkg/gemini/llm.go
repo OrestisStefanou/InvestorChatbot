@@ -75,3 +75,7 @@ func (llm GeminiLLM) GenerateResponse(conversation []services.Message, responseC
 
 	return nil
 }
+
+func (llm GeminiLLM) GetLlmName() string {
+	return string(llm.config.ModelName)
+}

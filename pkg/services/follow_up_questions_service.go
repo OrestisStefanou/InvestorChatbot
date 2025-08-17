@@ -48,6 +48,7 @@ func (rag FollowUpQuestionsRagImpl) GenerateFollowUpQuestions(
 
 	go func() {
 		storeErr := rag.responseStore.StoreRagResponse(
+			rag.llm.GetLlmName(),
 			"FollowUpQuestions",
 			conversationWithPrompt,
 			responseMessage,

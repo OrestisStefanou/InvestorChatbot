@@ -2,6 +2,7 @@ package services
 
 type RagResponsesRepository interface {
 	StoreRagResponse(
+		modelName string,
 		ragTopic Topic,
 		conversation []Message,
 		response string,
@@ -55,6 +56,7 @@ func (r *BaseRag) GenerateLllmResponse(
 	}
 
 	return r.responseStore.StoreRagResponse(
+		r.llm.GetLlmName(),
 		r.topic,
 		conversation,
 		responseMessage,

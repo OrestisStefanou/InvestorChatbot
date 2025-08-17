@@ -11,6 +11,7 @@ import (
 )
 
 type ragResponseDocument struct {
+	ModelName    string
 	RagTopic     services.Topic
 	Conversation []services.Message
 	Response     string
@@ -26,11 +27,13 @@ func NewRagResponsesBadgerRepo(db *badger.DB) (*RagResponsesBadgerRepo, error) {
 }
 
 func (r *RagResponsesBadgerRepo) StoreRagResponse(
+	modelName string,
 	ragTopic services.Topic,
 	conversation []services.Message,
 	response string,
 ) error {
 	document := ragResponseDocument{
+		ModelName:    string(modelName),
 		RagTopic:     ragTopic,
 		Conversation: conversation,
 		Response:     response,
@@ -64,6 +67,7 @@ func NewRagResponsesMongoRepo(client *mongo.Client, dbName, collectionName strin
 }
 
 func (r *RagResponsesMongoRepo) StoreRagResponse(
+	modelName string,
 	ragTopic services.Topic,
 	conversation []services.Message,
 	response string,
@@ -72,6 +76,7 @@ func (r *RagResponsesMongoRepo) StoreRagResponse(
 	defer cancel()
 
 	document := ragResponseDocument{
+		ModelName:    modelName,
 		RagTopic:     ragTopic,
 		Conversation: conversation,
 		Response:     response,

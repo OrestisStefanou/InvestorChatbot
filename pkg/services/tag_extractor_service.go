@@ -213,6 +213,7 @@ func (te TagExtractor) getLlmResponse(prompt string) (string, error) {
 
 	go func() {
 		storeErr := te.responseStore.StoreRagResponse(
+			te.llm.GetLlmName(),
 			"ExtractTags",
 			[]Message{promptMsg},
 			responseMessage,
