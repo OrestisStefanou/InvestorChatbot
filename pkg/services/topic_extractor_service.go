@@ -69,6 +69,7 @@ func (te TopicExtractor) ExtractTopic(conversation []Message, userID string) (To
 
 	go func() {
 		storeErr := te.responseStore.StoreRagResponse(
+			te.llm.GetLlmName(),
 			"ExtractTopic",
 			[]Message{promptMsg},
 			responseMessage,

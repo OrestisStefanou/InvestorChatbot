@@ -62,3 +62,7 @@ func (llm OpenAiLLM) GenerateResponse(conversation []services.Message, responseC
 	}
 	return nil
 }
+
+func (llm OpenAiLLM) GetLlmName() string {
+	return string(llm.modelName)
+}

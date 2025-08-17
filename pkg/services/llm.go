@@ -15,4 +15,5 @@ type Message struct {
 
 type Llm interface {
 	GenerateResponse(conversation []Message, responseChannel chan<- string) error
+	GetLlmName() string
 }
