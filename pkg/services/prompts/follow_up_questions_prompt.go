@@ -8,10 +8,15 @@ with %d follow up questions that the user can ask given the context of the conve
 %+v
 
 ## RESPONSE FORMAT
-Your answer MUST have the following format:
-<Follow up question>
-<Follow up question>
-.
-.
-<Follow up question>
+- Your response MUST BE a json parsable string with a key named 'follow_up_questions' and value an array of strings that will contain
+the follow up questions.
+
+Example response:
+{
+	"follow_up_questions":[
+		"follow up question",
+		"follow up question",
+		"follow up question"
+	]
+}
 `

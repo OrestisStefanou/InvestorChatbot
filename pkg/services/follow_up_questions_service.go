@@ -1,6 +1,7 @@
 package services
 
 import (
+	"encoding/json"
 	"fmt"
 	"investbot/pkg/errors"
 	"investbot/pkg/services/prompts"
@@ -17,6 +18,10 @@ type FollowUpQuestionsRagImpl struct {
 	responseStore RagResponsesRepository
 }
 
+type llmFollowUpQuestionsResponse struct {
+	FollowUpQuestions []string `json:"follow_up_questions"`
+}
+
 func NewFollowUpQuestionsRag(llm Llm, responsesStore RagResponsesRepository) (*FollowUpQuestionsRagImpl, error) {
 	return &FollowUpQuestionsRagImpl{llm: llm, responseStore: responsesStore}, nil
 }
@@ -25,8 +30,6 @@ func (rag FollowUpQuestionsRagImpl) GenerateFollowUpQuestions(
 	conversation []Message,
 	followUpQuestionsNum int,
 ) ([]string, error) {
-	followUpQuestions := make([]string, 0, followUpQuestionsNum)
-
 	prompt := fmt.Sprintf(prompts.FollowUpQuestionsPrompt, followUpQuestionsNum, conversation)
 	promptMsg := Message{
 		Role:    System,
@@ -43,7 +46,7 @@ func (rag FollowUpQuestionsRagImpl) GenerateFollowUpQuestions(
 		nil, // no need to stream follow-up questions
 	)
 	if err != nil {
-		return followUpQuestions, err
+		return nil, err
 	}
 
 	go func() {
@@ -58,7 +61,17 @@ func (rag FollowUpQuestionsRagImpl) GenerateFollowUpQuestions(
 		}
 	}()
 
-	return strings.Split(responseMessage, "\n"), nil
+	// Strip formatting artifacts from the response(in case they exist)
+	strippedLlmResponse := strings.TrimPrefix(responseMessage, "```json\n")
+	strippedLlmResponse = strings.TrimSuffix(strippedLlmResponse, "\n```")
+
+	var followUpsResponse llmFollowUpQuestionsResponse
+	err = json.Unmarshal([]byte(strippedLlmResponse), &followUpsResponse)
+	if err != nil {
+		return nil, err
+	}
+
+	return followUpsResponse.FollowUpQuestions, nil
 }
 
 type FollowUpQuestionsService struct {
