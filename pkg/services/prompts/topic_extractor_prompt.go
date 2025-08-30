@@ -60,8 +60,14 @@ Some context of the user asking the question is given below. You should take thi
 # Response instructions
 - Focus on the last question of the conversation, for example if the first messages are about education but the last question is 
 about stock sectors then your response must be sectors.
-- Your response MUST BE just the topic and nothing else.
 
 # Conversation to categorize
 %+v 
+
+## RESPONSE FORMAT
+- Your response MUST BE a json parsable string with a key named 'topic' and value a string that will contain
+the topic.
+
+Example response:
+{"topic": "news"}
 `

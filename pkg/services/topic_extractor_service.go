@@ -1,6 +1,7 @@
 package services
 
 import (
+	"encoding/json"
 	"fmt"
 	"investbot/pkg/domain"
 	"investbot/pkg/services/prompts"
@@ -24,6 +25,10 @@ func NewTopicExtractor(
 		userContextService: userContextService,
 		responseStore:      responsesStore,
 	}, nil
+}
+
+type llmTopicResponse struct {
+	Topic string `json:"topic"`
 }
 
 func (te TopicExtractor) ExtractTopic(conversation []Message, userID string) (Topic, error) {
@@ -52,21 +57,6 @@ func (te TopicExtractor) ExtractTopic(conversation []Message, userID string) (To
 		return "", err
 	}
 
-	// Validate the response against known topics
-	topics := map[Topic]any{
-		EDUCATION:        nil,
-		SECTORS:          nil,
-		STOCK_OVERVIEW:   nil,
-		STOCK_FINANCIALS: nil,
-		ETFS:             nil,
-		NEWS:             nil,
-	}
-
-	cleanedResponse := strings.ReplaceAll(responseMessage, "\n", "")
-	if _, found := topics[Topic(cleanedResponse)]; !found {
-		return "", fmt.Errorf("%s is not a valid topic", cleanedResponse)
-	}
-
 	go func() {
 		storeErr := te.responseStore.StoreRagResponse(
 			te.llm.GetLlmName(),
@@ -79,5 +69,29 @@ func (te TopicExtractor) ExtractTopic(conversation []Message, userID string) (To
 		}
 	}()
 
-	return Topic(cleanedResponse), nil
+	// Validate the response against known topics
+	topics := map[Topic]any{
+		EDUCATION:        nil,
+		SECTORS:          nil,
+		STOCK_OVERVIEW:   nil,
+		STOCK_FINANCIALS: nil,
+		ETFS:             nil,
+		NEWS:             nil,
+	}
+
+	// Strip formatting artifacts from the response(in case they exist)
+	strippedLlmResponse := strings.TrimPrefix(responseMessage, "```json\n")
+	strippedLlmResponse = strings.TrimSuffix(strippedLlmResponse, "\n```")
+
+	var topicResponse llmTopicResponse
+	err = json.Unmarshal([]byte(strippedLlmResponse), &topicResponse)
+	if err != nil {
+		return "", err
+	}
+
+	if _, found := topics[Topic(topicResponse.Topic)]; !found {
+		return "", fmt.Errorf("%s is not a valid topic", topicResponse.Topic)
+	}
+
+	return Topic(topicResponse.Topic), nil
 }
