@@ -219,7 +219,7 @@ curl --location 'http://localhost:1323/chat' \
   "topic": "etfs",
   "session_id": "<session_id>",
   "topic_tags": {
-    "etf_symbol": "AAAU"
+    "etf_symbols": ["AAAU"]
   }
 }'
 ```

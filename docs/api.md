@@ -129,7 +129,7 @@ Generates a streaming chat response based on the user's question, topic, session
 | `balance_sheet`    | boolean | No       | Whether to include balance sheet context.                                |
 | `income_statement` | boolean | No       | Whether to include income statement context.                             |
 | `cash_flow`        | boolean | No       | Whether to include cash flow context.                                    |
-| `etf_symbol`       | string  | No       | ETF symbol if the question is related to an ETF.                          |
+| `etf_symbols`      | string[]| No       | List of ETF symbols.                                                     |
 | `user_id`       | string  | No       | ID of user asking the question.(look at user context section below)                          |
 
 ### Example Request Body
@@ -258,7 +258,7 @@ Returns the inferred topic and relevant financial tags extracted from the questi
 | `balance_sheet`    | boolean   | Whether the question involves balance sheet data.    |
 | `income_statement` | boolean   | Whether the question involves income statement data. |
 | `cash_flow`        | boolean   | Whether the question involves cash flow data.        |
-| `etf_symbol`       | string    | ETF symbol mentioned, if any.                        |
+| `etf_symbols`      | string\[] | List of etf symbols involved in the question         |
 | `user_id`          | string    | user_id given in the request                         |
 
 ### Example Success Response
@@ -273,7 +273,7 @@ Returns the inferred topic and relevant financial tags extracted from the questi
     "balance_sheet": false,
     "income_statement": false,
     "cash_flow": false,
-    "etf_symbol": ""
+    "etf_symbols": []
   }
 }
 ```

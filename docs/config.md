@@ -1,83 +1,102 @@
 # 🔧 App Configuration Guide
 
 This document explains how to configure and use environment-based settings for the application using the `config` package. It supports flexible setup through a `.env` file or environment variables.
+---
 
-## 🧠 Supported LLM Providers
+## Providers
 
-The app supports three large language model (LLM) providers:
+### LlmProvider
+Specifies the Large Language Model (LLM) provider.
 
-- **OpenAI**
-- **Ollama**
-- **Gemini**
+- **Type:** `string`
+- **Possible values:**
+  - `OPEN_AI`
+  - `OLLAMA`
+  - `GEMINI`
 
-The provider is selected via the `LLM_PROVIDER` environment variable.
+### DatabaseProvider
+Specifies the database provider.
+
+- **Type:** `string`
+- **Possible values:**
+  - `MONGO_DB`
+  - `BADGER`
+
+### SessionStorageProvider
+Specifies how session data is stored.
+
+- **Type:** `string`
+- **Possible values:**
+  - `MONGO_DB`
+  - `MEMORY`
 
 ---
 
-## 📄 Sample `.env` File
+## Main Config Structure
 
-```env
-# LLM Provider
-LLM_PROVIDER=OPEN_AI  # or OLLAMA or GEMINI
+### `Config` Fields
 
-# OpenAI Config
-OPEN_AI_API_KEY=your-openai-key
-OPENAI_BASE_URL=https://api.openai.com/v1
-OPEN_AI_MODEL_NAME=gpt-4o-mini
+#### OpenAI Configuration
+- `OpenAiKey` – API key for OpenAI.  
+- `OpenAiBaseUrl` – Base URL for OpenAI API. Default: `https://api.openai.com/v1`
+- `OpenAiModelName` – Model name (e.g., `gpt-4o-mini`).
 
-# Ollama Config
-OLLAMA_BASE_URL=http://localhost:11434
-OLLAMA_MODEL_NAME=llama3.2
+#### Ollama Configuration
+- `OllamaBaseUrl` – Base URL for Ollama API. Default: `http://localhost:11434`
+- `OllamaModelName` – Model name (e.g., `llama3.2`).
 
-# Gemini Config
-GEMINI_API_KEY = your-gemini-api-key
-GEMINI_MODEL_NAME = "gemini-2.0-flash"
-
-# Application Settings
-FAQ_LIMIT=5
-CONV_MSG_LIMIT=10
-BASE_LLM_TEMPERATURE=0.2
-FOLLOW_UP_QUESTIONS_NUM=5
-```
+#### Gemini Configuration
+- `GeminiKey` – API key for Gemini.
+- `GeminiModelName` – Model name (e.g., `gemini-2.0-flash`).
 
 ---
 
-## ⚙️ Environment Variables Reference
-
-| Variable Name               | Description                                                               | Type     | Default                     |
-|----------------------------|---------------------------------------------------------------------------|----------|-----------------------------|
-| `LLM_PROVIDER`             | Determines which LLM to use: `OPEN_AI` or `OLLAMA` or `GEMINI`            | `string` | `OPEN_AI`                   |
-| `OPEN_AI_API_KEY`          | API key for OpenAI                                                        | `string` | `""` (empty)                |
-| `OPENAI_BASE_URL`          | Base URL for OpenAI API                                                   | `string` | `https://api.openai.com/v1` |
-| `OPEN_AI_MODEL_NAME`       | Model name used with OpenAI                                               | `string` | `gpt-4o-mini`               |
-| `GEMINI_API_KEY`          | API key for Gemini                                                         | `string` | `""` (empty)                |
-| `GEMINI_MODEL_NAME`       | Model name used with Gemini                                                | `string` | `gemini-2.0-flash`               |
-| `OLLAMA_BASE_URL`          | Base URL for Ollama server                                                | `string` | `http://localhost:11434`    |
-| `OLLAMA_MODEL_NAME`        | Model name used with Ollama                                               | `string` | `llama3.2`                  |
-| `FAQ_LIMIT`                | Number of FAQ items returned by the FAQ endpoint                          | `int`    | `5`                         |
-| `CONV_MSG_LIMIT`           | Number of most recent conversation messages to retrieve                   | `int`    | `10`                        |
-| `BASE_LLM_TEMPERATURE`     | Temperature setting for the LLM, controls randomness                      | `float`  | `0.2`                       |
-| `FOLLOW_UP_QUESTIONS_NUM` | Number of follow-up questions to generate                                 | `int`    | `5`                         |
+### Application Configs
+- `LlmProvider` – LLM provider to use. Default: `OPEN_AI`
+- `FaqLimit` – Number of FAQs returned by endpoints. Default: `5`
+- `ConvMsgLimit` – Number of recent session messages to retrieve. Default: `10`
+- `BaseLlmTemperature` – Temperature setting for the base LLM. Default: `0.2`
+- `FollowUpQuestionsNum` – Number of follow-up questions to return. Default: `5`
+- `CacheTtl` – Cache TTL in seconds. Default: `3600`
+- `DatabaseProvider` – Database provider (`MONGO_DB` or `BADGER`).
+- `SessionStorageProvider` – Session storage provider (`MONGO_DB` or `MEMORY`).
 
 ---
 
-## 🛠 Loading Config in Code
+## MongoDB Configuration
 
-The `LoadConfig` function loads and validates all configuration values:
-
-```go
-config, err := config.LoadConfig()
-if err != nil {
-	log.Fatalf("Error loading config: %v", err)
-}
-```
-
-It automatically falls back to default values if environment variables are missing or invalid.
+### `MongoDBConfig`
+- `Uri` – MongoDB connection URI.
+- `DBName` – Database name.
+- `SessionCollectionName` – Collection for session data. Default: `session`
+- `UserContextColletionName` – Collection for user context. Default: `user_context`
+- `TopicAndTagsCollectionName` – Collection for topics and tags. Default: `topic_and_tags`
+- `RagResponsesCollectionName` – Collection for RAG responses. Default: `rag_responses`
 
 ---
 
-## 📦 Dependencies
+## Environment Variables
 
-- [github.com/joho/godotenv](https://github.com/joho/godotenv) – for loading environment variables from `.env` files.
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `OPEN_AI_API_KEY` | `""` | OpenAI API key |
+| `OPENAI_BASE_URL` | `https://api.openai.com/v1` | OpenAI API base URL |
+| `OLLAMA_BASE_URL` | `http://localhost:11434` | Ollama API base URL |
+| `GEMINI_API_KEY` | `""` | Gemini API key |
+| `FAQ_LIMIT` | `5` | FAQ results limit |
+| `CONV_MSG_LIMIT` | `10` | Conversation message limit |
+| `FOLLOW_UP_QUESTIONS_NUM` | `5` | Number of follow-up questions |
+| `CACHE_TTL` | `3600` | Cache TTL in seconds |
+| `BADGER_DB_PATH` | `badger.db` | BadgerDB file path |
+| `MONGO_DB_URI` | `""` | MongoDB connection string |
+| `MONGO_DB_NAME` | `""` | MongoDB database name |
+| `MONGO_DB_SESSION_COLLECTION_NAME` | `session` | Session collection name |
+| `MONGO_DB_USER_CONTEXT_COLLECTION_NAME` | `user_context` | User context collection name |
+| `MONGO_DB_TOPIC_AND_TAGS_COLLECTION_NAME` | `topic_and_tags` | Topic and tags collection name |
+| `MONGO_DB_RAG_RESPONSES_COLLECTION_NAME` | `rag_responses` | RAG responses collection name |
 
 ---
+
+## Loading Configuration
+The function `LoadConfig()` loads values from `.env` and applies defaults if variables are missing.
+
