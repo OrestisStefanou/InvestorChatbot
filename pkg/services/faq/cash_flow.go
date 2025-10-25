@@ -1,0 +1,25 @@
+package faq
+
+var CashFlowFaq = []string{
+	"What is the company’s overall financial health based on its cash flow?",
+	"Can you give me an overview of the cash flow?",
+	"How has the company's operating cash flow trended over the past five years?",
+	"Is the company consistently generating positive cash flow from operations?",
+	"How does net income compare to operating cash flow?",
+	"Are there significant fluctuations in cash flow from year to year?",
+	"Is free cash flow (FCF) increasing or decreasing over time?",
+	"How much of the company’s cash flow is coming from core operations versus other sources?",
+	"Are capital expenditures (CapEx) increasing, and how do they impact free cash flow?",
+	"Is the company funding investments through cash flow or external financing?",
+	"How much cash is the company generating per dollar of revenue?",
+	"Does the company rely heavily on financing activities to maintain liquidity?",
+	"Is there a trend of increasing or decreasing debt repayments?",
+	"How does the company manage its working capital (changes in receivables, payables, and inventory)?",
+	"Are there any unusual or one-time cash inflows or outflows?",
+	"Is the company consistently paying dividends, and is it sustainable based on cash flow?",
+	"Has the company been buying back shares, and how does it affect cash flow?",
+	"What percentage of operating cash flow is being reinvested into the business?",
+	"Does the company generate enough cash to cover interest and debt repayments?",
+	"Are cash reserves increasing or depleting over time?",
+	"Is the company at risk of a cash crunch based on its historical cash flow trends?",
+}

@@ -1,0 +1,25 @@
+package faq
+
+var IncomeStatementFaq = []string{
+	"What is the company’s overall financial health based on its income statement?",
+	"Can you give me an overview of the income statement?",
+	"How has the company’s revenue trended over the past five years?",
+	"Is the company’s gross profit margin increasing or decreasing over time?",
+	"How have operating expenses changed over the years?",
+	"Is the company consistently profitable, or does net income fluctuate?",
+	"What is the company’s earnings growth rate over the past five years?",
+	"Are there any significant one-time expenses or revenues affecting net income?",
+	"How do depreciation and amortization impact the company’s earnings?",
+	"Is the company’s EBITDA improving or declining?",
+	"What is the trend in operating profit (EBIT) over the years?",
+	"How have interest expenses changed, and do they indicate rising debt levels?",
+	"What percentage of revenue is being spent on research and development (if applicable)?",
+	"Are the company’s tax expenses stable, or do they fluctuate significantly?",
+	"What is the trend in net profit margin over the past five years?",
+	"How does the company’s revenue growth compare to industry benchmarks?",
+	"Is there a seasonal pattern in revenue and profitability?",
+	"Are cost of goods sold (COGS) rising at a faster rate than revenue?",
+	"What portion of revenue comes from core operations versus other sources?",
+	"Is there a steady increase in earnings per share (EPS) over time?",
+	"How does the company’s net income trend compare with cash flow from operations?",
+}
