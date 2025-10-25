@@ -1,19 +1,169 @@
-# AI Investor Assistant API
+# 💹 AI Investment Copilot API
 
-## Key Benefits
+An open-source **AI-powered investment assistant API** designed to provide intelligent, context-aware financial insights, portfolio analysis, and conversational interactions for investors and analysts.
 
-* 🚀 **Plug-and-Play AI Assistant** – No need to build AI models or pipelines; simply integrate and provide immediate value.
-* 🧠 **Personalized Investor Insights** – Responses can be tailored based on user context, such as portfolio composition, risk profile, and interests.
-* 🤖 **Advanced AI Models** – Behind the scenes, the service leverages **OpenAI** and **Google Gemini** (configurable per use case) for high-quality answers.
-* 📊 **Trusted Market Data Sources** – All responses are generated using **institutional-grade financial data** for accuracy and reliability.
-* 🔍 **Continuous Quality Evaluation** – All questions and responses are securely stored to monitor performance and improve answer quality over time.
-* 💡 **Increased User Engagement & Retention** – Real-time, interactive investment guidance keeps users engaged and returning.
-* ⏱ **Time & Cost Savings** – Avoid the cost of developing, training, and maintaining large language models and financial knowledge bases.
-* 📚 **Enhanced Support Capabilities** – AI can handle FAQs, generate follow-up questions, and guide users toward actionable insights.
+This project offers a modular backend for an **AI investment copilot** — integrating topic extraction, financial context tagging, and user personalization — built for easy use in chatbots, dashboards, or financial research tools.
 
 ---
 
-## Example End-to-End Flow
+## 🚀 Features
+
+* 🧠 **Conversational AI for finance** — powered by OpenAI, Gemini, or Ollama models.
+* 💬 **Contextual chat sessions** — persistent session tracking for ongoing conversations.
+* 📊 **Topic & tag extraction** — automatically identify topics (e.g., "stock_overview") and extract context like tickers or financial statements.
+* 👤 **User personalization** — customize responses using user profiles and portfolios.
+* 🔎 **Dynamic FAQ & sector data** — retrieve FAQs, tickers, sectors, and ETFs for market insights.
+* 🤖 **Follow-up question generation** — intelligently guide users toward deeper exploration.
+* ⚙️ **Configurable and extensible** — easily switch between LLM or database providers using environment variables.
+
+---
+
+## 🏗️ Architecture Overview
+
+The API consists of multiple endpoints handling:
+
+* **Session management**
+* **Chat completions** (streamed responses)
+* **Topic and tag extraction**
+* **User context**
+* **Follow-up question generation**
+* **FAQ and market data retrieval**
+
+Behind the scenes, topic and tag extraction is performed in **two LLM steps**:
+
+1. Detect the topic of the question.
+2. Extract relevant tags (e.g., stock symbols, sectors, etc.) based on that topic.
+
+> See [`topic_tag_extractor.md`](topic_tag_extractor.md) for implementation details.
+
+---
+
+## ⚙️ Configuration
+
+Configuration is handled via environment variables or a `.env` file.
+Key providers and settings include:
+
+### Providers
+
+| Type            | Options                       |
+| --------------- | ----------------------------- |
+| LLM Provider    | `OPEN_AI`, `OLLAMA`, `GEMINI` |
+| Database        | `MONGO_DB`, `BADGER`          |
+| Session Storage | `MONGO_DB`, `MEMORY`          |
+
+### Example `.env`
+
+```env
+LlmProvider=OPEN_AI
+OPEN_AI_API_KEY=your_openai_key_here
+DatabaseProvider=MONGO_DB
+MONGO_DB_URI=mongodb://localhost:27017
+MONGO_DB_NAME=investment_copilot
+FAQ_LIMIT=5
+CONV_MSG_LIMIT=10
+FOLLOW_UP_QUESTIONS_NUM=5
+CACHE_TTL=3600
+```
+
+> For a full list of configuration variables, see [`config.md`](docs/config.md).
+
+---
+
+## 🧩 API Overview
+
+### 🔹 **Session Management**
+
+* `POST /session` – Create a new session.
+* `GET /session/:session_id` – Retrieve conversation history.
+
+### 🔹 **Chat & AI Responses**
+
+* `POST /chat` – Generate streamed chat responses.
+* `POST /chat/extract_topic_and_tags` – Extract the topic and financial tags from a question.
+
+### 🔹 **User Context**
+
+* `POST /user_context` – Create a personalized user profile and portfolio.
+* `PUT /user_context` – Update user context.
+* `GET /user_context/:user_id` – Retrieve existing user context.
+
+### 🔹 **Follow-Up Questions**
+
+* `POST /follow_up_questions` – Generate next-step questions to continue engagement.
+
+### 🔹 **Market Data & FAQs**
+
+* `GET /faq` – Retrieve FAQs for a specific topic.
+* `GET /topics` – List all supported FAQ topics.
+* `GET /tickers` – Search and list stock tickers.
+* `GET /sectors` – Retrieve sector-level data.
+* `GET /sectors/stocks/:sector` – Get all stocks in a specific sector.
+* `GET /etfs` – Retrieve a list of ETFs.
+
+> Detailed request and response formats are available in [`api.md`](docs/api.md).
+
+---
+
+## 🧠 Topic & Tag Extraction
+
+Topic and tag extraction is handled in **two steps**:
+
+1. **Topic Extraction** — Identify the main subject of the user’s query.
+2. **Tag Extraction** — Extract related financial entities (e.g., `stock_symbols`, `sector_name`, etc.) based on topic-specific prompts.
+
+### Advantages
+
+* Modular, reusable prompts for each topic.
+* Improved LLM accuracy and focus per task.
+
+### Future Improvements
+
+* Use embeddings and vector similarity to limit symbol search space for improved efficiency.
+
+For more, see [`topic_tag_extractor.md`](dosc/topic_tag_extractor.md).
+
+---
+
+## 🧰 Installation & Setup
+
+### Prerequisites
+
+* Go 1.21+
+* MongoDB (if using `MONGO_DB`)
+* Python (for optional Streamlit client)
+
+### Install Dependencies
+
+```bash
+go mod tidy
+```
+
+### Run the API Server
+
+```bash
+make run_investbot
+```
+
+Server will start at:
+
+```
+http://localhost:1323
+```
+
+---
+
+## 💻 Example Client (Optional)
+
+A minimal Streamlit client is available for testing:
+
+```bash
+pip install streamlit requests
+streamlit run client.py
+```
+
+---
+
+## 🧪 Example Use Flow
 
 Below is a quick way to test the API using simple HTTP requests. You can use **curl**, **Postman**, or any HTTP client.
 
@@ -120,18 +270,25 @@ Content-Type: application/json
   ]
 }
 ```
+---
+
+## 🛡️ License
+
+This project is open source and distributed under the **MIT License**.
+Feel free to fork, contribute, and build your own investment copilots.
 
 ---
 
-## Config settings
-[Runtime config settings](docs/config.md)
+## 🤝 Contributing
 
-## Api usage examples
-[API usage examples](docs/api_request_examples.md)
+Contributions are welcome!
+If you’d like to improve prompts, extend APIs, or optimize topic extraction:
 
-## Complete api reference
-[API reference](docs/api.md)
+1. Fork the repo
+2. Create a feature branch
+3. Submit a pull request
 
+---
 
 ## 📞 Contact
 For issues, reach out via GitHub Issues or email: [stefanouorestis@gmail.com](mailto:stefanouorestis@gmail.com)
