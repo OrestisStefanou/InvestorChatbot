@@ -272,6 +272,39 @@ Content-Type: application/json
 ```
 ---
 
+## How to test it with simple Streamlit ui app
+
+### ⚙️ Installation
+**Install dependencies**
+
+   ```bash
+   pip install streamlit requests
+   ```
+
+---
+
+### ▶️ Run the App
+
+1. Make sure your backend API is running at:
+
+   ```
+   http://localhost:1323
+   ```
+
+2. Start the Streamlit app:
+
+   ```bash
+   streamlit run client.py
+   ```
+
+3. Open the link shown in your terminal (usually `http://localhost:8501`) to use the chatbot.
+4. For personalised responses edit the [`client.py`](ui/client.py) file and update the USER_ID global variable with the id of your user.
+---
+
+## Next steps
+1. Add support for crypto
+2. Create an mcp server to expose the tools that the llms are using in the background.
+
 ## 🛡️ License
 
 This project is open source and distributed under the **MIT License**.
