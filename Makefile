@@ -7,6 +7,12 @@ run_investbot:
 build_investbot:
 	go build cmd/investbot/main.go
 
+run_mcp_server:
+	go run ./cmd/mcp_server
+
+build_mcp_server:
+	go build cmd/mcp_server/main.go
+
 install:
 	go mod tidy
 	go mod download

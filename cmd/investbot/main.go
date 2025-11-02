@@ -3,9 +3,9 @@ package main
 import (
 	"context"
 	"fmt"
+	restHandlers "investbot/pkg/api/rest/handlers"
 	"investbot/pkg/config"
 	"investbot/pkg/gemini"
-	"investbot/pkg/handlers"
 	"investbot/pkg/llama"
 	"investbot/pkg/marketDataScraper"
 	"investbot/pkg/openAI"
@@ -196,17 +196,17 @@ func main() {
 	etfService, _ := services.NewEtfService(dataService)
 	superInvestorService, _ := services.NewSuperInvestorService(dataService)
 
-	// Set up api handlers
-	chatHandler, _ := handlers.NewChatHandler(chatService)
-	sessionHandler, _ := handlers.NewSessionHandler(sessionService)
-	followUpQuestionsHandler, _ := handlers.NewFollowUpQuestionsHandler(followUpQuestionsService, conf.FollowUpQuestionsNum)
-	faqHandler, _ := handlers.NewFaqHandler(faqService)
-	tickerHandler, _ := handlers.NewTickerHandler(tickerService)
-	etfHandler, _ := handlers.NewEtfHandler(etfService)
-	superInvestorHandler, _ := handlers.NewSuperInvestorHandler(superInvestorService)
-	sectorHandler, _ := handlers.NewSectorHandler(dataService)
-	topicHandler, _ := handlers.NewTopicHandler()
-	userContextHandler, _ := handlers.NewUserContextHandler(userContextService)
+	// Set up rest api handlers
+	chatHandler, _ := restHandlers.NewChatHandler(chatService)
+	sessionHandler, _ := restHandlers.NewSessionHandler(sessionService)
+	followUpQuestionsHandler, _ := restHandlers.NewFollowUpQuestionsHandler(followUpQuestionsService, conf.FollowUpQuestionsNum)
+	faqHandler, _ := restHandlers.NewFaqHandler(faqService)
+	tickerHandler, _ := restHandlers.NewTickerHandler(tickerService)
+	etfHandler, _ := restHandlers.NewEtfHandler(etfService)
+	superInvestorHandler, _ := restHandlers.NewSuperInvestorHandler(superInvestorService)
+	sectorHandler, _ := restHandlers.NewSectorHandler(dataService)
+	topicHandler, _ := restHandlers.NewTopicHandler()
+	userContextHandler, _ := restHandlers.NewUserContextHandler(userContextService)
 
 	// Set up api routes
 	e.POST("/chat", chatHandler.ChatCompletion)
