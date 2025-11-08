@@ -142,3 +142,7 @@ func (s EtfService) GetEtfs(filters EtfFilterOptions) ([]domain.Etf, error) {
 
 	return etfs, nil
 }
+
+func (s EtfService) GetEtf(etfSymbol string) (domain.EtfOverview, error) {
+	return s.dataService.GetEtfOverview(etfSymbol)
+}
