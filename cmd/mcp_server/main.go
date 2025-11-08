@@ -37,11 +37,14 @@ func main() {
 	// Set up services
 	tickerService, _ := services.NewTickerService(dataService)
 	etfService, _ := services.NewEtfService(dataService)
+	superInvestorService, _ := services.NewSuperInvestorService(dataService)
 
 	// Setup tools
 	searchStocksTool, _ := tools.NewStockSearchTool(tickerService)
 	searchEtfsTool, _ := tools.NewSearchEtfTool(etfService)
 	getEtfTool, _ := tools.NewGetEtfTool(etfService)
+	getSuperInvestorsTool, _ := tools.NewGetSuperInvestorsTool(superInvestorService)
+	getSuperInvestorPortfolioTool, _ := tools.NewGetSuperInvestorPortfolioTool(superInvestorService)
 
 	// Add tools
 	mcpServer.AddTool(
@@ -57,6 +60,16 @@ func main() {
 	mcpServer.AddTool(
 		getEtfTool.GetTool(),
 		mcp.NewStructuredToolHandler(getEtfTool.HandleGetEtf),
+	)
+
+	mcpServer.AddTool(
+		getSuperInvestorsTool.GetTool(),
+		mcp.NewStructuredToolHandler(getSuperInvestorsTool.HandleGetSuperInvestors),
+	)
+
+	mcpServer.AddTool(
+		getSuperInvestorPortfolioTool.GetTool(),
+		mcp.NewStructuredToolHandler(getSuperInvestorPortfolioTool.HandleGetSuperInvestorPortfolio),
 	)
 
 	// Start the server
