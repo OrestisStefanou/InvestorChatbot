@@ -44,6 +44,7 @@ func main() {
 	searchEtfsTool, _ := tools.NewSearchEtfTool(etfService)
 	getEtfTool, _ := tools.NewGetEtfTool(etfService)
 	getSuperInvestorsTool, _ := tools.NewGetSuperInvestorsTool(superInvestorService)
+	getSuperInvestorPortfolioTool, _ := tools.NewGetSuperInvestorPortfolioTool(superInvestorService)
 
 	// Add tools
 	mcpServer.AddTool(
@@ -64,6 +65,11 @@ func main() {
 	mcpServer.AddTool(
 		getSuperInvestorsTool.GetTool(),
 		mcp.NewStructuredToolHandler(getSuperInvestorsTool.HandleGetSuperInvestors),
+	)
+
+	mcpServer.AddTool(
+		getSuperInvestorPortfolioTool.GetTool(),
+		mcp.NewStructuredToolHandler(getSuperInvestorPortfolioTool.HandleGetSuperInvestorPortfolio),
 	)
 
 	// Start the server
