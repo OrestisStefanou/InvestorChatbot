@@ -46,6 +46,8 @@ func main() {
 	getSuperInvestorsTool, _ := tools.NewGetSuperInvestorsTool(superInvestorService)
 	getSuperInvestorPortfolioTool, _ := tools.NewGetSuperInvestorPortfolioTool(superInvestorService)
 	getMarketNewsTool, _ := tools.NewGetMarketNewsTool(dataService)
+	getSectorsTool, _ := tools.NewGetSectorsTool(dataService)
+	getSectorStocksTool, _ := tools.NewGetSectorStocksTool(dataService)
 
 	// Add tools
 	mcpServer.AddTool(
@@ -76,6 +78,16 @@ func main() {
 	mcpServer.AddTool(
 		getMarketNewsTool.GetTool(),
 		mcp.NewStructuredToolHandler(getMarketNewsTool.HandleGetNews),
+	)
+
+	mcpServer.AddTool(
+		getSectorsTool.GetTool(),
+		mcp.NewStructuredToolHandler(getSectorsTool.HandleGetSectors),
+	)
+
+	mcpServer.AddTool(
+		getSectorStocksTool.GetTool(),
+		mcp.NewStructuredToolHandler(getSectorStocksTool.HandleGetSectorStocks),
 	)
 
 	// Start the server
