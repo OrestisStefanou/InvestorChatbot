@@ -33,7 +33,7 @@ func scrapeSectorStocks(sector string) ([]domain.SectorStock, error) {
 	}
 
 	// Access the second element in "nodes" which contains the data we are interested in
-	nodeData, ok := nodes[1].(map[string]interface{})
+	nodeData, ok := nodes[2].(map[string]interface{})
 	if !ok {
 		return []domain.SectorStock{}, fmt.Errorf("unexpected structure in 'nodes[1]'")
 	}

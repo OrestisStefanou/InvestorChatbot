@@ -24,9 +24,6 @@ type SectorStockSchema struct {
 	MarketCap   float32 `json:"market_cap" jsonschema_description:"Market cap of the stock"`
 }
 
-// TODO:
-//  Add a tool to return the stocks of a sector
-
 type SectorsService interface {
 	GetSectorStocks(sector string) ([]domain.SectorStock, error)
 	GetSectors() ([]domain.Sector, error)
@@ -79,5 +76,56 @@ func (t *GetSectorsTool) GetTool() mcp.Tool {
 		mcp.WithDescription("Get all stock sectors"),
 		mcp.WithInputSchema[GetSectorsRequest](),
 		mcp.WithOutputSchema[GetSectorsResponse](),
+	)
+}
+
+type GetSectorStocksRequest struct {
+	SectorUrlName string `json:"url_name" jsonschema_description:"The url name of the sector to get the stocks for"`
+	Limit         int    `json:"limit,omitempty" jsonschema_description:"Maximum results" jsonschema:"minimum=1,default=100"`
+}
+
+type GetSectorStocksResponse struct {
+	SectorStocks []SectorStockSchema `json:"sector_stocks" jsonschema_description:"The stocks of the sector"`
+}
+
+type GetSectorStocksTool struct {
+	sectorsService SectorsService
+}
+
+func NewGetSectorStocksTool(sectorsService SectorsService) (*GetSectorStocksTool, error) {
+	return &GetSectorStocksTool{sectorsService: sectorsService}, nil
+}
+
+func (t *GetSectorStocksTool) HandleGetSectorStocks(ctx context.Context, req mcp.CallToolRequest, args GetSectorStocksRequest) (GetSectorStocksResponse, error) {
+	if args.Limit == 0 {
+		args.Limit = 100
+	}
+
+	sectorStocks, err := t.sectorsService.GetSectorStocks(args.SectorUrlName)
+	if err != nil {
+		return GetSectorStocksResponse{}, err
+	}
+
+	response := GetSectorStocksResponse{SectorStocks: make([]SectorStockSchema, 0, len(sectorStocks))}
+
+	for i, sectorStock := range sectorStocks {
+		if i > args.Limit {
+			break
+		}
+		response.SectorStocks = append(response.SectorStocks, SectorStockSchema{
+			Symbol:      sectorStock.Symbol,
+			CompanyName: sectorStock.CompanyName,
+			MarketCap:   sectorStock.MarketCap,
+		})
+	}
+
+	return response, nil
+}
+
+func (t *GetSectorStocksTool) GetTool() mcp.Tool {
+	return mcp.NewTool("getSectorStocks",
+		mcp.WithDescription("Get the stocks of a sector"),
+		mcp.WithInputSchema[GetSectorStocksRequest](),
+		mcp.WithOutputSchema[GetSectorStocksResponse](),
 	)
 }
