@@ -48,6 +48,7 @@ func main() {
 	getMarketNewsTool, _ := tools.NewGetMarketNewsTool(dataService)
 	getSectorsTool, _ := tools.NewGetSectorsTool(dataService)
 	getSectorStocksTool, _ := tools.NewGetSectorStocksTool(dataService)
+	getStockOverviewTool, _ := tools.NewGetStockOverviewTool(dataService)
 
 	// Add tools
 	mcpServer.AddTool(
@@ -88,6 +89,11 @@ func main() {
 	mcpServer.AddTool(
 		getSectorStocksTool.GetTool(),
 		mcp.NewStructuredToolHandler(getSectorStocksTool.HandleGetSectorStocks),
+	)
+
+	mcpServer.AddTool(
+		getStockOverviewTool.GetTool(),
+		mcp.NewStructuredToolHandler(getStockOverviewTool.HandleGetStockOverview),
 	)
 
 	// Start the server

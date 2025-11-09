@@ -2,7 +2,10 @@ package tools
 
 import (
 	"context"
+	"fmt"
 	"investbot/pkg/domain"
+	"sync"
+	"time"
 
 	"github.com/mark3labs/mcp-go/mcp"
 )
@@ -91,6 +94,7 @@ type PriceSchema struct {
 	ClosePrice float64 `json:"close_price" jsonschema_description:"Closing price"`
 }
 
+// TODO: REMOVE PRICES FROM HERE TO REDUCE CONTEXT SIZE?
 type HistoricalPricesSchema struct {
 	Period           string        `json:"period" jsonschema_description:"Time period (1d, 5d, 1m, 6m, 1y, 5y)"`
 	Prices           []PriceSchema `json:"prices" jsonschema_description:"List of historical prices"`
@@ -117,9 +121,192 @@ func NewGetStockOverviewTool(stockOverviewService StockOverviewService) (*GetSto
 }
 
 func (t *GetStockOverviewTool) HandleGetStockOverview(ctx context.Context, req mcp.CallToolRequest, args GetStockOverviewRequest) (GetStockOverviewResponse, error) {
-	// TODO: For the forecast use only the last 2 entries of the response
-	// For the financila ratios keep only the first 10
-	return GetStockOverviewResponse{}, nil
+	if args.StockSymbol == "" {
+		return GetStockOverviewResponse{}, fmt.Errorf("stock_symbol is required")
+	}
+
+	stockSymbol := args.StockSymbol
+	var wg sync.WaitGroup
+	var mu sync.Mutex
+	var fetchErr error
+
+	response := GetStockOverviewResponse{
+		Symbol:                stockSymbol,
+		CurrentDate:           time.Now().Format("2006-01-02"),
+		StockFinancialRatios:  make([]FinancialRatiosSchema, 0),
+		HistoricalPerformance: make([]HistoricalPricesSchema, 0),
+	}
+
+	wg.Add(8) // 3 main + 5 historical
+
+	// Fetch stock profile
+	go func() {
+		defer wg.Done()
+		stockProfile, err := t.stockOverviewService.GetStockProfile(stockSymbol)
+		if err != nil {
+			mu.Lock()
+			fetchErr = fmt.Errorf("GetStockProfile failed: %w", err)
+			mu.Unlock()
+			return
+		}
+		mu.Lock()
+		response.StockProfile = StockProfileSchema{
+			Name:        stockProfile.Name,
+			Description: stockProfile.Description,
+			Country:     stockProfile.Country,
+			Founded:     stockProfile.Founded,
+			IpoDate:     stockProfile.IpoDate,
+			Industry:    stockProfile.Industry,
+			Sector:      stockProfile.Sector,
+			Ceo:         stockProfile.Ceo,
+		}
+		mu.Unlock()
+	}()
+
+	// Fetch financial ratios
+	go func() {
+		defer wg.Done()
+		financialRatios, err := t.stockOverviewService.GetFinancialRatios(stockSymbol)
+		if err != nil {
+			mu.Lock()
+			fetchErr = fmt.Errorf("GetFinancialRatios failed: %w", err)
+			mu.Unlock()
+			return
+		}
+		mu.Lock()
+		// Keep only the first 10 financial ratios
+		maxRatios := 10
+		if len(financialRatios) < maxRatios {
+			maxRatios = len(financialRatios)
+		}
+		ratiosSchema := make([]FinancialRatiosSchema, 0, maxRatios)
+		for i := 0; i < maxRatios; i++ {
+			ratio := financialRatios[i]
+			ratiosSchema = append(ratiosSchema, FinancialRatiosSchema{
+				Datekey:           ratio.Datekey,
+				FiscalYear:        ratio.FiscalYear,
+				FiscalQuarter:     ratio.FiscalQuarter,
+				Marketcap:         ratio.Marketcap,
+				MarketCapGrowth:   ratio.MarketCapGrowth,
+				Ev:                ratio.Ev,
+				LastCloseRatios:   ratio.LastCloseRatios,
+				Pe:                ratio.Pe,
+				Ps:                ratio.Ps,
+				Pb:                ratio.Pb,
+				Pfcf:              ratio.Pfcf,
+				Pocf:              ratio.Pocf,
+				EvRevenue:         ratio.EvRevenue,
+				EvEbitda:          ratio.EvEbitda,
+				EvEbit:            ratio.EvEbit,
+				EvFcf:             ratio.EvFcf,
+				DebtEquity:        ratio.DebtEquity,
+				DebtEbitda:        ratio.DebtEbitda,
+				DebtFcf:           ratio.DebtFcf,
+				AssetTurnover:     ratio.AssetTurnover,
+				InventoryTurnover: ratio.InventoryTurnover,
+				QuickRatio:        ratio.QuickRatio,
+				CurrentRatio:      ratio.CurrentRatio,
+				Roe:               ratio.Roe,
+				Roa:               ratio.Roa,
+				Roic:              ratio.Roic,
+				EarningsYield:     ratio.EarningsYield,
+				FcfYield:          ratio.FcfYield,
+				DividendYield:     ratio.DividendYield,
+				PayoutRatio:       ratio.PayoutRatio,
+				BuybackYield:      ratio.BuybackYield,
+				TotalReturn:       ratio.TotalReturn,
+			})
+		}
+		response.StockFinancialRatios = ratiosSchema
+		mu.Unlock()
+	}()
+
+	// Fetch forecast
+	go func() {
+		defer wg.Done()
+		stockForecast, err := t.stockOverviewService.GetStockForecast(stockSymbol)
+		if err != nil {
+			mu.Lock()
+			fetchErr = fmt.Errorf("GetStockForecast failed: %w", err)
+			mu.Unlock()
+			return
+		}
+		mu.Lock()
+		// Use only the last 2 entries of the forecast estimations
+		estimations := stockForecast.Estimations
+		maxEstimations := 2
+		startIdx := 0
+		if len(estimations) > maxEstimations {
+			startIdx = len(estimations) - maxEstimations
+		}
+		estimationsSchema := make([]StockEstimationSchema, 0, maxEstimations)
+		for i := startIdx; i < len(estimations); i++ {
+			est := estimations[i]
+			estimationsSchema = append(estimationsSchema, StockEstimationSchema{
+				Date:          est.Date,
+				Eps:           est.Eps,
+				EpsGrowth:     est.EpsGrowth,
+				FiscalQuarter: est.FiscalQuarter,
+				FiscalYear:    est.FiscalYear,
+				Revenue:       est.Revenue,
+				RevenueGrowth: est.RevenueGrowth,
+			})
+		}
+		response.StockForecast = StockForecastSchema{
+			Estimations: estimationsSchema,
+			TargetPrice: StockTargetPrcSchema{
+				Average: stockForecast.TargetPrice.Average,
+				High:    stockForecast.TargetPrice.High,
+				Low:     stockForecast.TargetPrice.Low,
+				Median:  stockForecast.TargetPrice.Median,
+			},
+		}
+		mu.Unlock()
+	}()
+
+	// Fetch historical performance for multiple periods
+	periods := []domain.Period{domain.Period5D, domain.Period1M, domain.Period6M, domain.Period1Y, domain.Period5Y}
+	performanceList := make([]HistoricalPricesSchema, 5)
+
+	for i, period := range periods {
+		index, performancePeriod := i, period // capture loop variables for goroutines
+		go func() {
+			defer wg.Done()
+			histPrices, err := t.stockOverviewService.GetHistoricalPrices(stockSymbol, domain.Stock, performancePeriod)
+			if err != nil {
+				mu.Lock()
+				fetchErr = fmt.Errorf("GetHistoricalPrices for %s failed: %w", period, err)
+				mu.Unlock()
+				return
+			}
+			// Convert prices to schema format
+			pricesSchema := make([]PriceSchema, 0, len(histPrices.Prices))
+			for _, price := range histPrices.Prices {
+				pricesSchema = append(pricesSchema, PriceSchema{
+					Date:       price.Date.Format("2006-01-02"),
+					ClosePrice: price.ClosePrice,
+				})
+			}
+			mu.Lock()
+			performanceList[index] = HistoricalPricesSchema{
+				Period:           string(histPrices.Period),
+				Prices:           pricesSchema,
+				PercentageChange: histPrices.PercentageChange,
+			}
+			mu.Unlock()
+		}()
+	}
+
+	wg.Wait()
+
+	// Check if any fetch failed
+	if fetchErr != nil {
+		return GetStockOverviewResponse{}, fetchErr
+	}
+
+	response.HistoricalPerformance = performanceList
+
+	return response, nil
 }
 
 func (t *GetStockOverviewTool) GetTool() mcp.Tool {
