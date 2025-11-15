@@ -61,7 +61,7 @@ type FinancialRatiosSchema struct {
 	Marketcap         float64 `json:"marketcap" jsonschema_description:"Market capitalization (zero value means not known)"`
 	MarketCapGrowth   float64 `json:"market_cap_growth" jsonschema_description:"Market cap growth percentage (zero value means not known)"`
 	Ev                float64 `json:"ev" jsonschema_description:"Enterprise value (zero value means not known)"`
-	LastCloseRatios   float64 `json:"last_close_ratios" jsonschema_description:"Last close price ratios (zero value means not known)"`
+	LastClosePrice    float64 `json:"last_close_price" jsonschema_description:"Last close price (zero value means not known)"`
 	Pe                float64 `json:"pe" jsonschema_description:"Price-to-earnings ratio (zero value means not known)"`
 	Ps                float64 `json:"ps" jsonschema_description:"Price-to-sales ratio (zero value means not known)"`
 	Pb                float64 `json:"pb" jsonschema_description:"Price-to-book ratio (zero value means not known)"`
@@ -94,20 +94,18 @@ type PriceSchema struct {
 	ClosePrice float64 `json:"close_price" jsonschema_description:"Closing price"`
 }
 
-// TODO: REMOVE PRICES FROM HERE TO REDUCE CONTEXT SIZE?
-type HistoricalPricesSchema struct {
-	Period           string        `json:"period" jsonschema_description:"Time period (1d, 5d, 1m, 6m, 1y, 5y)"`
-	Prices           []PriceSchema `json:"prices" jsonschema_description:"List of historical prices"`
-	PercentageChange float64       `json:"percentage_change" jsonschema_description:"Percentage change over the period"`
+type HistoricalPerformanceSchema struct {
+	Period           string  `json:"period" jsonschema_description:"Time period (1d, 5d, 1m, 6m, 1y, 5y)"`
+	PercentageChange float64 `json:"percentage_change" jsonschema_description:"Percentage change over the period"`
 }
 
 type GetStockOverviewResponse struct {
-	CurrentDate           string
-	Symbol                string
-	StockProfile          StockProfileSchema
-	StockFinancialRatios  []FinancialRatiosSchema
-	StockForecast         StockForecastSchema
-	HistoricalPerformance []HistoricalPricesSchema
+	CurrentDate           string                        `json:"current_date"`
+	Symbol                string                        `json:"symbol" jsonschema_description:"The symbol of the stock"`
+	StockProfile          StockProfileSchema            `json:"stock_profile" jsonschema_description:"Some very high level information of the stock company"`
+	StockFinancialRatios  []FinancialRatiosSchema       `json:"stock_financial_ratios" jsonschema_description:"The last quarterly financial ratios of the stock"`
+	StockForecast         StockForecastSchema           `json:"stock_forecast" jsonschema_description:"Financial forecast of the stock provided by analysts"`
+	HistoricalPerformance []HistoricalPerformanceSchema `json:"stock_historical_performance" jsonschema_description:"Historical price performance of the stock"`
 }
 
 type GetStockOverviewTool struct {
@@ -134,7 +132,7 @@ func (t *GetStockOverviewTool) HandleGetStockOverview(ctx context.Context, req m
 		Symbol:                stockSymbol,
 		CurrentDate:           time.Now().Format("2006-01-02"),
 		StockFinancialRatios:  make([]FinancialRatiosSchema, 0),
-		HistoricalPerformance: make([]HistoricalPricesSchema, 0),
+		HistoricalPerformance: make([]HistoricalPerformanceSchema, 0),
 	}
 
 	wg.Add(8) // 3 main + 5 historical
@@ -189,7 +187,7 @@ func (t *GetStockOverviewTool) HandleGetStockOverview(ctx context.Context, req m
 				Marketcap:         ratio.Marketcap,
 				MarketCapGrowth:   ratio.MarketCapGrowth,
 				Ev:                ratio.Ev,
-				LastCloseRatios:   ratio.LastCloseRatios,
+				LastClosePrice:    ratio.LastCloseRatios,
 				Pe:                ratio.Pe,
 				Ps:                ratio.Ps,
 				Pb:                ratio.Pb,
@@ -266,7 +264,7 @@ func (t *GetStockOverviewTool) HandleGetStockOverview(ctx context.Context, req m
 
 	// Fetch historical performance for multiple periods
 	periods := []domain.Period{domain.Period5D, domain.Period1M, domain.Period6M, domain.Period1Y, domain.Period5Y}
-	performanceList := make([]HistoricalPricesSchema, 5)
+	performanceList := make([]HistoricalPerformanceSchema, 5)
 
 	for i, period := range periods {
 		index, performancePeriod := i, period // capture loop variables for goroutines
@@ -279,18 +277,9 @@ func (t *GetStockOverviewTool) HandleGetStockOverview(ctx context.Context, req m
 				mu.Unlock()
 				return
 			}
-			// Convert prices to schema format
-			pricesSchema := make([]PriceSchema, 0, len(histPrices.Prices))
-			for _, price := range histPrices.Prices {
-				pricesSchema = append(pricesSchema, PriceSchema{
-					Date:       price.Date.Format("2006-01-02"),
-					ClosePrice: price.ClosePrice,
-				})
-			}
 			mu.Lock()
-			performanceList[index] = HistoricalPricesSchema{
+			performanceList[index] = HistoricalPerformanceSchema{
 				Period:           string(histPrices.Period),
-				Prices:           pricesSchema,
 				PercentageChange: histPrices.PercentageChange,
 			}
 			mu.Unlock()
