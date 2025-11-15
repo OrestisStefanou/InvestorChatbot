@@ -65,6 +65,9 @@ func scrapeFinancialStatementData(url string) ([]map[string]interface{}, error) 
 		if !ok {
 			return []map[string]interface{}{}, errors.New("unexpected index type in fieldIndex")
 		}
+		if fieldIndexFloat < 0 {
+			continue
+		}
 		fieldValues := []interface{}{}
 		for _, index := range data[int(fieldIndexFloat)].([]interface{}) {
 			indexFloat, ok := index.(float64)

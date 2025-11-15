@@ -22,10 +22,13 @@ async def main():
         five_days_ago = now - timedelta(days=5)
         
         result = await client.call_tool(
-            "getStockOverview", 
+            "getStockFinancials", 
             {
-                "stock_symbol": "MSFT", 
-                #"order_id": "c4e372d9-04b3-4013-af44-7a56502dd40e",
+                "stock_symbol": "APM", 
+                "include_balance_sheets": True,
+                "include_income_statements": True,
+                "include_cash_flows": True,
+                "limit": 1,
             }
         )        
         print(result.structured_content)
