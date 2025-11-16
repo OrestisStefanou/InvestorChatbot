@@ -79,3 +79,98 @@ func (t *GetUserContextTool) GetTool() mcp.Tool {
 		mcp.WithOutputSchema[UserContextResponse](),
 	)
 }
+
+type UpdateUserContextRequest struct {
+	UserID        string                       `json:"user_id" jsonschema_description:"The id of the user to update the context for"`
+	UserProfile   map[string]any               `json:"user_profile" jsonschema_description:"General information about the user. Must provide the complete user profile as it will replace the existing one."`
+	UserPortfolio []UserPortfolioHoldingSchema `json:"user_portfolio" jsonschema_description:"List of portfolio holdings. Must provide the complete portfolio as it will replace the existing one."`
+}
+
+type UpdateUserContextTool struct {
+	userContextService UserContextService
+}
+
+func NewUpdateUserContextTool(userContextService UserContextService) (*UpdateUserContextTool, error) {
+	return &UpdateUserContextTool{
+		userContextService: userContextService,
+	}, nil
+}
+
+func (t *UpdateUserContextTool) HandleUpdateUserContext(ctx context.Context, req mcp.CallToolRequest, args UpdateUserContextRequest) (UserContextResponse, error) {
+	if args.UserID == "" {
+		return UserContextResponse{}, fmt.Errorf("user_id is required")
+	}
+
+	// Validate portfolio holdings
+	for _, holding := range args.UserPortfolio {
+		if holding.AssetClass == "" {
+			return UserContextResponse{}, fmt.Errorf("asset_class is required for all portfolio holdings")
+		}
+		if holding.AssetClass != "stock" && holding.AssetClass != "etf" && holding.AssetClass != "crypto" {
+			return UserContextResponse{}, fmt.Errorf("asset_class valid values are: stock, etf, crypto")
+		}
+		if holding.Symbol == "" && holding.Name == "" {
+			return UserContextResponse{}, fmt.Errorf("you must define either symbol or name for all portfolio holdings")
+		}
+	}
+
+	// Convert request to domain.UserContext
+	portfolioHoldings := make([]domain.UserPortfolioHolding, 0, len(args.UserPortfolio))
+	for _, h := range args.UserPortfolio {
+		portfolioHoldings = append(
+			portfolioHoldings,
+			domain.UserPortfolioHolding{
+				AssetClass:          domain.AssetClass(h.AssetClass),
+				Symbol:              h.Symbol,
+				Name:                h.Name,
+				Quantity:            h.Quantity,
+				PortfolioPercentage: h.PortfolioPercentage,
+			},
+		)
+	}
+
+	userContext := domain.UserContext{
+		UserID:        args.UserID,
+		UserProfile:   args.UserProfile,
+		UserPortfolio: portfolioHoldings,
+	}
+
+	err := t.userContextService.UpdateUserContext(userContext)
+	if err != nil {
+		return UserContextResponse{}, err
+	}
+
+	// Fetch the updated user context to return what's actually stored
+	updatedUserContext, err := t.userContextService.GetUserContext(args.UserID)
+	if err != nil {
+		return UserContextResponse{}, err
+	}
+
+	// Return the updated user context
+	portfolio := make([]UserPortfolioHoldingSchema, 0, len(updatedUserContext.UserPortfolio))
+	for _, holding := range updatedUserContext.UserPortfolio {
+		portfolio = append(portfolio, UserPortfolioHoldingSchema{
+			AssetClass:          string(holding.AssetClass),
+			Symbol:              holding.Symbol,
+			Name:                holding.Name,
+			Quantity:            holding.Quantity,
+			PortfolioPercentage: holding.PortfolioPercentage,
+		})
+	}
+
+	response := UserContextResponse{
+		UserID:        updatedUserContext.UserID,
+		UserProfile:   updatedUserContext.UserProfile,
+		UserPortfolio: portfolio,
+	}
+
+	return response, nil
+}
+
+func (t *UpdateUserContextTool) GetTool() mcp.Tool {
+	return mcp.NewTool("updateUserContext",
+		mcp.WithDescription("Update the user context including user profile and portfolio holdings. Note: The provided context will completely replace the existing one, so the entire updated object must be provided."),
+		mcp.WithInputSchema[UpdateUserContextRequest](),
+		mcp.WithOutputSchema[UserContextResponse](),
+	)
+}

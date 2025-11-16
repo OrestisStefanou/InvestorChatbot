@@ -22,13 +22,15 @@ async def main():
         five_days_ago = now - timedelta(days=5)
         
         result = await client.call_tool(
-            "getUserContext", 
-            {
-                "user_id": "orestis_user_id",
-                # "include_balance_sheets": True,
-                # "include_income_statements": True,
-                # "include_cash_flows": True,
-                # "limit": 1,
+            name="updateUserContext", 
+            arguments={
+                'user_id': 'orestis_user_id', 
+                'user_profile': {'age': 28, 'investment_knowledge_level': 'Intermediate', 'name': 'Orestis', 'risk_apettite': 'medium'}, 
+                'user_portfolio': [
+                    {'asset_class': 'stock', 'symbol': '', 'name': 'META', 'quantity': 20, 'portfolio_percentage': 0.25}, 
+                    {'asset_class': 'stock', 'symbol': '', 'name': 'Microsoft', 'quantity': 15, 'portfolio_percentage': 0.25},
+                    {'asset_class': 'crypto', 'symbol': 'BTC', 'name': 'Bitcoin', 'quantity': 0.01, 'portfolio_percentage': 0.5}
+                ]
             }
         )        
         print(result.structured_content)

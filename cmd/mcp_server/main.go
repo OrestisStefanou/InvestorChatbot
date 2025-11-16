@@ -110,6 +110,7 @@ func main() {
 	getStockOverviewTool, _ := tools.NewGetStockOverviewTool(dataService)
 	getStockFinancialsTool, _ := tools.NewGetStockFinancialsTool(dataService)
 	getUserContextTool, _ := tools.NewGetUserContextTool(userContextService)
+	updateUserContextTool, _ := tools.NewUpdateUserContextTool(userContextService)
 
 	// Add tools
 	mcpServer.AddTool(
@@ -165,6 +166,11 @@ func main() {
 	mcpServer.AddTool(
 		getUserContextTool.GetTool(),
 		mcp.NewStructuredToolHandler(getUserContextTool.HandleGetUserContext),
+	)
+
+	mcpServer.AddTool(
+		updateUserContextTool.GetTool(),
+		mcp.NewStructuredToolHandler(updateUserContextTool.HandleUpdateUserContext),
 	)
 
 	// Start the server
