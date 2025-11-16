@@ -22,13 +22,13 @@ async def main():
         five_days_ago = now - timedelta(days=5)
         
         result = await client.call_tool(
-            "getStockFinancials", 
+            "getUserContext", 
             {
-                "stock_symbol": "APM", 
-                "include_balance_sheets": True,
-                "include_income_statements": True,
-                "include_cash_flows": True,
-                "limit": 1,
+                "user_id": "orestis_user_id",
+                # "include_balance_sheets": True,
+                # "include_income_statements": True,
+                # "include_cash_flows": True,
+                # "limit": 1,
             }
         )        
         print(result.structured_content)
