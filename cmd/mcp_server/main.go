@@ -1,16 +1,31 @@
 package main
 
 import (
+	"context"
 	"investbot/pkg/api/mcp/tools"
 	"investbot/pkg/config"
 	"investbot/pkg/marketDataScraper"
+	"investbot/pkg/repositories"
 	"investbot/pkg/services"
 	"log"
 	"os"
 
+	"github.com/dgraph-io/badger/v4"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
+	"go.mongodb.org/mongo-driver/v2/mongo"
+	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
+
+func initMongoClient(uri string) (*mongo.Client, error) {
+	serverAPI := options.ServerAPI(options.ServerAPIVersion1)
+	opts := options.Client().ApplyURI(uri).SetServerAPIOptions(serverAPI)
+	client, err := mongo.Connect(opts)
+	if err != nil {
+		return nil, err
+	}
+	return client, nil
+}
 
 func main() {
 	conf, _ := config.LoadConfig()
@@ -30,14 +45,58 @@ func main() {
 		server.WithToolHandlerMiddleware(loggingMW.ToolMiddleware),
 	)
 
+	var (
+		userContextRepository services.UserContextRepository
+		mongoClient           *mongo.Client
+		err                   error
+	)
+
+	// Create Mongo client only once if needed
+	if conf.DatabaseProvider == config.MONGO_DB || conf.SessionStorageProvider == config.MONGO_DB_STORAGE {
+		mongoClient, err = initMongoClient(conf.MongoDBConf.Uri)
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer func() {
+			if err = mongoClient.Disconnect(context.TODO()); err != nil {
+				log.Fatal(err)
+			}
+		}()
+	}
+
 	// Setup cache and data services
 	cache, _ := services.NewBadgerCacheService()
 	dataService := marketDataScraper.NewMarketDataScraperWithCache(cache, conf)
+	// User context repository
+	switch conf.DatabaseProvider {
+	case config.BADGER_DB:
+		db, err := badger.Open(badger.DefaultOptions(conf.BadgerDbPath))
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer db.Close()
+
+		userContextRepository, err = repositories.NewUserContextRepository(db)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+	case config.MONGO_DB:
+		userContextRepository, err = repositories.NewUserContextMongoRepo(
+			mongoClient,
+			conf.MongoDBConf.DBName,
+			conf.MongoDBConf.UserContextColletionName,
+		)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
 
 	// Set up services
 	tickerService, _ := services.NewTickerService(dataService)
 	etfService, _ := services.NewEtfService(dataService)
 	superInvestorService, _ := services.NewSuperInvestorService(dataService)
+	userContextService, _ := services.NewUserContextService(userContextRepository)
 
 	// Setup tools
 	searchStocksTool, _ := tools.NewStockSearchTool(tickerService)
@@ -50,6 +109,8 @@ func main() {
 	getSectorStocksTool, _ := tools.NewGetSectorStocksTool(dataService)
 	getStockOverviewTool, _ := tools.NewGetStockOverviewTool(dataService)
 	getStockFinancialsTool, _ := tools.NewGetStockFinancialsTool(dataService)
+	getUserContextTool, _ := tools.NewGetUserContextTool(userContextService)
+	updateUserContextTool, _ := tools.NewUpdateUserContextTool(userContextService)
 
 	// Add tools
 	mcpServer.AddTool(
@@ -100,6 +161,16 @@ func main() {
 	mcpServer.AddTool(
 		getStockFinancialsTool.GetTool(),
 		mcp.NewStructuredToolHandler(getStockFinancialsTool.HandleGetStockFinancials),
+	)
+
+	mcpServer.AddTool(
+		getUserContextTool.GetTool(),
+		mcp.NewStructuredToolHandler(getUserContextTool.HandleGetUserContext),
+	)
+
+	mcpServer.AddTool(
+		updateUserContextTool.GetTool(),
+		mcp.NewStructuredToolHandler(updateUserContextTool.HandleUpdateUserContext),
 	)
 
 	// Start the server
