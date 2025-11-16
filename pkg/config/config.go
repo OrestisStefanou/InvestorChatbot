@@ -69,6 +69,9 @@ type Config struct {
 
 	// MongoDB configs
 	MongoDBConf MongoDBConfig
+
+	// Alpha Vantage configs
+	AlphaVantageApiKey string
 }
 
 func LoadConfig() (Config, error) {
@@ -134,6 +137,7 @@ func LoadConfig() (Config, error) {
 		},
 		DatabaseProvider:       DatabaseProvider(dbProvider),
 		SessionStorageProvider: SessionStorageProvider(sessionStorage),
+		AlphaVantageApiKey:     getEnv("ALPHA_VANTAGE_API_KEY", ""),
 	}, nil
 }
 
