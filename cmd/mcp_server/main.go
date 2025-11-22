@@ -115,6 +115,7 @@ func main() {
 	getUserContextTool, _ := tools.NewGetUserContextTool(userContextService)
 	updateUserContextTool, _ := tools.NewUpdateUserContextTool(userContextService)
 	getEconomicIndicatorTimeSeriesTool, _ := tools.NewGetEconomicIndicatorTimeSeriesTool(alphaVantageClient)
+	getCommodityTimeSeriesTool, _ := tools.NewGetCommodityTimeSeriesTool(alphaVantageClient)
 
 	// Add tools
 	mcpServer.AddTool(
@@ -180,6 +181,11 @@ func main() {
 	mcpServer.AddTool(
 		getEconomicIndicatorTimeSeriesTool.GetTool(),
 		mcp.NewStructuredToolHandler(getEconomicIndicatorTimeSeriesTool.HandleGetEconomicIndicatorTimeSeries),
+	)
+
+	mcpServer.AddTool(
+		getCommodityTimeSeriesTool.GetTool(),
+		mcp.NewStructuredToolHandler(getCommodityTimeSeriesTool.HandleGetCommodityTimeSeries),
 	)
 
 	// Start the server

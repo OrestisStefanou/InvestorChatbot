@@ -420,3 +420,109 @@ func (c *AlphaVantageClient) GetUnemploymentRateTimeSeries() (domain.EconomicInd
 		Data:     data,
 	}, nil
 }
+
+// GetCommodityTimeSeries returns the monthly time series for the given commodity
+func (c *AlphaVantageClient) GetCommodityTimeSeries(commodity domain.Commodity) (domain.CommodityTimeSeries, error) {
+	var function string
+	var unit domain.CommodityUnit
+
+	switch commodity {
+	case domain.CrudeOil:
+		function = string(WTI)
+		unit = domain.DollarsPerBarrelCommodityUnit
+	case domain.NaturalGas:
+		function = string(NATURAL_GAS)
+		unit = domain.DollarsPerMillionBTUCommodityUnit
+	case domain.Copper:
+		function = string(COPPER)
+		unit = domain.DollarsPerMetricTonCommodityUnit
+	case domain.Aluminum:
+		function = string(ALUMINIUM)
+		unit = domain.DollarsPerMetricTonCommodityUnit
+	case domain.Wheat:
+		function = string(WHEAT)
+		unit = domain.DollarsPerMetricTonCommodityUnit
+	case domain.Corn:
+		function = string(CORN)
+		unit = domain.DollarsPerMetricTonCommodityUnit
+	case domain.Sugar:
+		function = string(SUGAR)
+		unit = domain.CentsPerPoundCommodityUnit
+	case domain.Coffee:
+		function = string(COFFEE)
+		unit = domain.CentsPerPoundCommodityUnit
+	default:
+		return domain.CommodityTimeSeries{}, fmt.Errorf("unsupported commodity: %v", commodity)
+	}
+
+	apiResponse, err := c.fetchCommodityData(function, "monthly")
+	if err != nil {
+		return domain.CommodityTimeSeries{}, err
+	}
+
+	data := make([]domain.CommodityTimeSeriesEntry, len(apiResponse.Data))
+	for i, entry := range apiResponse.Data {
+		data[i] = domain.CommodityTimeSeriesEntry{
+			Date:  entry.Date,
+			Value: entry.Value,
+		}
+	}
+
+	return domain.CommodityTimeSeries{
+		Name:     commodity,
+		Interval: domain.MonthlyCommodityInterval,
+		Unit:     unit,
+		Data:     data,
+	}, nil
+}
+
+func (c *AlphaVantageClient) fetchCommodityData(function string, interval string) (CommodityTimeSeriesResponse, error) {
+	requestUrl, err := url.Parse(alphaVantageBaseURL)
+	if err != nil {
+		return CommodityTimeSeriesResponse{}, &errors.HTTPError{
+			StatusCode: 0,
+			Message:    fmt.Sprintf("failed to parse base URL: %v", err),
+		}
+	}
+
+	q := requestUrl.Query()
+	q.Set("function", function)
+	q.Set("interval", interval)
+	q.Set("apikey", c.apiKey)
+	requestUrl.RawQuery = q.Encode()
+
+	req, err := http.NewRequest("GET", requestUrl.String(), nil)
+	if err != nil {
+		return CommodityTimeSeriesResponse{}, &errors.HTTPError{
+			StatusCode: 0,
+			Message:    fmt.Sprintf("failed to create HTTP request: %v", err),
+		}
+	}
+
+	httpClient := &http.Client{}
+	resp, err := httpClient.Do(req)
+	if err != nil {
+		return CommodityTimeSeriesResponse{}, &errors.HTTPError{
+			StatusCode: 0,
+			Message:    fmt.Sprintf("failed to send HTTP request: %v", err),
+		}
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return CommodityTimeSeriesResponse{}, &errors.HTTPError{
+			StatusCode: resp.StatusCode,
+			Message:    resp.Status,
+		}
+	}
+
+	var apiResponse CommodityTimeSeriesResponse
+	if err := json.NewDecoder(resp.Body).Decode(&apiResponse); err != nil {
+		return CommodityTimeSeriesResponse{}, &errors.JSONMarshalError{
+			Message: "failed to decode JSON response",
+			Err:     err,
+		}
+	}
+
+	return apiResponse, nil
+}

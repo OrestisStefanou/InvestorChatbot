@@ -22,10 +22,9 @@ async def main():
         five_days_ago = now - timedelta(days=5)
         
         result = await client.call_tool(
-            name="getEconomicIndicatorTimeSeries", 
+            name="getCommodityTimeSeries", 
             arguments={
-                'indicator_name': 'TreasuryYield', 
-                'treasury_yield_maturity': '10Y',
+                'commodity_name': 'CrudeOil', 
                 'limit': 10,
                 # 'user_profile': {'age': 28, 'investment_knowledge_level': 'Intermediate', 'name': 'Orestis', 'risk_apettite': 'medium'}, 
                 # 'user_portfolio': [
