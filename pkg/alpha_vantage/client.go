@@ -88,9 +88,9 @@ func (c *AlphaVantageClient) GetRealGdpTimeSeries(interval domain.EconomicIndica
 	domainUnit := domain.BillionsOfDollarsEconomicIndicatorUnit
 
 	// Map data entries
-	data := make([]domain.EconomicIndicatortypeTimeSeriesEntry, len(apiResponse.Data))
+	data := make([]domain.EconomicIndicatorTimeSeriesEntry, len(apiResponse.Data))
 	for i, entry := range apiResponse.Data {
-		data[i] = domain.EconomicIndicatortypeTimeSeriesEntry{
+		data[i] = domain.EconomicIndicatorTimeSeriesEntry{
 			Date:  entry.Date,
 			Value: entry.Value,
 		}
@@ -183,9 +183,9 @@ func (c *AlphaVantageClient) GetTreasuryYieldTimeSeries(
 	domainUnit := domain.PercentEconomicIndicatorUnit
 
 	// Map data entries
-	data := make([]domain.EconomicIndicatortypeTimeSeriesEntry, len(apiResponse.Data))
+	data := make([]domain.EconomicIndicatorTimeSeriesEntry, len(apiResponse.Data))
 	for i, entry := range apiResponse.Data {
-		data[i] = domain.EconomicIndicatortypeTimeSeriesEntry{
+		data[i] = domain.EconomicIndicatorTimeSeriesEntry{
 			Date:  entry.Date,
 			Value: entry.Value,
 		}
@@ -259,9 +259,9 @@ func (c *AlphaVantageClient) GetInterestRatesTimeSeries() (domain.EconomicIndica
 	domainUnit := domain.PercentEconomicIndicatorUnit
 
 	// Map data entries
-	data := make([]domain.EconomicIndicatortypeTimeSeriesEntry, len(apiResponse.Data))
+	data := make([]domain.EconomicIndicatorTimeSeriesEntry, len(apiResponse.Data))
 	for i, entry := range apiResponse.Data {
-		data[i] = domain.EconomicIndicatortypeTimeSeriesEntry{
+		data[i] = domain.EconomicIndicatorTimeSeriesEntry{
 			Date:  entry.Date,
 			Value: entry.Value,
 		}
@@ -332,9 +332,9 @@ func (c *AlphaVantageClient) GetInflationTimeSeries() (domain.EconomicIndicatorT
 	domainUnit := domain.PercentEconomicIndicatorUnit
 
 	// Map data entries
-	data := make([]domain.EconomicIndicatortypeTimeSeriesEntry, len(apiResponse.Data))
+	data := make([]domain.EconomicIndicatorTimeSeriesEntry, len(apiResponse.Data))
 	for i, entry := range apiResponse.Data {
-		data[i] = domain.EconomicIndicatortypeTimeSeriesEntry{
+		data[i] = domain.EconomicIndicatorTimeSeriesEntry{
 			Date:  entry.Date,
 			Value: entry.Value,
 		}
@@ -405,9 +405,9 @@ func (c *AlphaVantageClient) GetUnemploymentRateTimeSeries() (domain.EconomicInd
 	domainUnit := domain.PercentEconomicIndicatorUnit
 
 	// Map data entries
-	data := make([]domain.EconomicIndicatortypeTimeSeriesEntry, len(apiResponse.Data))
+	data := make([]domain.EconomicIndicatorTimeSeriesEntry, len(apiResponse.Data))
 	for i, entry := range apiResponse.Data {
-		data[i] = domain.EconomicIndicatortypeTimeSeriesEntry{
+		data[i] = domain.EconomicIndicatorTimeSeriesEntry{
 			Date:  entry.Date,
 			Value: entry.Value,
 		}

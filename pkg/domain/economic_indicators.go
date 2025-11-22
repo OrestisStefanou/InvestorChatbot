@@ -26,7 +26,7 @@ const (
 	BillionsOfDollarsEconomicIndicatorUnit EconomicIndicatorUnit = "BillionsOfDollars"
 )
 
-type EconomicIndicatortypeTimeSeriesEntry struct {
+type EconomicIndicatorTimeSeriesEntry struct {
 	Date  string
 	Value string
 }
@@ -35,7 +35,7 @@ type EconomicIndicatorTimeSeries struct {
 	Name     EconomicIndicator
 	Interval EconomicIndicatorInterval
 	Unit     EconomicIndicatorUnit
-	Data     []EconomicIndicatortypeTimeSeriesEntry
+	Data     []EconomicIndicatorTimeSeriesEntry
 }
 
 type TreasuryYieldMaturity string
