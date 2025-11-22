@@ -22,15 +22,16 @@ async def main():
         five_days_ago = now - timedelta(days=5)
         
         result = await client.call_tool(
-            name="updateUserContext", 
+            name="getCommodityTimeSeries", 
             arguments={
-                'user_id': 'orestis_user_id', 
-                'user_profile': {'age': 28, 'investment_knowledge_level': 'Intermediate', 'name': 'Orestis', 'risk_apettite': 'medium'}, 
-                'user_portfolio': [
-                    {'asset_class': 'stock', 'symbol': '', 'name': 'META', 'quantity': 20, 'portfolio_percentage': 0.25}, 
-                    {'asset_class': 'stock', 'symbol': '', 'name': 'Microsoft', 'quantity': 15, 'portfolio_percentage': 0.25},
-                    {'asset_class': 'crypto', 'symbol': 'BTC', 'name': 'Bitcoin', 'quantity': 0.01, 'portfolio_percentage': 0.5}
-                ]
+                'commodity_name': 'CrudeOil', 
+                'limit': 10,
+                # 'user_profile': {'age': 28, 'investment_knowledge_level': 'Intermediate', 'name': 'Orestis', 'risk_apettite': 'medium'}, 
+                # 'user_portfolio': [
+                #     {'asset_class': 'stock', 'symbol': '', 'name': 'META', 'quantity': 20, 'portfolio_percentage': 0.25}, 
+                #     {'asset_class': 'stock', 'symbol': '', 'name': 'Microsoft', 'quantity': 15, 'portfolio_percentage': 0.25},
+                #     {'asset_class': 'crypto', 'symbol': 'BTC', 'name': 'Bitcoin', 'quantity': 0.01, 'portfolio_percentage': 0.5}
+                # ]
             }
         )        
         print(result.structured_content)

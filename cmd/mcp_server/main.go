@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	alphavantage "investbot/pkg/alpha_vantage"
 	"investbot/pkg/api/mcp/tools"
 	"investbot/pkg/config"
 	"investbot/pkg/marketDataScraper"
@@ -92,6 +93,8 @@ func main() {
 		}
 	}
 
+	alphaVantageClient, _ := alphavantage.NewAlphaVantageClient(conf.AlphaVantageApiKey)
+
 	// Set up services
 	tickerService, _ := services.NewTickerService(dataService)
 	etfService, _ := services.NewEtfService(dataService)
@@ -111,6 +114,8 @@ func main() {
 	getStockFinancialsTool, _ := tools.NewGetStockFinancialsTool(dataService)
 	getUserContextTool, _ := tools.NewGetUserContextTool(userContextService)
 	updateUserContextTool, _ := tools.NewUpdateUserContextTool(userContextService)
+	getEconomicIndicatorTimeSeriesTool, _ := tools.NewGetEconomicIndicatorTimeSeriesTool(alphaVantageClient)
+	getCommodityTimeSeriesTool, _ := tools.NewGetCommodityTimeSeriesTool(alphaVantageClient)
 
 	// Add tools
 	mcpServer.AddTool(
@@ -171,6 +176,16 @@ func main() {
 	mcpServer.AddTool(
 		updateUserContextTool.GetTool(),
 		mcp.NewStructuredToolHandler(updateUserContextTool.HandleUpdateUserContext),
+	)
+
+	mcpServer.AddTool(
+		getEconomicIndicatorTimeSeriesTool.GetTool(),
+		mcp.NewStructuredToolHandler(getEconomicIndicatorTimeSeriesTool.HandleGetEconomicIndicatorTimeSeries),
+	)
+
+	mcpServer.AddTool(
+		getCommodityTimeSeriesTool.GetTool(),
+		mcp.NewStructuredToolHandler(getCommodityTimeSeriesTool.HandleGetCommodityTimeSeries),
 	)
 
 	// Start the server
