@@ -93,7 +93,7 @@ func main() {
 		}
 	}
 
-	alphaVantageClient, _ := alphavantage.NewAlphaVantageClient(conf.AlphaVantageApiKey)
+	alphaVantageClient, _ := alphavantage.NewAlphaVantageClientWithCache(conf.AlphaVantageApiKey, cache, conf.AlphaVantageCacheTtl)
 
 	// Set up services
 	tickerService, _ := services.NewTickerService(dataService)

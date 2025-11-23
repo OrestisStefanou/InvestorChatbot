@@ -71,7 +71,8 @@ type Config struct {
 	MongoDBConf MongoDBConfig
 
 	// Alpha Vantage configs
-	AlphaVantageApiKey string
+	AlphaVantageApiKey   string
+	AlphaVantageCacheTtl int // The ttl for the alpha vantage cache in seconds
 }
 
 func LoadConfig() (Config, error) {
@@ -112,6 +113,11 @@ func LoadConfig() (Config, error) {
 
 	geminiModelName := getEnv("GEMINI_MODEL_NAME", "gemini-2.0-flash")
 
+	alphaVantageCacheTtl, err := strconv.Atoi(getEnv("ALPHA_VANTAGE_CACHE_TTL", "3600"))
+	if err != nil {
+		alphaVantageCacheTtl = 3600
+	}
+
 	return Config{
 		OpenAiKey:            getEnv("OPEN_AI_API_KEY", ""),
 		OpenAiBaseUrl:        getEnv("OPENAI_BASE_URL", "https://api.openai.com/v1"),
@@ -138,6 +144,7 @@ func LoadConfig() (Config, error) {
 		DatabaseProvider:       DatabaseProvider(dbProvider),
 		SessionStorageProvider: SessionStorageProvider(sessionStorage),
 		AlphaVantageApiKey:     getEnv("ALPHA_VANTAGE_API_KEY", ""),
+		AlphaVantageCacheTtl:   alphaVantageCacheTtl,
 	}, nil
 }
 
