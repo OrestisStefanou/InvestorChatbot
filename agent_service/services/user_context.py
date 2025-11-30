@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 from pydantic import BaseModel
 from pymongo import AsyncMongoClient
 
+# The naming of the fields is done to match mcp server schema
 class UserPortfolioHolding(BaseModel):
     assetclass: str
     symbol: str
@@ -14,6 +15,11 @@ class UserContext(BaseModel):
     userprofile: dict
     userportfolio: list[UserPortfolioHolding]
 
+
+class UserContextAlreadyExistsError(Exception):
+    pass
+
+
 class UserContextService(ABC):
     @abstractmethod
     async def create_user_context(
@@ -23,7 +29,7 @@ class UserContextService(ABC):
         user_portfolio: list[UserPortfolioHolding] | None = None,
     ) -> UserContext | None:
         pass
-    
+
 
 class MongoDBUserContextService(UserContextService):
     def __init__(self, mongo_client: AsyncMongoClient, db_name: str, collection_name: str):
@@ -36,6 +42,12 @@ class MongoDBUserContextService(UserContextService):
         user_profile: dict | None = None,
         user_portfolio: list[UserPortfolioHolding] | None = None,
     ) -> UserContext | None:
+
+        # Check if user context for user_id already exists
+        existing_user_context = await self.collection.find_one({"userid": user_id})
+        if existing_user_context:
+            raise UserContextAlreadyExistsError(f"User context already exists for user_id: {user_id}")
+
         user_context = UserContext(
             userid=user_id,
             userprofile=user_profile if user_profile is not None else {},

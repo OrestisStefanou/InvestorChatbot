@@ -1,4 +1,5 @@
 from enum import Enum
+import http
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
@@ -30,7 +31,7 @@ class SessionSchema(BaseModel):
     messages: list[MessageSchema]
 
 
-@router.post("/session", response_model=SessionSchema)
+@router.post("/session", response_model=SessionSchema, status_code=http.HTTPStatus.CREATED)
 async def create_session(request: CreateSessionRequest, db_client: AsyncMongoClient = Depends(get_db_client)):
     session_service = MongoDBSessionService(
         mongo_client=db_client,
@@ -40,7 +41,7 @@ async def create_session(request: CreateSessionRequest, db_client: AsyncMongoCli
     try:
         session = await session_service.create_session(request.user_id)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=http.HTTPStatus.INTERNAL_SERVER_ERROR, detail=str(e))
     
     return SessionSchema(
         session_id=session.sessionID,
@@ -59,10 +60,10 @@ async def get_session(session_id: str, db_client: AsyncMongoClient = Depends(get
     try:
         session = await session_service.get_session(session_id)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=http.HTTPStatus.INTERNAL_SERVER_ERROR, detail=str(e))
     
     if not session:
-        raise HTTPException(status_code=404, detail="Session not found")
+        raise HTTPException(status_code=http.HTTPStatus.NOT_FOUND, detail="Session not found")
     
     # Convert Message objects to MessageSchema objects
     messages = [MessageSchema(role=RoleSchema(message.role), content=message.content) for message in session.messages]
