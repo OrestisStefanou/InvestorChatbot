@@ -1,18 +1,20 @@
-import asyncio
+from contextlib import asynccontextmanager
 
+from fastapi import FastAPI, Depends, HTTPException
 from pymongo import AsyncMongoClient
 
-from session import MongoDBSessionService, Message
-from user_context import MongoDBUserContextService
+from agent_service.routers import session
+from agent_service.config import settings
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
+    app.state.mongodb_client = AsyncMongoClient(settings.MONGO_URI)
+    yield
+    # Shutdown
+    await app.state.mongodb_client.close()
 
 
-from config import settings
+app = FastAPI(lifespan=lifespan)
 
-async def main():
-    mongo_client = AsyncMongoClient(settings.MONGO_URI)
-    user_context_service = MongoDBUserContextService(mongo_client, settings.MONGO_DB_NAME, settings.USER_CONTEXT_COLLECTION_NAME)
-    user_context = await user_context_service.create_user_context("lando-norris")
-    print(user_context)
-
-
-asyncio.run(main())
+app.include_router(session.router)

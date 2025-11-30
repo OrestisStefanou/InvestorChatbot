@@ -6,3 +6,5 @@ env/
 agent_service/.venv
 agent_service/__pycache__
 agent_service/.python-version
+agent_service/routers/__pycache__
+agent_service/services/__pycache__

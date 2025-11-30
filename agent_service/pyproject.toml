@@ -8,4 +8,5 @@ dependencies = [
     "pydantic>=2.12.5",
     "pymongo>=4.15.4",
     "pydantic-settings>=2.0.0",
+    "fastapi[standard]>=0.122.0",
 ]
