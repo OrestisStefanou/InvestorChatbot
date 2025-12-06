@@ -1,5 +1,6 @@
 mcp_service/.env
 mcp_service/cmd/temp/
+mcp_service/pkg/.DS_Store
 .env
 badger.db/
 env/

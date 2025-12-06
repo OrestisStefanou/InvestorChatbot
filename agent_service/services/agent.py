@@ -1,6 +1,6 @@
 import asyncio
 
-from langchain_mcp_adapters.client import MultiServerMCPClient  
+from langchain_mcp_adapters.client import MultiServerMCPClient
 from langchain.agents import create_agent
 from langchain_openai import ChatOpenAI
 from langchain_google_genai import ChatGoogleGenerativeAI
@@ -42,7 +42,7 @@ async def main():
     result = await agent.ainvoke(
         {"messages": [{"role": "user", "content": "what are the latest market news?"}]}
     )
-    print(result["structured_response"])
+    print(result["structured_response"].response)
 
 asyncio.run(main())
 
