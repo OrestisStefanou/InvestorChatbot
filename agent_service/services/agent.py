@@ -10,6 +10,7 @@ from langchain.agents.middleware import (
     wrap_tool_call,
 )
 from langchain.messages import ToolMessage
+from langchain_anthropic import ChatAnthropic
 from pydantic import BaseModel
 
 from agent_service.services.session import (
@@ -109,6 +110,12 @@ class AgentService:
             case LLMProvider.GOOGLE:
                 model = ChatGoogleGenerativeAI(
                     google_api_key=settings.GOOGLE_API_KEY,
+                    model=settings.LLM_MODEL,
+                    temperature=settings.TEMPERATURE,
+                )
+            case LLMProvider.ANTHROPIC:
+                model = ChatAnthropic(
+                    api_key=settings.ANTHROPIC_API_KEY,
                     model=settings.LLM_MODEL,
                     temperature=settings.TEMPERATURE,
                 )

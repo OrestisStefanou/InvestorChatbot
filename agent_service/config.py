@@ -5,6 +5,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class LLMProvider(str, Enum):
     OPENAI = "openai"
     GOOGLE = "google"
+    ANTHROPIC = "anthropic"
 
 class Settings(BaseSettings):
     # MongoDB
@@ -17,6 +18,7 @@ class Settings(BaseSettings):
     LLM_MODEL: str
     OPENAI_API_KEY: str | None = None
     GOOGLE_API_KEY: str | None = None
+    ANTHROPIC_API_KEY: str | None = None
     TEMPERATURE: float = 0.1
     # MCP
     MCP_SERVER_URL: str
