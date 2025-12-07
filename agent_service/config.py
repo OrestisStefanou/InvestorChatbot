@@ -7,16 +7,21 @@ class LLMProvider(str, Enum):
     GOOGLE = "google"
 
 class Settings(BaseSettings):
+    # MongoDB
     MONGO_URI: str
     MONGO_DB_NAME: str
     USER_CONTEXT_COLLECTION_NAME: str
     SESSION_COLLECTION_NAME: str
+    # LLM
     LLM_PROVIDER: LLMProvider
     LLM_MODEL: str
     OPENAI_API_KEY: str | None = None
     GOOGLE_API_KEY: str | None = None
-    MCP_SERVER_URL: str
     TEMPERATURE: float = 0.1
+    # MCP
+    MCP_SERVER_URL: str
+    # APP
+    CONVERSATION_MESSAGES_LIMIT: int = 15
 
     model_config = SettingsConfigDict(env_file=".env")
 

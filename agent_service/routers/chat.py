@@ -3,11 +3,18 @@ import http
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 from pymongo import AsyncMongoClient
+from langchain_mcp_adapters.client import MultiServerMCPClient
 
 from agent_service.services.session import MongoDBSessionService
 from agent_service.services.chat import AgenticChatService
+from agent_service.services.agent import (
+    AgentService,
+)
 from agent_service.config import settings
-from agent_service.dependencies import get_db_client
+from agent_service.dependencies import (
+    get_db_client,
+    get_mcp_client,
+)
 
 router = APIRouter()
 
@@ -22,13 +29,23 @@ class ChatResponse(BaseModel):
 
 
 @router.post("/chat", response_model=ChatResponse)
-async def chat(request: ChatRequest, db_client: AsyncMongoClient = Depends(get_db_client)):
+async def chat(
+    request: ChatRequest,
+    db_client: AsyncMongoClient = Depends(get_db_client), 
+    mcp_client: MultiServerMCPClient = Depends(get_mcp_client),
+):
     session_service = MongoDBSessionService(
         mongo_client=db_client,
         db_name=settings.MONGO_DB_NAME,
         collection_name=settings.SESSION_COLLECTION_NAME,
     )
-    chat_service = AgenticChatService(session_service)
+    agent_service = AgentService(
+        mcp_client=mcp_client,
+    )
+    chat_service = AgenticChatService(session_service, agent_service)
     # TODO: CHECK FOR ANY EXCEPTIONS HERE
-    response = await chat_service.generate_response(request.session_id, request.message)
+    response = await chat_service.generate_text_response(
+        request.session_id,
+        request.message,
+    )
     return ChatResponse(response=response)
