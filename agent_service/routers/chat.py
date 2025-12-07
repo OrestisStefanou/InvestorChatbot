@@ -1,11 +1,18 @@
 import http
 
-from fastapi import APIRouter, Depends
+from fastapi import (
+    APIRouter, 
+    Depends,
+    HTTPException,
+)
 from pydantic import BaseModel
 from pymongo import AsyncMongoClient
 from langchain_mcp_adapters.client import MultiServerMCPClient
 
-from agent_service.services.session import MongoDBSessionService
+from agent_service.services.session import (
+    MongoDBSessionService,
+    SessionNotFoundError,
+)
 from agent_service.services.chat import AgenticChatService
 from agent_service.services.agent import (
     AgentService,
@@ -43,9 +50,14 @@ async def chat(
         mcp_client=mcp_client,
     )
     chat_service = AgenticChatService(session_service, agent_service)
-    # TODO: CHECK FOR ANY EXCEPTIONS HERE
-    response = await chat_service.generate_text_response(
-        request.session_id,
-        request.message,
-    )
+    try:
+        response = await chat_service.generate_text_response(
+            request.session_id,
+            request.message,
+        )
+    except SessionNotFoundError:
+        raise HTTPException(status_code=http.HTTPStatus.NOT_FOUND, detail="Session not found")
+    except Exception as e:
+        raise HTTPException(status_code=http.HTTPStatus.INTERNAL_SERVER_ERROR, detail=str(e))
+
     return ChatResponse(response=response)
