@@ -1,4 +1,11 @@
-env/
+mcp_service/.env
+mcp_service/cmd/temp/
+mcp_service/pkg/.DS_Store
 .env
 badger.db/
-cmd/temp/*
+env/
+agent_service/.venv
+agent_service/__pycache__
+agent_service/.python-version
+agent_service/routers/__pycache__
+agent_service/services/__pycache__

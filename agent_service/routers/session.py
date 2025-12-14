@@ -1,0 +1,75 @@
+from enum import Enum
+import http
+
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
+from pymongo import AsyncMongoClient
+
+from agent_service.services.session import MongoDBSessionService
+from agent_service.config import settings
+from agent_service.dependencies import get_db_client
+
+router = APIRouter()
+
+class CreateSessionRequest(BaseModel):
+    user_id: str
+
+
+class RoleSchema(str, Enum):
+    USER = "user"
+    AGENT = "agent"
+
+
+class MessageSchema(BaseModel):
+    role: RoleSchema
+    content: str
+
+
+class SessionSchema(BaseModel):
+    session_id: str
+    user_id: str
+    messages: list[MessageSchema]
+
+
+@router.post("/session", response_model=SessionSchema, status_code=http.HTTPStatus.CREATED)
+async def create_session(request: CreateSessionRequest, db_client: AsyncMongoClient = Depends(get_db_client)):
+    session_service = MongoDBSessionService(
+        mongo_client=db_client,
+        db_name=settings.MONGO_DB_NAME,
+        collection_name=settings.SESSION_COLLECTION_NAME,
+    )
+    try:
+        session = await session_service.create_session(request.user_id)
+    except Exception as e:
+        raise HTTPException(status_code=http.HTTPStatus.INTERNAL_SERVER_ERROR, detail=str(e))
+    
+    return SessionSchema(
+        session_id=session.sessionID,
+        user_id=session.user_id,
+        messages=session.messages,
+    )
+
+
+@router.get("/session/{session_id}", response_model=SessionSchema)
+async def get_session(session_id: str, db_client: AsyncMongoClient = Depends(get_db_client)):
+    session_service = MongoDBSessionService(
+        mongo_client=db_client,
+        db_name=settings.MONGO_DB_NAME,
+        collection_name=settings.SESSION_COLLECTION_NAME,
+    )
+    try:
+        session = await session_service.get_session(session_id)
+    except Exception as e:
+        raise HTTPException(status_code=http.HTTPStatus.INTERNAL_SERVER_ERROR, detail=str(e))
+    
+    if not session:
+        raise HTTPException(status_code=http.HTTPStatus.NOT_FOUND, detail="Session not found")
+    
+    # Convert Message objects to MessageSchema objects
+    messages = [MessageSchema(role=RoleSchema(message.role), content=message.content) for message in session.messages]
+
+    return SessionSchema(
+        session_id=session.sessionID,
+        user_id=session.user_id,
+        messages=messages,
+    )
