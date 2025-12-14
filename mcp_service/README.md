@@ -303,7 +303,37 @@ Content-Type: application/json
 
 ## Next steps
 1. Add support for crypto
-2. Create an mcp server to expose the tools that the llms are using in the background.
+
+## 🔌 MCP Server
+
+The project includes a Model Context Protocol (MCP) server that exposes various financial tools to LLMs.
+
+#### Running the MCP Server
+
+```bash
+make run_mcp_server
+```
+
+#### Exposed Tools
+
+The MCP server exposes the following tools:
+
+| Tool | Description |
+|------|-------------|
+| `stockSearch` | Search for stocks by symbol or company name. |
+| `etfSearch` | Search for ETFs by symbol or name. |
+| `getETF` | Get detailed information about an ETF using its symbol. |
+| `getSuperInvestors` | Get a list of super investors. |
+| `getSuperInvestorPortfolio` | Get the portfolio of a specific super investor. |
+| `getMarketNews` | Get recent market news. |
+| `getSectors` | Get a list of market sectors. |
+| `getSectorStocks` | Get stocks belonging to a specific sector. |
+| `getStockOverview` | Get a general overview of a stock. |
+| `getStockFinancials` | Get financial data for a stock. |
+| `getUserContext` | Retrieve the current user's context (profile, portfolio). |
+| `updateUserContext` | Update the user's context. |
+| `getEconomicIndicatorTimeSeries` | Get time series data for economic indicators (GDP, Inflation, etc.). |
+| `getCommodityTimeSeries` | Get time series data for commodities (Oil, Gold, etc.). |
 
 ## 🛡️ License
 
