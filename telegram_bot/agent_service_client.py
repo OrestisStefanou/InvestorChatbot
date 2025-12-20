@@ -1,0 +1,29 @@
+import http
+
+import httpx
+
+from config import settings
+
+class AgentServiceClient:
+    def __init__(self):
+        pass
+
+    async def create_user_context(self, user_id: str, user_profile: dict | None = None):
+        agent_service_url = settings.AGENT_SERVICE_URL
+        async with httpx.AsyncClient() as client:
+            try:
+                response = await client.post(
+                    f"{agent_service_url}/user_context",
+                    json={
+                        "user_id": user_id,
+                        "user_profile": user_profile,
+                    },
+                )
+            except httpx.RequestError as e:
+                raise Exception(f"Failed to create user context: {e}")
+
+            # http status code conflict means that the user context already exists
+            if response.status_code not in [http.HTTPStatus.CREATED, http.HTTPStatus.CONFLICT]:
+                raise Exception(f"Failed to create user context with status code: {response.status_code} and text: {response.text}")
+        
+        return
