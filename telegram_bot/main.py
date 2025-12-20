@@ -10,6 +10,7 @@ from telegram.ext import (
 )
 
 from config import settings
+from agent_service_client import AgentServiceClient
 
 # Enable logging
 logging.basicConfig(
@@ -20,13 +21,29 @@ logger = logging.getLogger(__name__)
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Send a message when the command /start is issued."""
-    # TODO: Send an introduction message here
-    # TODO: Create user context in agent service
-    # TODO: Create a session in agent service
-    user = update.effective_user
-    logger.info(f"User {user.id} ({user.username}) sent /start")
+    logger.info(f"User {update.effective_user.id} ({update.effective_user.username}) sent /start")
+    agent_service_client = AgentServiceClient()
+    try:
+        await agent_service_client.create_user_context(
+            user_id=f"telegram:{update.effective_user.id}",
+            user_profile={
+                "first_name": update.effective_user.first_name,
+            }
+        )
+    except Exception as e:
+        logger.error(f"Failed to create user context: {e}")
+
+    try:
+        await agent_service_client.create_session(
+            user_id=f"telegram:{update.effective_user.id}",
+            session_id=f"telegram:{update.effective_user.id}",
+        )
+    except Exception as e:
+        logger.error(f"Failed to create session: {e}")
+
+    # TODO: Send an introduction message here and add it in the session
     await update.message.reply_text(
-        f'Hi {user.first_name}! I am your test bot. Send me any message and I will echo it back!'
+        f'Hi {update.effective_user.first_name}! I am your test bot. Send me any message and I will echo it back!'
     )
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):

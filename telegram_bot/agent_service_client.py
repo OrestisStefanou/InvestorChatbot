@@ -27,3 +27,23 @@ class AgentServiceClient:
                 raise Exception(f"Failed to create user context with status code: {response.status_code} and text: {response.text}")
         
         return
+
+    async def create_session(self, user_id: str, session_id: str):
+        agent_service_url = settings.AGENT_SERVICE_URL
+        async with httpx.AsyncClient() as client:
+            try:
+                response = await client.post(
+                    f"{agent_service_url}/session",
+                    json={
+                        "user_id": user_id,
+                        "session_id": session_id,
+                    },
+                )
+            except httpx.RequestError as e:
+                raise Exception(f"Failed to create session: {e}")
+
+            # http status code conflict means that the session already exists
+            if response.status_code not in [http.HTTPStatus.CREATED, http.HTTPStatus.CONFLICT]:
+                raise Exception(f"Failed to create session with status code: {response.status_code} and text: {response.text}")
+        
+        return
