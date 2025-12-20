@@ -1,18 +1,33 @@
 from enum import Enum
 import http
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import (
+    APIRouter, 
+    Depends, 
+    HTTPException,
+)
 from pydantic import BaseModel
 from pymongo import AsyncMongoClient
 
-from agent_service.services.session import MongoDBSessionService
+from agent_service.services.session import (
+    MongoDBSessionService, 
+    SessionAlreadyExistsError,
+)
 from agent_service.config import settings
 from agent_service.dependencies import get_db_client
 
 router = APIRouter()
 
 class CreateSessionRequest(BaseModel):
+    """
+    Request model for creating a new session.
+    
+    Attributes:
+        user_id (str): The ID of the user.
+        session_id (str | None): The ID of the session. If not provided, a new ID will be generated.
+    """
     user_id: str
+    session_id: str | None = None
 
 
 class RoleSchema(str, Enum):
@@ -39,7 +54,9 @@ async def create_session(request: CreateSessionRequest, db_client: AsyncMongoCli
         collection_name=settings.SESSION_COLLECTION_NAME,
     )
     try:
-        session = await session_service.create_session(request.user_id)
+        session = await session_service.create_session(request.user_id, request.session_id)
+    except SessionAlreadyExistsError as e:
+        raise HTTPException(status_code=http.HTTPStatus.CONFLICT, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=http.HTTPStatus.INTERNAL_SERVER_ERROR, detail=str(e))
     

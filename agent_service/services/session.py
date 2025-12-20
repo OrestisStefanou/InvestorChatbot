@@ -23,7 +23,7 @@ class Session(BaseModel):
 
 class SessionService(ABC):
     @abstractmethod
-    async def create_session(self, user_id: str) -> Session:
+    async def create_session(self, user_id: str, session_id: str | None = None) -> Session:
         pass
 
     @abstractmethod
@@ -39,13 +39,35 @@ class SessionNotFoundError(Exception):
     pass
 
 
+class SessionAlreadyExistsError(Exception):
+    pass
+
+
 class MongoDBSessionService(SessionService):
     def __init__(self, mongo_client: AsyncMongoClient, db_name: str, collection_name: str):
         self.db = mongo_client[db_name]
         self.collection = self.db[collection_name]
 
-    async def create_session(self, user_id: str) -> Session:
-        session_id = str(uuid.uuid4())
+    async def create_session(self, user_id: str, session_id: str | None = None) -> Session:
+        """
+        Create a new session for the user.
+        
+        Args:
+            user_id (str): The ID of the user.
+            session_id (str | None): The ID of the session. If not provided, a new ID will be generated.
+        
+        Returns:
+            Session: The created session.
+        
+        Raises:
+            SessionAlreadyExistsError: If the session already exists.
+        """
+        session_id = session_id or str(uuid.uuid4())
+        # Check if session already exists
+        session = await self.get_session(session_id)
+        if session:
+            raise SessionAlreadyExistsError(f"Session {session_id} already exists")
+    
         session = Session(sessionID=session_id, user_id=user_id, messages=[])
         await self.collection.insert_one(session.model_dump())
         return session
