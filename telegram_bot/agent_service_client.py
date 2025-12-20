@@ -47,3 +47,30 @@ class AgentServiceClient:
                 raise Exception(f"Failed to create session with status code: {response.status_code} and text: {response.text}")
         
         return
+
+    async def generate_ai_response(self, session_id: str, message: str) -> str:
+        agent_service_url = settings.AGENT_SERVICE_URL
+        async with httpx.AsyncClient() as client:
+            try:
+                response = await client.post(
+                    f"{agent_service_url}/chat",
+                    json={
+                        "session_id": session_id,
+                        "message": message,
+                    },
+                    timeout=10,
+                )
+            except httpx.RequestError as e:
+                raise Exception(f"Failed to generate AI response: {e}")
+
+        if response.status_code != http.HTTPStatus.OK:
+            raise Exception(f"Failed to generate AI response with status code: {response.status_code} and text: {response.text}")
+        
+        print(response.json())
+
+        ai_response_msg = response.json().get("response", None)
+
+        if ai_response_msg is None:
+            raise Exception("Failed to extract AI response message")
+
+        return ai_response_msg

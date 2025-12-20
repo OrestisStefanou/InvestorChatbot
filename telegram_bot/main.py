@@ -23,9 +23,12 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Send a message when the command /start is issued."""
     logger.info(f"User {update.effective_user.id} ({update.effective_user.username}) sent /start")
     agent_service_client = AgentServiceClient()
+    
+    user_id = f"telegram:{update.effective_user.id}"
+    session_id = f"telegram_session:{update.effective_user.id}"
     try:
         await agent_service_client.create_user_context(
-            user_id=f"telegram:{update.effective_user.id}",
+            user_id=user_id,
             user_profile={
                 "first_name": update.effective_user.first_name,
             }
@@ -35,31 +38,44 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     try:
         await agent_service_client.create_session(
-            user_id=f"telegram:{update.effective_user.id}",
-            session_id=f"telegram:{update.effective_user.id}",
+            user_id=user_id,
+            session_id=session_id,
         )
     except Exception as e:
         logger.error(f"Failed to create session: {e}")
 
-    # TODO: Send an introduction message here and add it in the session
-    await update.message.reply_text(
-        f'Hi {update.effective_user.first_name}! I am your test bot. Send me any message and I will echo it back!'
-    )
+    try:
+        ai_message = await agent_service_client.generate_ai_response(
+            session_id=session_id,
+            message=f"Hey, I am your new client {update.effective_user.first_name}!",
+        )
+    except Exception as e:
+        logger.error(f"Failed to generate AI response: {e}")
+        ai_message = "I'm sorry, something went wrong. Please try again later."
+    
+    await update.message.reply_text(ai_message)
+
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Echo the user message and log user info."""
+    agent_service_client = AgentServiceClient()
+    session_id = f"telegram_session:{update.effective_user.id}"
+
     user = update.effective_user
     message_text = update.message.text
     
     # Log the message and user info
     logger.info(f"User {user.id} (@{user.username}) sent: {message_text}")
     
-    # Respond to the user
-    response = f"You said: {message_text}\n\nYour user ID: {user.id}"
-    if user.username:
-        response += f"\nYour username: @{user.username}"
+    try:
+        ai_message = await agent_service_client.generate_ai_response(
+            session_id=session_id,
+            message=message_text,
+        )
+    except Exception as e:
+        logger.error(f"Failed to generate AI response: {e}")
+        ai_message = "I'm sorry, something went wrong. Please try again later."
     
-    await update.message.reply_text(response)
+    await update.message.reply_text(ai_message)
 
 async def error_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Log errors caused by updates."""
