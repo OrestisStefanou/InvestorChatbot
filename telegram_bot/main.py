@@ -60,11 +60,11 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if message_chunk == "":
             continue
 
-        tg_formatted_message = utils.markdown_to_telegram_markdown(message_chunk)
+        tg_formatted_message = utils.markdown_to_telegram_html(message_chunk)
         if tg_formatted_message == "":
             continue
 
-        await update.message.reply_text(tg_formatted_message, parse_mode="MarkdownV2")
+        await update.message.reply_text(tg_formatted_message, parse_mode="HTML")
         time.sleep(1)
 
 
@@ -92,11 +92,11 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if message_chunk == "":
             continue
 
-        tg_formatted_message = utils.markdown_to_telegram_markdown(message_chunk)
+        tg_formatted_message = utils.markdown_to_telegram_html(message_chunk)
         if tg_formatted_message == "":
             continue
 
-        await update.message.reply_text(tg_formatted_message, parse_mode="MarkdownV2")
+        await update.message.reply_text(tg_formatted_message, parse_mode="HTML")
         time.sleep(1)
 
 

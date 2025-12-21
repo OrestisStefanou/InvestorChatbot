@@ -1,42 +1,77 @@
 import re
+import html
 
-def split_ai_response_message(ai_response_message: str) -> list[str]:
-    """
-    Splits the AI response message into chunks to handle the character limit 
-    of the Telegram API (4096 characters per message)
-    """
-    return ai_response_message.split("\n")
+TELEGRAM_CHAR_LIMIT = 4096
+CODE_FENCE = "```"
+
+def split_ai_response_message(markdown_message: str) -> list[str]:
+    messages: list[str] = []
+    current_lines: list[str] = []
+    current_len = 0
+    in_code_block = False
+    code_block_lang = ""
+
+    for line in markdown_message.split("\n"):
+        stripped = line.strip()
+
+        # Detect code fence
+        if stripped.startswith(CODE_FENCE):
+            if not in_code_block:
+                code_block_lang = stripped[len(CODE_FENCE):]
+                in_code_block = True
+            else:
+                in_code_block = False
+                code_block_lang = ""
+
+        line_len = len(line) + 1  # newline
+
+        # If adding line exceeds limit, flush
+        if current_len + line_len > TELEGRAM_CHAR_LIMIT:
+            if in_code_block:
+                # Close code block before flushing
+                current_lines.append(CODE_FENCE)
+                messages.append("\n".join(current_lines))
+                current_lines = [f"{CODE_FENCE}{code_block_lang}"]
+                current_len = len(current_lines[0]) + 1
+            else:
+                messages.append("\n".join(current_lines))
+                current_lines = []
+                current_len = 0
+
+        current_lines.append(line)
+        current_len += line_len
+
+    # Final flush
+    if current_lines:
+        messages.append("\n".join(current_lines))
+
+    return messages
 
 
-def markdown_to_telegram_markdown(text):
-    """
-    Convert basic Markdown to Telegram MarkdownV2 format.
-    Handles: headers, bold, italic
-    """
+def markdown_to_telegram_html(text):
+    # Escape everything first
+    text = html.escape(text)
 
-    # Step 1: Convert markdown syntax
-    # Headers -> bold
-    text = re.sub(r'^#{1,6}\s+(.+)$', r'*\1*', text, flags=re.MULTILINE)
+    # Tables → <pre>
+    table_re = re.compile(
+        r'(\|.+\|\n\|[-:\s|]+\|\n(?:\|.*\|\n?)*)'
+    )
+    text = table_re.sub(lambda m: f"<pre>{m.group(1)}</pre>", text)
 
-    # Bold: **text** or __text__ -> *text*
-    text = re.sub(r'\*\*(.+?)\*\*', r'*\1*', text)
-    text = re.sub(r'__(.+?)__', r'*\1*', text)
+    # Headers
+    text = re.sub(r'^#{1,6}\s+(.+)$', r'<b>\1</b>', text, flags=re.MULTILINE)
 
-    # Italic: *text* or _text_ -> _text_
-    text = re.sub(r'(?<!\*)\*([^\*]+?)\*(?!\*)', r'_\1_', text)
-    text = re.sub(r'(?<!_)_([^_]+?)_(?!_)', r'_\1_', text)
+    # Links: [text](url)
+    text = re.sub(
+        r'\[([^\]]+)\]\((https?://[^\s)]+)\)',
+        r'<a href="\2">\1</a>',
+        text
+    )
 
-    # Step 2: Escape all special characters
-    special_chars = ['_', '*', '[', ']', '(', ')', '~', '`', '>', '#', '+', '-', '=', '|', '{', '}', '.', '!']
+    # Bold
+    text = re.sub(r'\*\*(.+?)\*\*', r'<b>\1</b>', text)
 
-    for char in special_chars:
-        text = text.replace(char, '\\' + char)
-
-    # Step 3: Unescape formatting markers
-    # Bold: \*text\* -> *text*
-    text = re.sub(r'\\\*(.+?)\\\*', r'*\1*', text)
-
-    # Italic: \_text\_ -> _text_
-    text = re.sub(r'\\_(.+?)\\_', r'_\1_', text)
+    # Italic
+    text = re.sub(r'\*(.+?)\*', r'<i>\1</i>', text)
 
     return text
