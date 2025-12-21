@@ -1,10 +1,10 @@
 import re
 import html
 
-TELEGRAM_CHAR_LIMIT = 4096
-CODE_FENCE = "```"
-
 def split_ai_response_message(markdown_message: str) -> list[str]:
+    telegram_char_limit = 4096
+    code_fence = "```"
+
     messages: list[str] = []
     current_lines: list[str] = []
     current_len = 0
@@ -15,9 +15,9 @@ def split_ai_response_message(markdown_message: str) -> list[str]:
         stripped = line.strip()
 
         # Detect code fence
-        if stripped.startswith(CODE_FENCE):
+        if stripped.startswith(code_fence):
             if not in_code_block:
-                code_block_lang = stripped[len(CODE_FENCE):]
+                code_block_lang = stripped[len(code_fence):]
                 in_code_block = True
             else:
                 in_code_block = False
@@ -26,12 +26,12 @@ def split_ai_response_message(markdown_message: str) -> list[str]:
         line_len = len(line) + 1  # newline
 
         # If adding line exceeds limit, flush
-        if current_len + line_len > TELEGRAM_CHAR_LIMIT:
+        if current_len + line_len > telegram_char_limit:
             if in_code_block:
                 # Close code block before flushing
-                current_lines.append(CODE_FENCE)
+                current_lines.append(code_fence)
                 messages.append("\n".join(current_lines))
-                current_lines = [f"{CODE_FENCE}{code_block_lang}"]
+                current_lines = [f"{code_fence}{code_block_lang}"]
                 current_len = len(current_lines[0]) + 1
             else:
                 messages.append("\n".join(current_lines))

@@ -10,3 +10,4 @@ agent_service/routers/__pycache__
 agent_service/services/__pycache__
 telegram_bot/.venv
 telegram_bot/__pycache__
+.idea
