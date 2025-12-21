@@ -1,4 +1,5 @@
 import logging
+import time
 
 from telegram import Update
 from telegram.ext import (
@@ -11,6 +12,7 @@ from telegram.ext import (
 
 from config import settings
 from agent_service_client import AgentServiceClient
+import utils
 
 # Enable logging
 logging.basicConfig(
@@ -52,8 +54,18 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         logger.error(f"Failed to generate AI response: {e}")
         ai_message = "I'm sorry, something went wrong. Please try again later."
-    
-    await update.message.reply_text(ai_message)
+
+    message_chunks = utils.split_ai_response_message(ai_message)
+    for message_chunk in message_chunks:
+        if message_chunk == "":
+            continue
+
+        tg_formatted_message = utils.markdown_to_telegram_markdown(message_chunk)
+        if tg_formatted_message == "":
+            continue
+
+        await update.message.reply_text(tg_formatted_message, parse_mode="MarkdownV2")
+        time.sleep(1)
 
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -75,7 +87,18 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         logger.error(f"Failed to generate AI response: {e}")
         ai_message = "I'm sorry, something went wrong. Please try again later."
     
-    await update.message.reply_text(ai_message)
+    message_chunks = utils.split_ai_response_message(ai_message)
+    for message_chunk in message_chunks:
+        if message_chunk == "":
+            continue
+
+        tg_formatted_message = utils.markdown_to_telegram_markdown(message_chunk)
+        if tg_formatted_message == "":
+            continue
+
+        await update.message.reply_text(tg_formatted_message, parse_mode="MarkdownV2")
+        time.sleep(1)
+
 
 async def error_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Log errors caused by updates."""

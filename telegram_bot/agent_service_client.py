@@ -58,15 +58,13 @@ class AgentServiceClient:
                         "session_id": session_id,
                         "message": message,
                     },
-                    timeout=10,
+                    timeout=120,    # 2 minutes since this can take long
                 )
             except httpx.RequestError as e:
                 raise Exception(f"Failed to generate AI response: {e}")
 
         if response.status_code != http.HTTPStatus.OK:
             raise Exception(f"Failed to generate AI response with status code: {response.status_code} and text: {response.text}")
-        
-        print(response.json())
 
         ai_response_msg = response.json().get("response", None)
 
