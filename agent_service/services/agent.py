@@ -122,8 +122,6 @@ class AgentService:
             case _:
                 raise ValueError(f"Unknown LLM provider: {settings.LLM_PROVIDER}") 
 
-        print("System prompt: ", system_prompt)
-
         return Agent(
             tools=tools,
             model=model,
