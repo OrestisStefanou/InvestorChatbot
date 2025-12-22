@@ -22,6 +22,7 @@ class Settings(BaseSettings):
     TEMPERATURE: float = 0.1
     # MCP
     MCP_SERVER_URL: str
+    MCP_SERVER_NAME: str = "investing_data_tools"
     # APP
     CONVERSATION_MESSAGES_LIMIT: int = 15
 

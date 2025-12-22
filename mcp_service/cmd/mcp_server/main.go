@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	alphavantage "investbot/pkg/alpha_vantage"
+	"investbot/pkg/api/mcp/prompts"
 	"investbot/pkg/api/mcp/tools"
 	"investbot/pkg/config"
 	"investbot/pkg/marketDataScraper"
@@ -186,6 +187,15 @@ func main() {
 	mcpServer.AddTool(
 		getCommodityTimeSeriesTool.GetTool(),
 		mcp.NewStructuredToolHandler(getCommodityTimeSeriesTool.HandleGetCommodityTimeSeries),
+	)
+
+	// Set up prompts
+	investmentAdvisorPrompt := prompts.NewInvestmentAdvisorPrompt()
+
+	// Add prompts
+	mcpServer.AddPrompt(
+		investmentAdvisorPrompt.GetPrompt(),
+		investmentAdvisorPrompt.HandleGetInvestmentAdvisorPrompt,
 	)
 
 	// Start the server
