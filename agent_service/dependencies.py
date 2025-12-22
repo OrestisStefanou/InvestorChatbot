@@ -13,7 +13,7 @@ def get_db_client(request: Request):
 def get_mcp_client():
     mcp_server_client = MultiServerMCPClient(
         {
-            "investing_data_tools": {
+            settings.MCP_SERVER_NAME: {
                 "transport": "streamable_http",  # HTTP-based remote server
                 "url": settings.MCP_SERVER_URL,
             }
