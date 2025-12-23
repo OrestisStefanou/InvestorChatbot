@@ -140,6 +140,13 @@ func (t *GetStockOverviewTool) HandleGetStockOverview(ctx context.Context, req m
 	// Fetch stock profile
 	go func() {
 		defer wg.Done()
+		defer func() {
+			if r := recover(); r != nil {
+				mu.Lock()
+				fetchErr = fmt.Errorf("panic in GetStockProfile goroutine: %v", r)
+				mu.Unlock()
+			}
+		}()
 		stockProfile, err := t.stockOverviewService.GetStockProfile(stockSymbol)
 		if err != nil {
 			mu.Lock()
@@ -164,6 +171,13 @@ func (t *GetStockOverviewTool) HandleGetStockOverview(ctx context.Context, req m
 	// Fetch financial ratios
 	go func() {
 		defer wg.Done()
+		defer func() {
+			if r := recover(); r != nil {
+				mu.Lock()
+				fetchErr = fmt.Errorf("panic in GetFinancialRatios goroutine: %v", r)
+				mu.Unlock()
+			}
+		}()
 		financialRatios, err := t.stockOverviewService.GetFinancialRatios(stockSymbol)
 		if err != nil {
 			mu.Lock()
@@ -222,6 +236,13 @@ func (t *GetStockOverviewTool) HandleGetStockOverview(ctx context.Context, req m
 	// Fetch forecast
 	go func() {
 		defer wg.Done()
+		defer func() {
+			if r := recover(); r != nil {
+				mu.Lock()
+				fetchErr = fmt.Errorf("panic in GetStockForecast goroutine: %v", r)
+				mu.Unlock()
+			}
+		}()
 		stockForecast, err := t.stockOverviewService.GetStockForecast(stockSymbol)
 		if err != nil {
 			mu.Lock()
@@ -270,6 +291,13 @@ func (t *GetStockOverviewTool) HandleGetStockOverview(ctx context.Context, req m
 		index, performancePeriod := i, period // capture loop variables for goroutines
 		go func() {
 			defer wg.Done()
+			defer func() {
+				if r := recover(); r != nil {
+					mu.Lock()
+					fetchErr = fmt.Errorf("panic in GetHistoricalPrices goroutine for %s: %v", period, r)
+					mu.Unlock()
+				}
+			}()
 			histPrices, err := t.stockOverviewService.GetHistoricalPrices(stockSymbol, domain.Stock, performancePeriod)
 			if err != nil {
 				mu.Lock()
