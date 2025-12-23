@@ -12,6 +12,9 @@ import (
 	"investbot/pkg/services"
 	"log"
 	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"github.com/dgraph-io/badger/v4"
 	"github.com/mark3labs/mcp-go/mcp"
@@ -45,6 +48,7 @@ func main() {
 		server.WithToolCapabilities(true),
 		server.WithResourceCapabilities(false, true),
 		server.WithPromptCapabilities(true),
+		server.WithRecovery(),
 		server.WithToolHandlerMiddleware(loggingMW.ToolMiddleware),
 	)
 
@@ -220,8 +224,35 @@ func main() {
 	)
 
 	// Start the server
-	httpServer := server.NewStreamableHTTPServer(mcpServer)
-	if err := httpServer.Start(":8080"); err != nil {
-		log.Fatal(err)
+	startWithGracefulShutdown(mcpServer)
+}
+
+func startWithGracefulShutdown(mcpServer *server.MCPServer) {
+	// Setup signal handling
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
+
+	var httpServer *server.StreamableHTTPServer
+
+	// Start server in goroutine
+	go func() {
+		httpServer = server.NewStreamableHTTPServer(mcpServer)
+		if err := httpServer.Start(":8080"); err != nil {
+			log.Printf("Server error: %v", err)
+		}
+	}()
+
+	// Wait for shutdown signal
+	<-sigChan
+	log.Println("Shutting down server...")
+
+	// Graceful shutdown with timeout
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	if err := httpServer.Shutdown(ctx); err != nil {
+		log.Printf("Shutdown error: %v", err)
 	}
+
+	log.Println("Server stopped")
 }

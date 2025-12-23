@@ -22,9 +22,12 @@ async def main():
         five_days_ago = now - timedelta(days=5)
         
         result = await client.call_tool(
-            name="getCryptocurrencyNews", 
+            name="getStockFinancials", 
             arguments={
-                'symbol': 'btc',
+                'stock_symbol':'AAPLLLL',
+                "income_statement": True,
+                "balance_sheet": True,
+                "cash_flow": True,
             }
         )
 

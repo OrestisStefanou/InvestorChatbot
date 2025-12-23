@@ -59,37 +59,87 @@ func scrapeStockProfile(symbol string) (domain.StockProfile, error) {
 		return domain.StockProfile{}, fmt.Errorf("unexpected structure for 'profile'")
 	}
 
-	stockProfileData := data[int(profileIndex)].(map[string]interface{})
+	if int(profileIndex) < 0 || int(profileIndex) >= len(data) {
+		return domain.StockProfile{}, fmt.Errorf("profile index out of bounds")
+	}
+	stockProfileData, ok := data[int(profileIndex)].(map[string]interface{})
+	if !ok {
+		return domain.StockProfile{}, fmt.Errorf("unexpected structure for stockProfileData")
+	}
 
 	industryDataIndex, ok := stockProfileData["industry"].(float64)
 	if !ok {
 		return domain.StockProfile{}, fmt.Errorf("unexpected structure for 'industry'")
 	}
 
-	industryData := data[int(industryDataIndex)].(map[string]interface{})
-	industryNameIndex := industryData["value"].(float64)
+	if int(industryDataIndex) < 0 || int(industryDataIndex) >= len(data) {
+		return domain.StockProfile{}, fmt.Errorf("industry index out of bounds")
+	}
+	industryData, ok := data[int(industryDataIndex)].(map[string]interface{})
+	if !ok {
+		return domain.StockProfile{}, fmt.Errorf("unexpected structure for industryData")
+	}
+	industryNameIndex, _ := industryData["value"].(float64)
 
 	sectorDataIndex, ok := stockProfileData["sector"].(float64)
 	if !ok {
 		return domain.StockProfile{}, fmt.Errorf("unexpected structure for 'sector'")
 	}
-	sectorData := data[int(sectorDataIndex)].(map[string]interface{})
-	sectorNameIndex := sectorData["value"].(float64)
+	if int(sectorDataIndex) < 0 || int(sectorDataIndex) >= len(data) {
+		return domain.StockProfile{}, fmt.Errorf("sector index out of bounds")
+	}
+	sectorData, ok := data[int(sectorDataIndex)].(map[string]interface{})
+	if !ok {
+		return domain.StockProfile{}, fmt.Errorf("unexpected structure for sectorData")
+	}
+	sectorNameIndex, _ := sectorData["value"].(float64)
 
-	stockNameINdex := stockProfileData["name"].(float64)
-	stockCountryIndex := stockProfileData["country"].(float64)
-	stockFoundedIndex := stockProfileData["founded"].(float64)
-	stockIpoDateIndex := stockProfileData["ipoDate"].(float64)
-	stockCeoIndex := stockProfileData["ceo"].(float64)
+	stockNameINdex, _ := stockProfileData["name"].(float64)
+	stockCountryIndex, _ := stockProfileData["country"].(float64)
+	stockFoundedIndex, _ := stockProfileData["founded"].(float64)
+	stockIpoDateIndex, _ := stockProfileData["ipoDate"].(float64)
+	stockCeoIndex, _ := stockProfileData["ceo"].(float64)
 
 	return domain.StockProfile{
-		Name:        data[int(stockNameINdex)].(string),
-		Description: data[int(descriptionIndex)].(string),
-		Country:     data[int(stockCountryIndex)].(string),
-		Founded:     int(data[int(stockFoundedIndex)].(float64)),
-		IpoDate:     data[int(stockIpoDateIndex)].(string),
-		Industry:    data[int(industryNameIndex)].(string),
-		Sector:      data[int(sectorNameIndex)].(string),
-		Ceo:         data[int(stockCeoIndex)].(string),
+		Name:        getString(data, stockNameINdex),
+		Description: getString(data, descriptionIndex),
+		Country:     getString(data, stockCountryIndex),
+		Founded:     getInt(data, stockFoundedIndex),
+		IpoDate:     getString(data, stockIpoDateIndex),
+		Industry:    getString(data, industryNameIndex),
+		Sector:      getString(data, sectorNameIndex),
+		Ceo:         getString(data, stockCeoIndex),
 	}, nil
+}
+
+func getString(data []interface{}, index interface{}) string {
+	idx, ok := index.(float64)
+	if !ok {
+		return ""
+	}
+	i := int(idx)
+	if i < 0 || i >= len(data) {
+		return ""
+	}
+	s, ok := data[i].(string)
+	if !ok {
+		return ""
+	}
+	return s
+}
+
+func getInt(data []interface{}, index interface{}) int {
+	idx, ok := index.(float64)
+	if !ok {
+		return 0
+	}
+	i := int(idx)
+	if i < 0 || i >= len(data) {
+		return 0
+	}
+	f, ok := data[i].(float64)
+	if !ok {
+		return 0
+	}
+	return int(f)
 }
