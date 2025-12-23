@@ -23,7 +23,7 @@ type UserPortfolioHoldingSchema struct {
 	Symbol              string  `json:"symbol" jsonschema_description:"Symbol of the holding"`
 	Name                string  `json:"name" jsonschema_description:"Name of the holding"`
 	Quantity            float64 `json:"quantity" jsonschema_description:"Quantity of the holding(zero value means not known/given)"`
-	PortfolioPercentage float64 `json:"portfolio_percentage" jsonschema_description:"Portfolio percentage of the holding(zero value means not known/given)"`
+	PortfolioPercentage float64 `json:"portfolio_percentage" jsonschema_description:"Portfolio percentage of the holding(zero value means not known/given, 20 means 20%)"`
 }
 
 type UserContextResponse struct {
