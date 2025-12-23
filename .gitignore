@@ -11,3 +11,4 @@ agent_service/services/__pycache__
 telegram_bot/.venv
 telegram_bot/__pycache__
 .idea
+mcp_service/cache.db

@@ -21,27 +21,14 @@ async def main():
         # Datetime 5 days ago
         five_days_ago = now - timedelta(days=5)
         
-        # result = await client.call_tool(
-        #     name="getCommodityTimeSeries", 
-        #     arguments={
-        #         'commodity_name': 'CrudeOil', 
-        #         'limit': 10,
-        #         # 'user_profile': {'age': 28, 'investment_knowledge_level': 'Intermediate', 'name': 'Orestis', 'risk_apettite': 'medium'}, 
-        #         # 'user_portfolio': [
-        #         #     {'asset_class': 'stock', 'symbol': '', 'name': 'META', 'quantity': 20, 'portfolio_percentage': 0.25}, 
-        #         #     {'asset_class': 'stock', 'symbol': '', 'name': 'Microsoft', 'quantity': 15, 'portfolio_percentage': 0.25},
-        #         #     {'asset_class': 'crypto', 'symbol': 'BTC', 'name': 'Bitcoin', 'quantity': 0.01, 'portfolio_percentage': 0.5}
-        #         # ]
-        #     }
-        # )
-        
-        result = await client.get_prompt(
-            name="investment_advisor_prompt", 
+        result = await client.call_tool(
+            name="getCryptocurrencyNews", 
             arguments={
-                'user_id': str(uuid.uuid4()),
+                'symbol': 'btc',
             }
-        )        
-        print(result)
+        )
 
+        print(result.data)
+        
 
 asyncio.run(main())

@@ -18,7 +18,7 @@ type BadgerCacheService struct {
 }
 
 func NewBadgerCacheService() (*BadgerCacheService, error) {
-	db, err := badger.Open(badger.DefaultOptions("").WithInMemory(true))
+	db, err := badger.Open(badger.DefaultOptions("cache.db"))
 	if err != nil {
 		return nil, err
 	}

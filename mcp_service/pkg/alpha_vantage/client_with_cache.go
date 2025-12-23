@@ -154,3 +154,26 @@ func (c *AlphaVantageClientWithCache) GetCommodityTimeSeries(commodity domain.Co
 
 	return commodityTimeSeries, nil
 }
+
+func (c *AlphaVantageClientWithCache) GetCryptocurrencyNews(symbol string) ([]domain.NewsArticle, error) {
+	// Check if the data is in the cache
+	var newsArticles []domain.NewsArticle
+
+	key := fmt.Sprintf("cryptocurrency_news_%s", symbol)
+	err := c.cache.Get(key, &newsArticles)
+	if err == nil {
+		return newsArticles, nil
+	}
+
+	// If not in cache, get from API
+	alphaVantageClient := AlphaVantageClient{apiKey: c.apiKey}
+	newsArticles, err = alphaVantageClient.GetCryptocurrencyNews(symbol)
+	if err != nil {
+		return nil, err
+	}
+
+	// Set in cache
+	c.cache.Set(key, newsArticles, time.Duration(c.cacheTtlSeconds)*time.Second)
+
+	return newsArticles, nil
+}
