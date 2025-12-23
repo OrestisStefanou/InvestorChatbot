@@ -238,9 +238,4 @@ func scrapeStockForecast(symbol string) (domain.StockForecast, error) {
 		Estimations: estimations,
 		TargetPrice: targetPrice,
 	}, nil
-
-	return domain.StockForecast{
-		Estimations: estimations,
-		TargetPrice: targetPrice,
-	}, nil
 }
