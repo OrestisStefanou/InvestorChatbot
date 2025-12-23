@@ -103,7 +103,7 @@ func main() {
 	etfService, _ := services.NewEtfService(dataService)
 	superInvestorService, _ := services.NewSuperInvestorService(dataService)
 	userContextService, _ := services.NewUserContextService(userContextRepository)
-	cryptoService, _ := services.NewCryptoService(coinGeckoClient)
+	cryptoService, _ := services.NewCryptoService(coinGeckoClient, alphaVantageClient)
 
 	// Setup tools
 	searchStocksTool, _ := tools.NewStockSearchTool(tickerService)
@@ -122,6 +122,7 @@ func main() {
 	getCommodityTimeSeriesTool, _ := tools.NewGetCommodityTimeSeriesTool(alphaVantageClient)
 	searchCryptocurrenciesTool, _ := tools.NewSearchCryptocurrenciesTool(cryptoService)
 	getCryptocurrencyDataByIdTool, _ := tools.NewGetCryptocurrencyDataByIdTool(cryptoService)
+	getCryptocurrencyNewsTool, _ := tools.NewGetCryptocurrencyNewsTool(cryptoService)
 
 	// Add tools
 	mcpServer.AddTool(
@@ -202,6 +203,11 @@ func main() {
 	mcpServer.AddTool(
 		getCryptocurrencyDataByIdTool.GetTool(),
 		mcp.NewStructuredToolHandler(getCryptocurrencyDataByIdTool.HandleGetCryptocurrencyDataById),
+	)
+
+	mcpServer.AddTool(
+		getCryptocurrencyNewsTool.GetTool(),
+		mcp.NewStructuredToolHandler(getCryptocurrencyNewsTool.HandleGetCryptocurrencyNews),
 	)
 
 	// Set up prompts

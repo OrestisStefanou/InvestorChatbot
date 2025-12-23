@@ -7,6 +7,7 @@ import (
 	"investbot/pkg/errors"
 	"net/http"
 	"net/url"
+	"strings"
 )
 
 type AlphaVantageClient struct {
@@ -525,4 +526,73 @@ func (c *AlphaVantageClient) fetchCommodityData(function string, interval string
 	}
 
 	return apiResponse, nil
+}
+
+func (c *AlphaVantageClient) GetCryptocurrencyNews(symbol string) ([]domain.NewsArticle, error) {
+	// Build URL with query parameters
+	requestUrl, err := url.Parse(alphaVantageBaseURL)
+	if err != nil {
+		return nil, &errors.HTTPError{
+			StatusCode: 0,
+			Message:    fmt.Sprintf("failed to parse base URL: %v", err),
+		}
+	}
+
+	q := requestUrl.Query()
+	q.Set("function", "NEWS_SENTIMENT")
+	q.Set("tickers", fmt.Sprintf("CRYPTO:%s", strings.ToUpper(symbol)))
+	q.Set("apikey", c.apiKey)
+	requestUrl.RawQuery = q.Encode()
+
+	// Create HTTP request
+	req, err := http.NewRequest("GET", requestUrl.String(), nil)
+	if err != nil {
+		return nil, &errors.HTTPError{
+			StatusCode: 0,
+			Message:    fmt.Sprintf("failed to create HTTP request: %v", err),
+		}
+	}
+
+	// Send the request
+	httpClient := &http.Client{}
+	resp, err := httpClient.Do(req)
+	if err != nil {
+		return nil, &errors.HTTPError{
+			StatusCode: 0,
+			Message:    fmt.Sprintf("failed to send HTTP request: %v", err),
+		}
+	}
+	defer resp.Body.Close()
+
+	// Check if the request was successful
+	if resp.StatusCode != http.StatusOK {
+		return nil, &errors.HTTPError{
+			StatusCode: resp.StatusCode,
+			Message:    resp.Status,
+		}
+	}
+
+	// Parse JSON response
+	var apiResponse GetNewsResponse
+	if err := json.NewDecoder(resp.Body).Decode(&apiResponse); err != nil {
+		return nil, &errors.JSONMarshalError{
+			Message: "failed to decode JSON response",
+			Err:     err,
+		}
+	}
+
+	// Map API response to domain model
+	var newsArticles []domain.NewsArticle
+	for _, article := range apiResponse.Feed {
+		newsArticles = append(newsArticles, domain.NewsArticle{
+			Title:  article.Title,
+			Url:    article.URL,
+			Time:   article.TimePublished,
+			Image:  article.BannerImage,
+			Source: article.Source,
+			Text:   article.Summary,
+		})
+	}
+
+	return newsArticles, nil
 }

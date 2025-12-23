@@ -11,6 +11,7 @@ import (
 type CryptoDataService interface {
 	SearchCryptocurrencies(query string) ([]domain.Cryptocurrency, error)
 	GetCryptocurrencyDataById(id string) (domain.CryptocurrencyData, error)
+	GetCryptocurrencyNews(symbol string) ([]domain.NewsArticle, error)
 }
 
 type SearchCryptocurrenciesRequest struct {
@@ -144,5 +145,55 @@ func (t *GetCryptocurrencyDataByIdTool) GetTool() mcp.Tool {
 		mcp.WithDescription("Get the data of the given cryptocurrency by ID."),
 		mcp.WithInputSchema[GetCryptocurrencyDataByIdRequest](),
 		mcp.WithOutputSchema[GetCryptocurrencyDataByIdResponse](),
+	)
+}
+
+type GetCryptocurrencyNewsRequest struct {
+	Symbol string `json:"symbol" jsonschema_description:"Symbol of the cryptocurrency"`
+}
+
+type GetCryptocurrencyNewsResponse struct {
+	News []NewsArticleSchema `json:"news" jsonschema_description:"A list of crypto news articles"`
+}
+
+type GetCryptocurrencyNewsTool struct {
+	cryptoDataService CryptoDataService
+}
+
+func NewGetCryptocurrencyNewsTool(cryptoDataService CryptoDataService) (*GetCryptocurrencyNewsTool, error) {
+	return &GetCryptocurrencyNewsTool{
+		cryptoDataService: cryptoDataService,
+	}, nil
+}
+
+func (t *GetCryptocurrencyNewsTool) HandleGetCryptocurrencyNews(ctx context.Context, req mcp.CallToolRequest, args GetCryptocurrencyNewsRequest) (GetCryptocurrencyNewsResponse, error) {
+	news, err := t.cryptoDataService.GetCryptocurrencyNews(args.Symbol)
+	if err != nil {
+		return GetCryptocurrencyNewsResponse{}, err
+	}
+
+	response := GetCryptocurrencyNewsResponse{
+		News: make([]NewsArticleSchema, 0, len(news)),
+	}
+
+	for _, article := range news {
+		response.News = append(response.News, NewsArticleSchema{
+			Url:    article.Url,
+			Image:  article.Image,
+			Title:  article.Title,
+			Text:   article.Text,
+			Source: article.Source,
+			Time:   article.Time,
+		})
+	}
+
+	return response, nil
+}
+
+func (t *GetCryptocurrencyNewsTool) GetTool() mcp.Tool {
+	return mcp.NewTool("getCryptocurrencyNews",
+		mcp.WithDescription("Get the news of the given cryptocurrency by symbol."),
+		mcp.WithInputSchema[GetCryptocurrencyNewsRequest](),
+		mcp.WithOutputSchema[GetCryptocurrencyNewsResponse](),
 	)
 }

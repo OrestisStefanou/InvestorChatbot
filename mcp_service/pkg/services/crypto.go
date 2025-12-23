@@ -10,12 +10,17 @@ type ICryptoDataService interface {
 	GetCryptocurrencyDataById(id string) (domain.CryptocurrencyData, error)
 }
 
-type CryptoService struct {
-	cryptoDataService ICryptoDataService
+type CryptoNewsSource interface {
+	GetCryptocurrencyNews(symbol string) ([]domain.NewsArticle, error)
 }
 
-func NewCryptoService(cryptoDataService ICryptoDataService) (*CryptoService, error) {
-	return &CryptoService{cryptoDataService: cryptoDataService}, nil
+type CryptoService struct {
+	cryptoDataService ICryptoDataService
+	cryptoNewsSource  CryptoNewsSource
+}
+
+func NewCryptoService(cryptoDataService ICryptoDataService, cryptoNewsSource CryptoNewsSource) (*CryptoService, error) {
+	return &CryptoService{cryptoDataService: cryptoDataService, cryptoNewsSource: cryptoNewsSource}, nil
 }
 
 func (s *CryptoService) GetCryptocurrenciesList() ([]domain.Cryptocurrency, error) {
@@ -62,4 +67,8 @@ func (s *CryptoService) SearchCryptocurrencies(query string) ([]domain.Cryptocur
 	}
 
 	return searchResults, nil
+}
+
+func (s *CryptoService) GetCryptocurrencyNews(symbol string) ([]domain.NewsArticle, error) {
+	return s.cryptoNewsSource.GetCryptocurrencyNews(symbol)
 }
