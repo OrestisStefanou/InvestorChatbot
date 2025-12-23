@@ -5,6 +5,7 @@ import (
 	alphavantage "investbot/pkg/alpha_vantage"
 	"investbot/pkg/api/mcp/prompts"
 	"investbot/pkg/api/mcp/tools"
+	coingecko "investbot/pkg/coin_gecko"
 	"investbot/pkg/config"
 	"investbot/pkg/marketDataScraper"
 	"investbot/pkg/repositories"
@@ -95,12 +96,14 @@ func main() {
 	}
 
 	alphaVantageClient, _ := alphavantage.NewAlphaVantageClientWithCache(conf.AlphaVantageApiKey, cache, conf.AlphaVantageCacheTtl)
+	coinGeckoClient, _ := coingecko.NewCoinGeckoClientWithCache(conf.CoinGeckoApiKey, cache, conf.CoinGeckoCacheTtl)
 
 	// Set up services
 	tickerService, _ := services.NewTickerService(dataService)
 	etfService, _ := services.NewEtfService(dataService)
 	superInvestorService, _ := services.NewSuperInvestorService(dataService)
 	userContextService, _ := services.NewUserContextService(userContextRepository)
+	cryptoService, _ := services.NewCryptoService(coinGeckoClient)
 
 	// Setup tools
 	searchStocksTool, _ := tools.NewStockSearchTool(tickerService)
@@ -117,6 +120,8 @@ func main() {
 	updateUserContextTool, _ := tools.NewUpdateUserContextTool(userContextService)
 	getEconomicIndicatorTimeSeriesTool, _ := tools.NewGetEconomicIndicatorTimeSeriesTool(alphaVantageClient)
 	getCommodityTimeSeriesTool, _ := tools.NewGetCommodityTimeSeriesTool(alphaVantageClient)
+	searchCryptocurrenciesTool, _ := tools.NewSearchCryptocurrenciesTool(cryptoService)
+	getCryptocurrencyDataByIdTool, _ := tools.NewGetCryptocurrencyDataByIdTool(cryptoService)
 
 	// Add tools
 	mcpServer.AddTool(
@@ -187,6 +192,16 @@ func main() {
 	mcpServer.AddTool(
 		getCommodityTimeSeriesTool.GetTool(),
 		mcp.NewStructuredToolHandler(getCommodityTimeSeriesTool.HandleGetCommodityTimeSeries),
+	)
+
+	mcpServer.AddTool(
+		searchCryptocurrenciesTool.GetTool(),
+		mcp.NewStructuredToolHandler(searchCryptocurrenciesTool.HandleSearchCryptocurrencies),
+	)
+
+	mcpServer.AddTool(
+		getCryptocurrencyDataByIdTool.GetTool(),
+		mcp.NewStructuredToolHandler(getCryptocurrencyDataByIdTool.HandleGetCryptocurrencyDataById),
 	)
 
 	// Set up prompts

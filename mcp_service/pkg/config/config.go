@@ -73,6 +73,10 @@ type Config struct {
 	// Alpha Vantage configs
 	AlphaVantageApiKey   string
 	AlphaVantageCacheTtl int // The ttl for the alpha vantage cache in seconds
+
+	// CoinGecko configs
+	CoinGeckoApiKey   string
+	CoinGeckoCacheTtl int // The ttl for the coin gecko cache in seconds
 }
 
 func LoadConfig() (Config, error) {
@@ -118,6 +122,11 @@ func LoadConfig() (Config, error) {
 		alphaVantageCacheTtl = 3600
 	}
 
+	coinGeckoCacheTtl, err := strconv.Atoi(getEnv("COIN_GECKO_CACHE_TTL", "3600"))
+	if err != nil {
+		coinGeckoCacheTtl = 3600
+	}
+
 	return Config{
 		OpenAiKey:            getEnv("OPEN_AI_API_KEY", ""),
 		OpenAiBaseUrl:        getEnv("OPENAI_BASE_URL", "https://api.openai.com/v1"),
@@ -145,6 +154,8 @@ func LoadConfig() (Config, error) {
 		SessionStorageProvider: SessionStorageProvider(sessionStorage),
 		AlphaVantageApiKey:     getEnv("ALPHA_VANTAGE_API_KEY", ""),
 		AlphaVantageCacheTtl:   alphaVantageCacheTtl,
+		CoinGeckoApiKey:        getEnv("COIN_GECKO_API_KEY", ""),
+		CoinGeckoCacheTtl:      coinGeckoCacheTtl,
 	}, nil
 }
 
