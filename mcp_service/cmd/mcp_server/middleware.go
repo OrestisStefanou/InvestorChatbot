@@ -22,7 +22,7 @@ func (m *LoggingMiddleware) ToolMiddleware(next server.ToolHandlerFunc) server.T
 		start := time.Now()
 		// sessionID := server.GetSessionID(ctx)	// TODO: ADD session at some point
 
-		m.logger.Printf("Tool call started: tool=%s", req.Params.Name)
+		m.logger.Printf("Tool call started: tool=%s with args=%v", req.Params.Name, req.Params.Arguments)
 
 		result, err := next(ctx, req)
 
